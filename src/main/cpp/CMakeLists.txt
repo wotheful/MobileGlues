@@ -43,6 +43,8 @@ add_library(${CMAKE_PROJECT_NAME} SHARED
         gles/loader.c
         config/cJSON.c
         config/config.c
+
+        gl/fpe/state.c
 )
 
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE ./includes)

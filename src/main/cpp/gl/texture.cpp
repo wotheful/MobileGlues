@@ -243,9 +243,35 @@ void internal_convert(GLenum* internal_format, GLenum* type, GLenum* format) {
 void glTexParameterf(GLenum target, GLenum pname, GLfloat param) {
     LOG();
     pname = pname_convert(pname);
-    if(pname == GL_TEXTURE_LOD_BIAS)
-        return;
-    LOG_D("glTexParameterf, target: %d, pname: %d, param: %f",target, pname, param);
+
+    LOG_D("glTexParameterf, target: 0x%x, pname: 0x%x, param: %f",target, pname, param);
+
+    switch (pname) {
+        case GL_TEXTURE_LOD_BIAS:
+            return;
+        case GL_TEXTURE_MIN_FILTER:
+        case GL_TEXTURE_MAG_FILTER:
+        case GL_TEXTURE_WRAP_S:
+        case GL_TEXTURE_WRAP_T:
+        case GL_TEXTURE_WRAP_R: {
+            LOG_D("GL_TEXTURE_WRAP_*/GL_TEXTURE_*_FILTER, glTexParameterf -> glTexParameteri");
+            LOAD_GLES_FUNC(glTexParameteri)
+
+            GLint parami = (GLint)param;
+
+            switch (parami) {
+                case GL_CLAMP:
+                    gles_glTexParameteri(target, pname, GL_CLAMP_TO_EDGE);
+                    break;
+                default:
+                    gles_glTexParameteri(target, pname, (GLint)param);
+            }
+
+            CHECK_GL_ERROR
+            return;
+        }
+    }
+
     LOAD_GLES(glTexParameterf, void, GLenum target, GLenum pname, GLfloat param);
     gles_glTexParameterf(target,pname, param);
     CHECK_GL_ERROR
@@ -782,3 +808,14 @@ void glReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format
     gles_glReadPixels(x, y, width, height, format, type, pixels);
     CHECK_GL_ERROR
 }
+
+//void glGenTextures(GLsizei n, GLuint *textures) {
+//    LOG()
+//    LOAD_GLES_FUNC(glGenTextures)
+//
+//    LOG_D("glGenTextures, n = %d, textures = 0x%x", n, textures);
+//
+//    gles_glGenTextures(n, textures);
+//
+//    CHECK_GL_ERROR
+//}

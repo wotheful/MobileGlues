@@ -36,3 +36,12 @@ void glMultiDrawElements(GLenum mode,const GLsizei * count,GLenum type,const voi
         }
     }
 }
+
+void glDrawArrays(GLenum mode, GLint first, GLsizei count) {
+    LOG()
+    LOAD_GLES_FUNC(glDrawArrays)
+
+    LOG_D("glDrawArrays(), mode = 0x%x, first = %d, count = %u", mode, first, count)
+
+    gles_glDrawArrays(mode, first, count);
+}

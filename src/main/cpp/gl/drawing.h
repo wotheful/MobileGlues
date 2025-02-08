@@ -23,4 +23,6 @@ GLAPI GLAPIENTRY void glMultiDrawElementsBaseVertex( GLenum mode, GLsizei *count
 
 GLAPI GLAPIENTRY void glMultiDrawElements(GLenum mode,const GLsizei * count,GLenum type,const void * const * indices,GLsizei primcount);
 
+GLAPI GLAPIENTRY void glDrawArrays(GLenum mode, GLint first, GLsizei count);
+
 #endif //MOBILEGLUES_DRAWING_H
