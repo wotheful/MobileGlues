@@ -44,10 +44,12 @@ add_library(${CMAKE_PROJECT_NAME} SHARED
         config/cJSON.c
         config/config.c
 
+        gl/fpe/fpe.cpp
         gl/fpe/state.c
+        gl/fpe/transformation.cpp
 )
 
-target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE ./includes)
+target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE ./includes ./glm)
 
 target_link_libraries(${CMAKE_PROJECT_NAME}
         ${CMAKE_SOURCE_DIR}/libraries/arm64-v8a/libglslang.a

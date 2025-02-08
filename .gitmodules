@@ -1,0 +1,3 @@
+[submodule "src/main/cpp/glm"]
+	path = src/main/cpp/glm
+	url = https://github.com/g-truc/glm.git

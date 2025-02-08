@@ -50,12 +50,12 @@ STUB_FUNCTION_HEAD(void, glAccum, GLenum op, GLfloat value ) STUB_FUNCTION_END_N
 /*
 * Transformation
 */
-STUB_FUNCTION_HEAD(void, glMatrixMode, GLenum mode ) STUB_FUNCTION_END_NO_RETURN(void, glMatrixMode,mode)
-STUB_FUNCTION_HEAD(void, glOrtho, GLdouble left, GLdouble right, GLdouble bottom, GLdouble top, GLdouble near_val, GLdouble far_val ) STUB_FUNCTION_END_NO_RETURN(void, glOrtho,left,right,bottom,top,near_val,far_val)
+//STUB_FUNCTION_HEAD(void, glMatrixMode, GLenum mode ) STUB_FUNCTION_END_NO_RETURN(void, glMatrixMode,mode)
+//STUB_FUNCTION_HEAD(void, glOrtho, GLdouble left, GLdouble right, GLdouble bottom, GLdouble top, GLdouble near_val, GLdouble far_val ) STUB_FUNCTION_END_NO_RETURN(void, glOrtho,left,right,bottom,top,near_val,far_val)
 STUB_FUNCTION_HEAD(void, glFrustum, GLdouble left, GLdouble right, GLdouble bottom, GLdouble top, GLdouble near_val, GLdouble far_val ) STUB_FUNCTION_END_NO_RETURN(void, glFrustum,left,right,bottom,top,near_val,far_val)
 STUB_FUNCTION_HEAD(void, glPushMatrix) STUB_FUNCTION_END_NO_RETURN(void, glPushMatrix)
 STUB_FUNCTION_HEAD(void, glPopMatrix) STUB_FUNCTION_END_NO_RETURN(void, glPopMatrix)
-STUB_FUNCTION_HEAD(void, glLoadIdentity) STUB_FUNCTION_END_NO_RETURN(void, glLoadIdentity)
+//STUB_FUNCTION_HEAD(void, glLoadIdentity) STUB_FUNCTION_END_NO_RETURN(void, glLoadIdentity)
 STUB_FUNCTION_HEAD(void, glLoadMatrixd, const GLdouble *m ) STUB_FUNCTION_END_NO_RETURN(void, glLoadMatrixd,m)
 STUB_FUNCTION_HEAD(void, glLoadMatrixf, const GLfloat *m ) STUB_FUNCTION_END_NO_RETURN(void, glLoadMatrixf,m)
 STUB_FUNCTION_HEAD(void, glMultMatrixd, const GLdouble *m ) STUB_FUNCTION_END_NO_RETURN(void, glMultMatrixd,m)
