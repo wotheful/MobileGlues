@@ -11,7 +11,7 @@ void glGetIntegerv(GLenum pname, GLint *params) {
     LOG();
     LOG_D("glGetIntegerv, pname: 0x%x",pname);
     if (pname == GL_CONTEXT_PROFILE_MASK) {
-        (*params) = GL_CONTEXT_CORE_PROFILE_BIT;
+        (*params) = GL_CONTEXT_COMPATIBILITY_PROFILE_BIT;
         return;
     } 
     if (pname == GL_NUM_EXTENSIONS) {
@@ -83,7 +83,9 @@ void InitGLESBaseExtensions() {
              "OpenGL40 "
              //"OpenGL43 "
              //"ARB_compute_shader "
-             "GL_ARB_get_program_binary ";
+             "GL_ARB_get_program_binary "
+             "GL_ARB_multitexture "
+             ;
 }
 
 void AppendExtension(const char* ext) {
