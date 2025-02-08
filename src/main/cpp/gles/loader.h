@@ -70,18 +70,18 @@ void *open_lib(const char **names, const char *override);
 
 
 
-//#define LOAD_EGL(name) \
-//static name##_PTR egl_##name = NULL; \
-//{ \
-//        static bool first = true; \
-//        if (first) { \
-//            first = false; \
-//            if (egl != NULL) { \
-//                egl_##name = (name##_PTR)proc_address(egl, #name); \
-//            } \
-//            WARN_NULL(egl_##name); \
-//        } \
-//}
+#define LOAD_EGL(name) \
+static name##_PTR egl_##name = NULL; \
+{ \
+        static bool first = true; \
+        if (first) { \
+            first = false; \
+            if (egl != NULL) { \
+                egl_##name = (name##_PTR)proc_address(egl, #name); \
+            } \
+            WARN_NULL(egl_##name); \
+        } \
+}
 
 #define CLEAR_GL_ERROR \
     LOAD_GLES(glGetError, GLenum)                                           \

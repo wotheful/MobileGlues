@@ -120,7 +120,7 @@ NATIVE_FUNCTION_HEAD(void, glStencilOpSeparate, GLenum face, GLenum sfail, GLenu
 //NATIVE_FUNCTION_HEAD(void, glTexImage2D, GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const void *pixels) NATIVE_FUNCTION_END_NO_RETURN(void, glTexImage2D, target,level,internalformat,width,height,border,format,type,pixels)
 //NATIVE_FUNCTION_HEAD(void, glTexParameterf, GLenum target, GLenum pname, GLfloat param) NATIVE_FUNCTION_END_NO_RETURN(void, glTexParameterf, target,pname,param)
 NATIVE_FUNCTION_HEAD(void, glTexParameterfv, GLenum target, GLenum pname, const GLfloat *params) NATIVE_FUNCTION_END_NO_RETURN(void, glTexParameterfv, target,pname,params)
-NATIVE_FUNCTION_HEAD(void, glTexParameteri, GLenum target, GLenum pname, GLint param) NATIVE_FUNCTION_END_NO_RETURN(void, glTexParameteri, target,pname,param)
+//NATIVE_FUNCTION_HEAD(void, glTexParameteri, GLenum target, GLenum pname, GLint param) NATIVE_FUNCTION_END_NO_RETURN(void, glTexParameteri, target,pname,param)
 //NATIVE_FUNCTION_HEAD(void, glTexParameteriv, GLenum target, GLenum pname, const GLint *params) NATIVE_FUNCTION_END_NO_RETURN(void, glTexParameteriv, target,pname,params)
 //NATIVE_FUNCTION_HEAD(void, glTexSubImage2D, GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const void *pixels) NATIVE_FUNCTION_END_NO_RETURN(void, glTexSubImage2D, target,level,xoffset,yoffset,width,height,format,type,pixels)
 NATIVE_FUNCTION_HEAD(void, glUniform1f, GLint location, GLfloat v0) NATIVE_FUNCTION_END_NO_RETURN(void, glUniform1f, location,v0)

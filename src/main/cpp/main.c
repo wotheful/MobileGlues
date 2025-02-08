@@ -163,8 +163,6 @@ int init_watermark_res() {
 void draw_watermark() {
     LOG()
 
-    LOAD_EGL_FUNC(eglSwapBuffers)
-
     LOG_D("Drawing watermark!")
     LOAD_GLES_FUNC(glGetIntegerv)
     LOAD_GLES_FUNC(glBindVertexArray)
