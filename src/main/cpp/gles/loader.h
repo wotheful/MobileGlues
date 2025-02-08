@@ -18,10 +18,6 @@ void *proc_address(void *lib, const char *name);
 extern void *gles, *egl;
 
 
-#ifdef __cplusplus
-}
-#endif
-
 void init_target_gles();
 
 #define WARN_NULL(name) if (name == NULL) { LOG_W("%s line %d function %s: " #name " is NULL\n", __FILE__, __LINE__, __func__); }
@@ -71,18 +67,21 @@ void *open_lib(const char **names, const char *override);
 //#define LOAD_GLES(name,type, ...)            LOAD_LIB(type, name, __VA_ARGS__)
 //#define LOAD_GLES2(name,type, ...)           LOAD_LIB(type, name, __VA_ARGS__)
 //#define LOAD_GLES3(name,type, ...)           LOAD_LIB(type, name, __VA_ARGS__)
-#define LOAD_EGL(name) \
-static name##_PTR egl_##name = NULL; \
-{ \
-        static bool first = true; \
-        if (first) { \
-            first = false; \
-            if (egl != NULL) { \
-                egl_##name = (name##_PTR)proc_address(egl, #name); \
-            } \
-            WARN_NULL(egl_##name); \
-        } \
-}
+
+
+
+//#define LOAD_EGL(name) \
+//static name##_PTR egl_##name = NULL; \
+//{ \
+//        static bool first = true; \
+//        if (first) { \
+//            first = false; \
+//            if (egl != NULL) { \
+//                egl_##name = (name##_PTR)proc_address(egl, #name); \
+//            } \
+//            WARN_NULL(egl_##name); \
+//        } \
+//}
 
 #define CLEAR_GL_ERROR \
     LOAD_GLES(glGetError, GLenum)                                           \
@@ -177,5 +176,9 @@ GLAPI GLAPIENTRY type name(__VA_ARGS__) {
 #define STUB_FUNCTION_END_NO_RETURN(type,name,...)                          \
     LOG_W("No function: %s @ %s(...)", RENDERERNAME, __FUNCTION__);         \
 }
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // MOBILEGLUES_GLES_LOADER_H_

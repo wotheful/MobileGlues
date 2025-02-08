@@ -255,18 +255,7 @@ void glTexParameterf(GLenum target, GLenum pname, GLfloat param) {
         case GL_TEXTURE_WRAP_T:
         case GL_TEXTURE_WRAP_R: {
             LOG_D("GL_TEXTURE_WRAP_*/GL_TEXTURE_*_FILTER, glTexParameterf -> glTexParameteri");
-            LOAD_GLES_FUNC(glTexParameteri)
-
-            GLint parami = (GLint)param;
-
-            switch (parami) {
-                case GL_CLAMP:
-                    gles_glTexParameteri(target, pname, GL_CLAMP_TO_EDGE);
-                    break;
-                default:
-                    gles_glTexParameteri(target, pname, (GLint)param);
-            }
-
+            glTexParameteri(target, pname, (GLint)param);
             CHECK_GL_ERROR
             return;
         }
@@ -274,6 +263,20 @@ void glTexParameterf(GLenum target, GLenum pname, GLfloat param) {
 
     LOAD_GLES(glTexParameterf, void, GLenum target, GLenum pname, GLfloat param);
     gles_glTexParameterf(target,pname, param);
+    CHECK_GL_ERROR
+}
+
+void glTexParameteri(GLenum target, GLenum pname, GLint param) {
+    LOG()
+    LOAD_GLES_FUNC(glTexParameteri)
+
+    switch (param) {
+        case GL_CLAMP:
+            gles_glTexParameteri(target, pname, GL_CLAMP_TO_EDGE);
+            break;
+        default:
+            gles_glTexParameteri(target, pname, param);
+    }
     CHECK_GL_ERROR
 }
 
