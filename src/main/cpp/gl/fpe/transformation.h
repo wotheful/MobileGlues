@@ -17,6 +17,13 @@ extern "C" {
 GLAPI GLAPIENTRY void glMatrixMode( GLenum mode );
 GLAPI GLAPIENTRY void glLoadIdentity();
 GLAPI GLAPIENTRY void glOrtho(GLdouble left, GLdouble right, GLdouble bottom, GLdouble top, GLdouble near_val, GLdouble far_val);
+GLAPI GLAPIENTRY void glOrthof(GLfloat left, GLfloat right, GLfloat bottom, GLfloat top, GLfloat near_val, GLfloat far_val);
+GLAPI GLAPIENTRY void glScalef( GLfloat x, GLfloat y, GLfloat z );
+GLAPI GLAPIENTRY void glTranslatef( GLfloat x, GLfloat y, GLfloat z );
+GLAPI GLAPIENTRY void glRotatef( GLfloat angle, GLfloat x, GLfloat y, GLfloat z );
+
+GLAPI GLAPIENTRY void glPushMatrix( void );
+GLAPI GLAPIENTRY void glPopMatrix( void );
 
 #ifdef __cplusplus
 }
