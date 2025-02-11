@@ -19,9 +19,18 @@
 #define _mglues_dlclose(handle) dlclose(handle)
 #define _mglues_dlsym(handle, name) dlsym(handle, name)
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 static int g_initialized = 0;
 
 void proc_init();
+
+#ifdef __cplusplus
+}
+#endif
+
 
 EGLContext mglues_eglCreateContext (EGLDisplay dpy, EGLConfig config, EGLContext share_context, const EGLint *attrib_list);
 EGLBoolean mglues_eglDestroyContext(EGLDisplay dpy, EGLContext ctx);

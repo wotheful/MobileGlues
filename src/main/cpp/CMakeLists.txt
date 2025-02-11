@@ -22,7 +22,7 @@ find_library(GLSLANG_LIB glslang PATHS ${CMAKE_SOURCE_DIR}/libraries/arm64-v8a/)
 
 add_library(${CMAKE_PROJECT_NAME} SHARED
         init.cpp
-        main.c
+        main.cpp
         gl/gl_stub.c
         gl/gl_native.c
         gl/gl.c
@@ -32,7 +32,7 @@ add_library(${CMAKE_PROJECT_NAME} SHARED
         gl/shader.c
         gl/framebuffer.c
         gl/texture.cpp
-        gl/drawing.c
+        gl/drawing.cpp
         gl/mg.c
         gl/buffer.cpp
         gl/getter.cpp
@@ -45,7 +45,7 @@ add_library(${CMAKE_PROJECT_NAME} SHARED
         config/config.c
 
         gl/fpe/fpe.cpp
-        gl/fpe/state.c
+        gl/fpe/state.cpp
         gl/fpe/transformation.cpp
         gl/fpe/vertexpointer.cpp
 )
@@ -56,6 +56,7 @@ target_link_libraries(${CMAKE_PROJECT_NAME}
         ${CMAKE_SOURCE_DIR}/libraries/arm64-v8a/libglslang.a
         ${CMAKE_SOURCE_DIR}/libraries/arm64-v8a/libspirv-cross-c-shared.so
         ${CMAKE_SOURCE_DIR}/libraries/arm64-v8a/libshaderconv.so
+        ${CMAKE_SOURCE_DIR}/libraries/arm64-v8a/libc++_shared.so
         android
         log
 )
@@ -63,3 +64,4 @@ target_link_libraries(${CMAKE_PROJECT_NAME}
 target_include_directories(mobileglues PUBLIC
         ${CMAKE_SOURCE_DIR}/include
         )
+

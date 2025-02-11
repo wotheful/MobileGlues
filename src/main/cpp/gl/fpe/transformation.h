@@ -10,6 +10,10 @@
 #include "../gl/log.h"
 #include "fpe.hpp"
 
+
+
+static int matrix_idx(GLenum matrix_mode);
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -21,6 +25,10 @@ GLAPI GLAPIENTRY void glOrthof(GLfloat left, GLfloat right, GLfloat bottom, GLfl
 GLAPI GLAPIENTRY void glScalef( GLfloat x, GLfloat y, GLfloat z );
 GLAPI GLAPIENTRY void glTranslatef( GLfloat x, GLfloat y, GLfloat z );
 GLAPI GLAPIENTRY void glRotatef( GLfloat angle, GLfloat x, GLfloat y, GLfloat z );
+
+GLAPI GLAPIENTRY void glRotated(GLdouble angle, GLdouble x, GLdouble y, GLdouble z );
+GLAPI GLAPIENTRY void glScaled(GLdouble x, GLdouble y, GLdouble z );
+GLAPI GLAPIENTRY void glTranslated(GLdouble x, GLdouble y, GLdouble z );
 
 GLAPI GLAPIENTRY void glPushMatrix( void );
 GLAPI GLAPIENTRY void glPopMatrix( void );

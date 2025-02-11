@@ -12,6 +12,9 @@
 #include "gles/loader.h"
 #include "gl/envvars.h"
 #include "gl/log.h"
+#include "gl/fpe/fpe.hpp"
+
+extern struct glstate_t g_glstate;
 
 #define DEBUG 0
 
@@ -29,7 +32,7 @@ void init_libshaderconv() {
         LOG_D("%s not found\n", shaderconv_lib);
     }
     else {
-        MesaConvertShader = dlsym(glslconv, func_name);
+        MesaConvertShader = (char *(*)(const char *, unsigned int, unsigned int, unsigned int))dlsym(glslconv, func_name);
         if (MesaConvertShader) {
             LOG_D("%s loaded\n", shaderconv_lib);
         } else {
@@ -214,6 +217,29 @@ void draw_watermark() {
     LOG_D("restore ok")
 }
 
+void init_fpe() {
+    LOG_I("Initializing fixed-function pipeline...")
+
+    LOAD_GLES_FUNC(glGenVertexArrays)
+    LOAD_GLES_FUNC(glBindVertexArray)
+    LOAD_GLES_FUNC(glGenBuffers)
+    LOAD_GLES_FUNC(glBindBuffer)
+    LOAD_GLES_FUNC(glBufferData)
+    LOAD_GLES_FUNC(glCreateShader)
+    LOAD_GLES_FUNC(glShaderSource)
+    LOAD_GLES_FUNC(glCompileShader)
+    LOAD_GLES_FUNC(glCreateProgram)
+    LOAD_GLES_FUNC(glAttachShader)
+    LOAD_GLES_FUNC(glLinkProgram)
+    LOAD_GLES_FUNC(glGetShaderiv)
+    LOAD_GLES_FUNC(glGetShaderInfoLog)
+    LOAD_GLES_FUNC(glGetProgramiv)
+    LOAD_GLES_FUNC(glVertexAttribPointer)
+    LOAD_GLES_FUNC(glEnableVertexAttribArray)
+
+    gles_glGenVertexArrays(1, &g_glstate.vertexpointer_array.fpe_vao);
+}
+
 void load_libs();
 void proc_init() {
     init_config();
@@ -228,6 +254,8 @@ void proc_init() {
     init_libshaderconv();
 
     init_watermark_res();
+
+    init_fpe();
 
     g_initialized = 1;
 }

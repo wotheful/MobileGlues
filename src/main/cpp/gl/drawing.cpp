@@ -5,6 +5,7 @@
 #include "drawing.h"
 #include "buffer.h"
 #include "framebuffer.h"
+#include "fpe/fpe.hpp"
 
 #define DEBUG 0
 
@@ -39,6 +40,9 @@ void glMultiDrawElements(GLenum mode,const GLsizei * count,GLenum type,const voi
 
 void glDrawArrays(GLenum mode, GLint first, GLsizei count) {
     LOG()
+
+    commit_fpe_state_on_draw(mode, first, count);
+
     LOAD_GLES_FUNC(glDrawArrays)
 
     LOG_D("glDrawArrays(), mode = 0x%x, first = %d, count = %u", mode, first, count)
