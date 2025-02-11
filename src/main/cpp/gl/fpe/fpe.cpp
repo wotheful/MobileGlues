@@ -45,7 +45,6 @@ void commit_fpe_state_on_draw(GLenum mode, GLint first, GLsizei count) {
     // All assuming tightly packed here...
     auto& vpa = g_glstate.vertexpointer_array;
     gles_glBindVertexArray(vpa.fpe_vao);
-    const void* starting_pointer = nullptr;
 
     if (vpa.dirty) {
         vpa.dirty = false;
@@ -57,10 +56,11 @@ void commit_fpe_state_on_draw(GLenum mode, GLint first, GLsizei count) {
                 auto &vp = vpa.pointers[i];
 
                 if (is_first) {
-                    starting_pointer = vp.pointer;
+                    vpa.starting_pointer = vp.pointer;
+                    vpa.stride = vp.stride; // TODO: stride == 0?
                 }
 
-                const void* offset = (const void*)((const char*)vp.pointer - (const char*)starting_pointer);
+                const void* offset = (const void*)((const char*)vp.pointer - (const char*)vpa.starting_pointer);
                 gles_glVertexAttribPointer(i, vp.size, vp.type, GL_FALSE, vp.stride, offset);
 
                 gles_glEnableVertexAttribArray(i);
@@ -72,5 +72,9 @@ void commit_fpe_state_on_draw(GLenum mode, GLint first, GLsizei count) {
         }
     }
 
+    gles_glBindBuffer(GL_ARRAY_BUFFER, g_glstate.vertexpointer_array.fpe_vbo);
+    gles_glBufferData(GL_ARRAY_BUFFER, count * vpa.stride, vpa.starting_pointer, GL_DYNAMIC_DRAW);
+
+//    gles_glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, g_glstate.vertexpointer_array.fpe_ibo);
 
 }

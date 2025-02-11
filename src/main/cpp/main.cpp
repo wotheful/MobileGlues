@@ -85,7 +85,7 @@ GLuint watermark_program = 0;
 
 int watermark_inited = 0;
 
-char watermark_compile_info[1024];
+char compile_info[1024];
 
 int init_watermark_res() {
     LOAD_GLES_FUNC(glGenVertexArrays)
@@ -111,8 +111,8 @@ int init_watermark_res() {
     int success = 0;
     gles_glGetShaderiv(watermark_vtx_shader, GL_COMPILE_STATUS, &success);
     if (!success) {
-        gles_glGetShaderInfoLog(watermark_vtx_shader, 1024, NULL, watermark_compile_info);
-        LOG_E("Watermark vertex shader compile error: %s", watermark_compile_info);
+        gles_glGetShaderInfoLog(watermark_vtx_shader, 1024, NULL, compile_info);
+        LOG_E("Watermark vertex shader compile error: %s", compile_info);
         return -1;
     }
 
@@ -122,8 +122,8 @@ int init_watermark_res() {
 
     gles_glGetShaderiv(watermark_frag_shader, GL_COMPILE_STATUS, &success);
     if (!success) {
-        gles_glGetShaderInfoLog(watermark_frag_shader, 1024, NULL, watermark_compile_info);
-        LOG_E("Watermark fragment shader compile error: %s", watermark_compile_info);
+        gles_glGetShaderInfoLog(watermark_frag_shader, 1024, NULL, compile_info);
+        LOG_E("Watermark fragment shader compile error: %s", compile_info);
         return -1;
     }
 
@@ -133,8 +133,8 @@ int init_watermark_res() {
     gles_glLinkProgram(watermark_program);
     gles_glGetProgramiv(watermark_program, GL_LINK_STATUS, &success);
     if(!success) {
-        glGetProgramInfoLog(watermark_program, 1024, NULL, watermark_compile_info);
-        LOG_E("Watermark program link error: %s", watermark_compile_info);
+        glGetProgramInfoLog(watermark_program, 1024, NULL, compile_info);
+        LOG_E("Watermark program link error: %s", compile_info);
         return -1;
     }
 
@@ -217,7 +217,7 @@ void draw_watermark() {
     LOG_D("restore ok")
 }
 
-void init_fpe() {
+int init_fpe() {
     LOG_I("Initializing fixed-function pipeline...")
 
     LOAD_GLES_FUNC(glGenVertexArrays)
@@ -237,7 +237,55 @@ void init_fpe() {
     LOAD_GLES_FUNC(glVertexAttribPointer)
     LOAD_GLES_FUNC(glEnableVertexAttribArray)
 
+    g_glstate.fpe_vtx_shader_src =
+            "#version 320 es\n"
+            "precision highp float;\n"
+            "precision highp int;\n"
+            "layout (location = 0) in vec3 aPos;\n"
+            "void main() {\n"
+            "   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
+            "}\n";
+
+    g_glstate.fpe_vtx_shader_src =
+            watermark_frag_shader_src;
+
+    g_glstate.fpe_vtx_shader = gles_glCreateShader(GL_VERTEX_SHADER);
+    gles_glShaderSource(g_glstate.fpe_vtx_shader, 1, &g_glstate.fpe_vtx_shader_src, NULL);
+    gles_glCompileShader(g_glstate.fpe_vtx_shader);
+    int success = 0;
+    gles_glGetShaderiv(g_glstate.fpe_vtx_shader, GL_COMPILE_STATUS, &success);
+    if (!success) {
+        gles_glGetShaderInfoLog(g_glstate.fpe_vtx_shader, 1024, NULL, compile_info);
+        LOG_E("fpe vertex shader compile error: %s", compile_info);
+        return -1;
+    }
+
+    g_glstate.fpe_frag_shader = gles_glCreateShader(GL_FRAGMENT_SHADER);
+    gles_glShaderSource(g_glstate.fpe_frag_shader, 1, &g_glstate.fpe_frag_shader_src, NULL);
+    gles_glCompileShader(g_glstate.fpe_frag_shader);
+
+    gles_glGetShaderiv(g_glstate.fpe_frag_shader, GL_COMPILE_STATUS, &success);
+    if (!success) {
+        gles_glGetShaderInfoLog(g_glstate.fpe_frag_shader, 1024, NULL, compile_info);
+        LOG_E("fpe fragment shader compile error: %s", compile_info);
+        return -1;
+    }
+
+    g_glstate.fpe_program = gles_glCreateProgram();
+    gles_glAttachShader(g_glstate.fpe_program, g_glstate.fpe_vtx_shader);
+    gles_glAttachShader(g_glstate.fpe_program, g_glstate.fpe_frag_shader);
+    gles_glLinkProgram(g_glstate.fpe_program);
+    gles_glGetProgramiv(g_glstate.fpe_program, GL_LINK_STATUS, &success);
+    if(!success) {
+        glGetProgramInfoLog(g_glstate.fpe_program, 1024, NULL, compile_info);
+        LOG_E("fpe program link error: %s", compile_info);
+        return -1;
+    }
+
     gles_glGenVertexArrays(1, &g_glstate.vertexpointer_array.fpe_vao);
+    gles_glGenBuffers(1, &g_glstate.vertexpointer_array.fpe_vbo);
+    gles_glGenBuffers(1, &g_glstate.vertexpointer_array.fpe_ibo);
+    return 0;
 }
 
 void load_libs();
@@ -255,7 +303,8 @@ void proc_init() {
 
     init_watermark_res();
 
-    init_fpe();
+    if (init_fpe() != 0)
+        abort();
 
     g_initialized = 1;
 }

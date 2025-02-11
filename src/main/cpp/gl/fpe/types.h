@@ -32,7 +32,12 @@ struct vertex_pointer_array_t {
     // programmable pipeline.
     GLuint fpe_vao = 0;
 
+    GLuint fpe_vbo = 0;
+
     GLuint fpe_ibo = 0;
+
+    const void* starting_pointer = NULL;
+    GLsizei stride = 0;
 
     struct vertexpointer_t pointers[VERTEX_POINTER_COUNT];
     uint32_t enabled_pointers = 0;
@@ -49,6 +54,11 @@ struct glstate_t {
     struct transformation_t transformation;
     struct fixed_state_t state;
     struct vertex_pointer_array_t vertexpointer_array;
+    GLuint fpe_vtx_shader = 0;
+    GLuint fpe_frag_shader = 0;
+    GLuint fpe_program = 0;
+    char* fpe_vtx_shader_src;
+    char* fpe_frag_shader_src;
 };
 
 #endif //MOBILEGLUES_TYPES_H
