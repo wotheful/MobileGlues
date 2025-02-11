@@ -241,13 +241,31 @@ int init_fpe() {
             "#version 320 es\n"
             "precision highp float;\n"
             "precision highp int;\n"
-            "layout (location = 0) in vec3 aPos;\n"
+            "layout (location = 0) in vec3 vPos;\n"
+            "layout (location = 2) in vec4 vColor;\n"
+            "layout (location = 4) in vec2 vTexCoord;\n"
+            "out vec3 fPos;\n"
+            "out vec4 fColor;\n"
+            "out vec2 fTexCoord;\n"
             "void main() {\n"
-            "   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
+            "   fPos = vPos;\n"
+            "   fColor = vColor;\n"
+            "   fTexCoord = vTexCoord;\n"
             "}\n";
 
-    g_glstate.fpe_vtx_shader_src =
-            watermark_frag_shader_src;
+    g_glstate.fpe_frag_shader_src =
+            "#version 320 es\n"
+            "precision highp float;\n"
+            "precision highp int;\n"
+            "in vec4 fPos;\n"
+            "in vec4 fColor;\n"
+            "in vec2 fTexCoord;"
+            "out vec4 FragColor;\n"
+            "\n"
+            "void main()\n"
+            "{\n"
+            "    FragColor = fColor;\n"
+            "}";
 
     g_glstate.fpe_vtx_shader = gles_glCreateShader(GL_VERTEX_SHADER);
     gles_glShaderSource(g_glstate.fpe_vtx_shader, 1, &g_glstate.fpe_vtx_shader_src, NULL);
@@ -262,6 +280,8 @@ int init_fpe() {
 
     g_glstate.fpe_frag_shader = gles_glCreateShader(GL_FRAGMENT_SHADER);
     gles_glShaderSource(g_glstate.fpe_frag_shader, 1, &g_glstate.fpe_frag_shader_src, NULL);
+
+    return 0;
     gles_glCompileShader(g_glstate.fpe_frag_shader);
 
     gles_glGetShaderiv(g_glstate.fpe_frag_shader, GL_COMPILE_STATUS, &success);
@@ -270,6 +290,7 @@ int init_fpe() {
         LOG_E("fpe fragment shader compile error: %s", compile_info);
         return -1;
     }
+
 
     g_glstate.fpe_program = gles_glCreateProgram();
     gles_glAttachShader(g_glstate.fpe_program, g_glstate.fpe_vtx_shader);

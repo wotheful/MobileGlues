@@ -36,6 +36,8 @@ struct vertex_pointer_array_t {
 
     GLuint fpe_ibo = 0;
 
+    std::vector<uint32_t> fpe_ibo_buffer;
+
     const void* starting_pointer = NULL;
     GLsizei stride = 0;
 
@@ -57,8 +59,8 @@ struct glstate_t {
     GLuint fpe_vtx_shader = 0;
     GLuint fpe_frag_shader = 0;
     GLuint fpe_program = 0;
-    char* fpe_vtx_shader_src;
-    char* fpe_frag_shader_src;
+    const char* fpe_vtx_shader_src;
+    const char* fpe_frag_shader_src;
 };
 
 #endif //MOBILEGLUES_TYPES_H

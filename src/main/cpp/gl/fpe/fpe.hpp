@@ -13,6 +13,7 @@
 
 extern struct glstate_t g_glstate;
 
-void commit_fpe_state_on_draw(GLenum mode, GLint first, GLsizei count);
+// 0 - keep DrawArray, 1 - switch to DrawElements
+int commit_fpe_state_on_draw(GLenum* mode, GLint* first, GLsizei* count);
 
 #endif //MOBILEGLUES_FPE_HPP

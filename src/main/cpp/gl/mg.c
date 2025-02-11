@@ -29,7 +29,7 @@ void write_log(const char* format, ...) {
     va_end(args);
     fprintf(file, "\n");
     // Todo: close file
-    //fclose(file);
+    fflush(file);
 }
 
 void clear_log() {

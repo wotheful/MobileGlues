@@ -40,12 +40,20 @@ void glMultiDrawElements(GLenum mode,const GLsizei * count,GLenum type,const voi
 
 void glDrawArrays(GLenum mode, GLint first, GLsizei count) {
     LOG()
-
-    commit_fpe_state_on_draw(mode, first, count);
-
-    LOAD_GLES_FUNC(glDrawArrays)
-
     LOG_D("glDrawArrays(), mode = 0x%x, first = %d, count = %u", mode, first, count)
 
-    gles_glDrawArrays(mode, first, count);
+    int do_draw_element = commit_fpe_state_on_draw(&mode, &first, &count);
+
+    LOAD_GLES_FUNC(glDrawArrays)
+    LOAD_GLES_FUNC(glDrawElements)
+
+
+    if (do_draw_element) {
+        LOG_D("Switch to glDrawElements(), mode = 0x%x, count = %u", mode, count)
+
+        gles_glDrawElements(mode, count, GL_UNSIGNED_INT, (void *) 0);
+    } else
+        gles_glDrawArrays(mode, first, count);
+
+    CHECK_GL_ERROR
 }
