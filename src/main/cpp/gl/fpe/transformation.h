@@ -9,10 +9,11 @@
 #include "../gles/loader.h"
 #include "../gl/log.h"
 #include "fpe.hpp"
+#include <glm/glm.hpp>
 
+int matrix_idx(GLenum matrix_mode);
 
-
-static int matrix_idx(GLenum matrix_mode);
+void print_matrix(const glm::mat4& mat);
 
 #ifdef __cplusplus
 extern "C" {

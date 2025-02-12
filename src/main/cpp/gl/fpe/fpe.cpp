@@ -3,6 +3,7 @@
 //
 
 #include "fpe.hpp"
+#include "glm/gtc/type_ptr.hpp"
 
 #define DEBUG 0
 
@@ -97,13 +98,15 @@ int init_fpe() {
             "#version 320 es\n"
             "precision highp float;\n"
             "precision highp int;\n"
+            "uniform mat4 ModelViewMat;\n"
+            "uniform mat4 ProjMat;\n"
             "layout (location = 0) in vec3 vPos;\n"
             "layout (location = 2) in vec4 vColor;\n"
             "layout (location = 4) in vec2 vTexCoord;\n"
             "out vec4 fColor;\n"
             "out vec2 fTexCoord;\n"
             "void main() {\n"
-            "   gl_Position = vec4(vPos, 1.0);\n"
+            "   gl_Position = ProjMat * ModelViewMat * vec4(vPos, 1.0);\n"
             "   fColor = vColor;\n"
             "   fTexCoord = vTexCoord;\n"
             "}\n";
@@ -212,6 +215,8 @@ int commit_fpe_state_on_draw(GLenum* mode, GLint* first, GLsizei* count) {
     LOAD_GLES_FUNC(glEnableVertexAttribArray)
     LOAD_GLES_FUNC(glDisableVertexAttribArray)
     LOAD_GLES_FUNC(glUseProgram)
+    LOAD_GLES_FUNC(glGetUniformLocation)
+    LOAD_GLES_FUNC(glUniformMatrix4fv)
 
     INIT_CHECK_GL_ERROR
 
@@ -310,10 +315,26 @@ int commit_fpe_state_on_draw(GLenum* mode, GLint* first, GLsizei* count) {
         ret = 1;
     }
 
+    const auto& mv = g_glstate.transformation.matrices[matrix_idx(GL_MODELVIEW)];
+    const auto& proj = g_glstate.transformation.matrices[matrix_idx(GL_PROJECTION)];
+
+    LOG_D("GL_MODELVIEW: ")
+    print_matrix(mv);
+    LOG_D("GL_PROJECTION: ")
+    print_matrix(proj);
+
     gles_glUseProgram(g_glstate.fpe_program);
     CHECK_GL_ERROR_NO_INIT
     gles_glBindVertexArray(g_glstate.vertexpointer_array.fpe_vao);
     CHECK_GL_ERROR_NO_INIT
-//    gles_glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, g_glstate.vertexpointer_array.fpe_ibo);
+    GLint mvmat = gles_glGetUniformLocation(g_glstate.fpe_program, "ModelViewMat");
+    CHECK_GL_ERROR_NO_INIT
+    GLint projmat = gles_glGetUniformLocation(g_glstate.fpe_program, "ProjMat");
+    CHECK_GL_ERROR_NO_INIT
+    gles_glUniformMatrix4fv(mvmat, 1, GL_FALSE, glm::value_ptr(g_glstate.transformation.matrices[matrix_idx(GL_MODELVIEW)]));
+    CHECK_GL_ERROR_NO_INIT
+    gles_glUniformMatrix4fv(projmat, 1, GL_FALSE, glm::value_ptr(g_glstate.transformation.matrices[matrix_idx(GL_PROJECTION)]));
+    CHECK_GL_ERROR_NO_INIT
+
     return ret;
 }

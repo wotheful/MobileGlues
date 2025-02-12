@@ -3,8 +3,8 @@
 //
 
 #include "transformation.h"
+#include "glm/gtc/type_ptr.hpp"
 
-#include <glm/glm.hpp>
 #include <glm/ext/matrix_clip_space.hpp>
 #include <glm/ext/matrix_relational.hpp>
 #include <glm/ext/matrix_transform.hpp>
@@ -29,8 +29,25 @@ int matrix_idx(GLenum matrix_mode) {
     return 0;
 }
 
+void print_matrix(const glm::mat4& mat)
+{
+#if DEBUG || GLOBAL_DEBUG
+    auto *pmat = (const float*)glm::value_ptr(mat);
+    LOG_D_N("[")
+    for (int i = 0; i < 4; ++i) {
+        for (int j = 0; j < 4; ++j) {
+            int idx = j + i * 4;
+            LOG_D_N("%.2f ", pmat[idx])
+        }
+        LOG_D("")
+    }
+    LOG_D("]")
+#endif
+}
+
 void glMatrixMode( GLenum mode ) {
     LOG()
+    LOG_D("glMatrixMode(0x%x)", mode)
 
     auto& transformation = g_glstate.transformation;
 
@@ -49,7 +66,10 @@ void glLoadIdentity() {
     LOG()
     auto& transformation = g_glstate.transformation;
 
-    transformation.matrices[matrix_idx(transformation.matrix_mode)] = glm::mat4();
+    transformation.matrices[matrix_idx(transformation.matrix_mode)] = glm::mat4(1.0);
+
+    LOG_D("Matrix 0x%x:", transformation.matrix_mode)
+    print_matrix(transformation.matrices[matrix_idx(transformation.matrix_mode)]);
 }
 
 void glOrtho(GLdouble left, GLdouble right, GLdouble bottom, GLdouble top, GLdouble near_val, GLdouble far_val) {
@@ -64,6 +84,8 @@ void glOrthof(GLfloat left, GLfloat right, GLfloat bottom, GLfloat top, GLfloat 
     auto& transformation = g_glstate.transformation;
 
     transformation.matrices[matrix_idx(transformation.matrix_mode)] *= glm::ortho(left, right, bottom, top, zNear, zFar);
+    LOG_D("Matrix 0x%x:", transformation.matrix_mode)
+    print_matrix(transformation.matrices[matrix_idx(transformation.matrix_mode)]);
 }
 
 void glScalef( GLfloat x, GLfloat y, GLfloat z ) {
@@ -72,6 +94,8 @@ void glScalef( GLfloat x, GLfloat y, GLfloat z ) {
 
     transformation.matrices[matrix_idx(transformation.matrix_mode)] =
             glm::scale(transformation.matrices[matrix_idx(transformation.matrix_mode)], glm::vec3(x, y, z));
+    LOG_D("Matrix 0x%x:", transformation.matrix_mode)
+    print_matrix(transformation.matrices[matrix_idx(transformation.matrix_mode)]);
 }
 
 void glTranslatef( GLfloat x, GLfloat y, GLfloat z ) {
@@ -80,6 +104,8 @@ void glTranslatef( GLfloat x, GLfloat y, GLfloat z ) {
 
     transformation.matrices[matrix_idx(transformation.matrix_mode)] =
             glm::translate(transformation.matrices[matrix_idx(transformation.matrix_mode)], glm::vec3(x, y, z));
+    LOG_D("Matrix 0x%x:", transformation.matrix_mode)
+    print_matrix(transformation.matrices[matrix_idx(transformation.matrix_mode)]);
 }
 
 void glRotatef( GLfloat angle, GLfloat x, GLfloat y, GLfloat z ) {
@@ -88,6 +114,8 @@ void glRotatef( GLfloat angle, GLfloat x, GLfloat y, GLfloat z ) {
 
     transformation.matrices[matrix_idx(transformation.matrix_mode)] =
             glm::rotate(transformation.matrices[matrix_idx(transformation.matrix_mode)], angle, glm::vec3(x, y, z));
+    LOG_D("Matrix 0x%x:", transformation.matrix_mode)
+    print_matrix(transformation.matrices[matrix_idx(transformation.matrix_mode)]);
 }
 
 void glRotated(GLdouble angle, GLdouble x, GLdouble y, GLdouble z ) {
