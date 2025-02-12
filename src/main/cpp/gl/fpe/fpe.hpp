@@ -11,7 +11,7 @@
 #include "state.h"
 #include "vertexpointer.h"
 
-extern struct glstate_t g_glstate;
+#define g_glstate glstate_t::get_instance()
 
 // 0 - keep DrawArray, 1 - switch to DrawElements
 int commit_fpe_state_on_draw(GLenum* mode, GLint* first, GLsizei* count);

@@ -9,8 +9,7 @@
 #include "../gles/loader.h"
 #include "../gl/log.h"
 #include "types.h"
-
-extern struct glstate_t g_glstate;
+#include "fpe.hpp"
 
 int vp2idx(GLenum vp);
 uint32_t vp_mask(GLenum vp);

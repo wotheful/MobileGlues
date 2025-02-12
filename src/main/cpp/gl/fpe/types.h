@@ -61,6 +61,8 @@ struct glstate_t {
     GLuint fpe_program = 0;
     const char* fpe_vtx_shader_src;
     const char* fpe_frag_shader_src;
+
+    static glstate_t& get_instance();
 };
 
 #endif //MOBILEGLUES_TYPES_H

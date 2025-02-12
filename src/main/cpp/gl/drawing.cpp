@@ -42,6 +42,9 @@ void glDrawArrays(GLenum mode, GLint first, GLsizei count) {
     LOG()
     LOG_D("glDrawArrays(), mode = 0x%x, first = %d, count = %u", mode, first, count)
 
+    INIT_CHECK_GL_ERROR
+
+    CHECK_GL_ERROR_NO_INIT
     int do_draw_element = commit_fpe_state_on_draw(&mode, &first, &count);
 
     LOAD_GLES_FUNC(glDrawArrays)
@@ -55,5 +58,5 @@ void glDrawArrays(GLenum mode, GLint first, GLsizei count) {
     } else
         gles_glDrawArrays(mode, first, count);
 
-    CHECK_GL_ERROR
+    CHECK_GL_ERROR_NO_INIT
 }

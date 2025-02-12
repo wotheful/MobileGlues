@@ -14,8 +14,6 @@
 #include "gl/log.h"
 #include "gl/fpe/fpe.hpp"
 
-extern struct glstate_t g_glstate;
-
 #define DEBUG 0
 
 #ifdef __cplusplus
@@ -217,97 +215,6 @@ void draw_watermark() {
     LOG_D("restore ok")
 }
 
-int init_fpe() {
-    LOG_I("Initializing fixed-function pipeline...")
-
-    LOAD_GLES_FUNC(glGenVertexArrays)
-    LOAD_GLES_FUNC(glBindVertexArray)
-    LOAD_GLES_FUNC(glGenBuffers)
-    LOAD_GLES_FUNC(glBindBuffer)
-    LOAD_GLES_FUNC(glBufferData)
-    LOAD_GLES_FUNC(glCreateShader)
-    LOAD_GLES_FUNC(glShaderSource)
-    LOAD_GLES_FUNC(glCompileShader)
-    LOAD_GLES_FUNC(glCreateProgram)
-    LOAD_GLES_FUNC(glAttachShader)
-    LOAD_GLES_FUNC(glLinkProgram)
-    LOAD_GLES_FUNC(glGetShaderiv)
-    LOAD_GLES_FUNC(glGetShaderInfoLog)
-    LOAD_GLES_FUNC(glGetProgramiv)
-    LOAD_GLES_FUNC(glVertexAttribPointer)
-    LOAD_GLES_FUNC(glEnableVertexAttribArray)
-
-    g_glstate.fpe_vtx_shader_src =
-            "#version 320 es\n"
-            "precision highp float;\n"
-            "precision highp int;\n"
-            "layout (location = 0) in vec3 vPos;\n"
-            "layout (location = 2) in vec4 vColor;\n"
-            "layout (location = 4) in vec2 vTexCoord;\n"
-            "out vec3 fPos;\n"
-            "out vec4 fColor;\n"
-            "out vec2 fTexCoord;\n"
-            "void main() {\n"
-            "   fPos = vPos;\n"
-            "   fColor = vColor;\n"
-            "   fTexCoord = vTexCoord;\n"
-            "}\n";
-
-    g_glstate.fpe_frag_shader_src =
-            "#version 320 es\n"
-            "precision highp float;\n"
-            "precision highp int;\n"
-            "in vec4 fPos;\n"
-            "in vec4 fColor;\n"
-            "in vec2 fTexCoord;"
-            "out vec4 FragColor;\n"
-            "\n"
-            "void main()\n"
-            "{\n"
-            "    FragColor = fColor;\n"
-            "}";
-
-    g_glstate.fpe_vtx_shader = gles_glCreateShader(GL_VERTEX_SHADER);
-    gles_glShaderSource(g_glstate.fpe_vtx_shader, 1, &g_glstate.fpe_vtx_shader_src, NULL);
-    gles_glCompileShader(g_glstate.fpe_vtx_shader);
-    int success = 0;
-    gles_glGetShaderiv(g_glstate.fpe_vtx_shader, GL_COMPILE_STATUS, &success);
-    if (!success) {
-        gles_glGetShaderInfoLog(g_glstate.fpe_vtx_shader, 1024, NULL, compile_info);
-        LOG_E("fpe vertex shader compile error: %s", compile_info);
-        return -1;
-    }
-
-    g_glstate.fpe_frag_shader = gles_glCreateShader(GL_FRAGMENT_SHADER);
-    gles_glShaderSource(g_glstate.fpe_frag_shader, 1, &g_glstate.fpe_frag_shader_src, NULL);
-
-    return 0;
-    gles_glCompileShader(g_glstate.fpe_frag_shader);
-
-    gles_glGetShaderiv(g_glstate.fpe_frag_shader, GL_COMPILE_STATUS, &success);
-    if (!success) {
-        gles_glGetShaderInfoLog(g_glstate.fpe_frag_shader, 1024, NULL, compile_info);
-        LOG_E("fpe fragment shader compile error: %s", compile_info);
-        return -1;
-    }
-
-
-    g_glstate.fpe_program = gles_glCreateProgram();
-    gles_glAttachShader(g_glstate.fpe_program, g_glstate.fpe_vtx_shader);
-    gles_glAttachShader(g_glstate.fpe_program, g_glstate.fpe_frag_shader);
-    gles_glLinkProgram(g_glstate.fpe_program);
-    gles_glGetProgramiv(g_glstate.fpe_program, GL_LINK_STATUS, &success);
-    if(!success) {
-        glGetProgramInfoLog(g_glstate.fpe_program, 1024, NULL, compile_info);
-        LOG_E("fpe program link error: %s", compile_info);
-        return -1;
-    }
-
-    gles_glGenVertexArrays(1, &g_glstate.vertexpointer_array.fpe_vao);
-    gles_glGenBuffers(1, &g_glstate.vertexpointer_array.fpe_vbo);
-    gles_glGenBuffers(1, &g_glstate.vertexpointer_array.fpe_ibo);
-    return 0;
-}
 
 void load_libs();
 void proc_init() {
@@ -324,8 +231,8 @@ void proc_init() {
 
     init_watermark_res();
 
-    if (init_fpe() != 0)
-        abort();
+//    if (init_fpe() != 0)
+//        abort();
 
     g_initialized = 1;
 }
