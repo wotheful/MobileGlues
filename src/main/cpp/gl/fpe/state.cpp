@@ -23,3 +23,10 @@ void glDisable(GLenum cap) {
 
     gles_glDisable(cap);
 }
+
+void glClientActiveTexture(GLenum texture) {
+    LOG()
+    LOG_D("glClientActiveTexture(GL_TEXTURE%d)", texture - GL_TEXTURE0)
+
+    g_glstate.state.client_active_texture = texture;
+}

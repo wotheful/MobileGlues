@@ -10,6 +10,7 @@
 #include "../gl/log.h"
 
 #include "types.h"
+#include "fpe.hpp"
 
 #ifdef __cplusplus
 extern "C" {
@@ -17,6 +18,7 @@ extern "C" {
 
 GLAPI GLAPIENTRY void glEnable(GLenum cap);
 GLAPI GLAPIENTRY void glDisable(GLenum cap);
+GLAPI GLAPIENTRY void glClientActiveTexture(GLenum texture);
 
 #ifdef __cplusplus
 }

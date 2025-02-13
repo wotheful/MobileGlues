@@ -101,14 +101,14 @@ int init_fpe() {
             "uniform mat4 ModelViewMat;\n"
             "uniform mat4 ProjMat;\n"
             "layout (location = 0) in vec3 vPos;\n"
-            "layout (location = 2) in vec4 vColor;\n"
-            "layout (location = 4) in vec2 vTexCoord;\n"
-            "out vec4 fColor;\n"
+            "layout (location = 2) in vec4 Color;\n"
+            "layout (location = 7) in vec2 UV0;\n"
+            "out vec4 vertexColor;\n"
             "out vec2 texCoord0;\n"
             "void main() {\n"
             "   gl_Position = ProjMat * ModelViewMat * vec4(vPos, 1.0);\n"
-            "   fColor = vColor;\n"
-            "   texCoord0 = vTexCoord;\n"
+            "   vertexColor = Color;\n"
+            "   texCoord0 = UV0;\n"
             "}\n";
 
     g_glstate.fpe_frag_shader_src =
@@ -116,13 +116,16 @@ int init_fpe() {
             "precision highp float;\n"
             "precision highp int;\n"
             "uniform sampler2D Sampler0;\n"
-            "in vec4 fColor;\n"
-            "in vec2 texCoord0;"
+            "in vec4 vertexColor;\n"
+            "in vec2 texCoord0;\n"
             "out vec4 FragColor;\n"
             "\n"
-            "void main()\n"
-            "{\n"
-            "    FragColor = texture(Sampler0, texCoord0);\n"
+            "void main() {\n"
+            "   vec4 color = texture(Sampler0, texCoord0) * vertexColor;"
+            "   if (color.a < 0.1) {\n"
+            "       discard;\n"
+            "   }\n"
+            "   FragColor = color;\n"
             "}";
 
     g_glstate.fpe_vtx_shader = gles_glCreateShader(GL_VERTEX_SHADER);
@@ -256,7 +259,7 @@ int commit_fpe_state_on_draw(GLenum* mode, GLint* first, GLsizei* count) {
                 }
 
                 const void* offset = (const void*)((const char*)vp.pointer - (const char*)vpa.starting_pointer);
-                gles_glVertexAttribPointer(i, vp.size, vp.type, GL_FALSE, vp.stride, offset);
+                gles_glVertexAttribPointer(i, vp.size, vp.type, vp.normalized, vp.stride, offset);
                 CHECK_GL_ERROR_NO_INIT
 
                 gles_glEnableVertexAttribArray(i);
@@ -337,7 +340,7 @@ int commit_fpe_state_on_draw(GLenum* mode, GLint* first, GLsizei* count) {
     CHECK_GL_ERROR_NO_INIT
     gles_glUniformMatrix4fv(projmat, 1, GL_FALSE, glm::value_ptr(g_glstate.transformation.matrices[matrix_idx(GL_PROJECTION)]));
     CHECK_GL_ERROR_NO_INIT
-    gles_glUniform1i(gles_glGetUniformLocation(g_glstate.fpe_program, "tex0"), 0);
+    gles_glUniform1i(gles_glGetUniformLocation(g_glstate.fpe_program, "Sampler0"), 0);
 
     return ret;
 }

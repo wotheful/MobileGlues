@@ -20,11 +20,12 @@ struct vertexpointer_t {
     GLint size;
     GLenum usage;
     GLenum type;
+    GLenum normalized;
     GLsizei stride;
     const void *pointer;
 };
 
-#define VERTEX_POINTER_COUNT 8
+#define VERTEX_POINTER_COUNT (8 + 16)
 struct vertex_pointer_array_t {
     // Fixed-function VAO
     // Reserve a vao purely for fpe, so that
@@ -49,7 +50,7 @@ struct vertex_pointer_array_t {
 
 
 struct fixed_state_t {
-
+    GLenum client_active_texture = GL_TEXTURE0;
 };
 
 struct glstate_t {

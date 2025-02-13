@@ -16,14 +16,14 @@ int vp2idx(GLenum vp) {
             return 2;
         case GL_INDEX_ARRAY:
             return 3;
-        case GL_TEXTURE_COORD_ARRAY:
-            return 4;
         case GL_EDGE_FLAG_ARRAY:
-            return 5;
+            return 4;
         case GL_FOG_COORD_ARRAY:
-            return 6;
+            return 5;
         case GL_SECONDARY_COLOR_ARRAY:
-            return 7;
+            return 6;
+        case GL_TEXTURE_COORD_ARRAY:
+            return 7 + (g_glstate.state.client_active_texture - GL_TEXTURE0);
     }
     LOG_E("ERROR: 1280")
     return -1;
@@ -32,21 +32,14 @@ int vp2idx(GLenum vp) {
 uint32_t vp_mask(GLenum vp) {
     switch (vp) {
         case GL_VERTEX_ARRAY:
-            return (1 << 0);
         case GL_NORMAL_ARRAY:
-            return (1 << 1);
         case GL_COLOR_ARRAY:
-            return (1 << 2);
         case GL_INDEX_ARRAY:
-            return (1 << 3);
         case GL_TEXTURE_COORD_ARRAY:
-            return (1 << 4);
         case GL_EDGE_FLAG_ARRAY:
-            return (1 << 5);
         case GL_FOG_COORD_ARRAY:
-            return (1 << 6);
         case GL_SECONDARY_COLOR_ARRAY:
-            return (1 << 7);
+            return (1 << vp2idx(vp));
     }
     LOG_E("ERROR: 1280")
     return 0;
@@ -85,6 +78,7 @@ void glVertexPointer(GLint size,
             .size = size,
             .usage = GL_VERTEX_ARRAY,
             .type = type,
+            .normalized = GL_FALSE,
             .stride = stride,
             .pointer = pointer
     };
@@ -97,6 +91,7 @@ void glNormalPointer(GLenum type, GLsizei stride, const GLvoid *pointer) {
             .size = 0,
             .usage = GL_NORMAL_ARRAY,
             .type = type,
+            .normalized = GL_FALSE,
             .stride = stride,
             .pointer = pointer
     };
@@ -109,6 +104,7 @@ void glColorPointer(GLint size, GLenum type, GLsizei stride, const GLvoid *point
             .size = size,
             .usage = GL_COLOR_ARRAY,
             .type = type,
+            .normalized = GL_TRUE,
             .stride = stride,
             .pointer = pointer
     };
@@ -117,10 +113,11 @@ void glColorPointer(GLint size, GLenum type, GLsizei stride, const GLvoid *point
 
 void glTexCoordPointer(GLint size, GLenum type, GLsizei stride, const GLvoid *pointer) {
     LOG_D("glTexCoordPointer, size = %d, type = 0x%x, stride = %d, pointer = 0x%x", size, type, stride, pointer)
-    g_glstate.vertexpointer_array.pointers[vp2idx(GL_TEXTURE_COORD_ARRAY)] = {
+    g_glstate.vertexpointer_array.pointers[vp2idx(GL_TEXTURE_COORD_ARRAY + (g_glstate.state.client_active_texture - GL_TEXTURE0))] = {
             .size = size,
-            .usage = GL_TEXTURE_COORD_ARRAY,
+            .usage = GL_TEXTURE_COORD_ARRAY + (g_glstate.state.client_active_texture - GL_TEXTURE0),
             .type = type,
+            .normalized = GL_FALSE,
             .stride = stride,
             .pointer = pointer
     };
@@ -133,6 +130,7 @@ void glIndexPointer(GLenum type, GLsizei stride, const GLvoid *pointer ) {
             .size = 1,
             .usage = GL_INDEX_ARRAY,
             .type = type,
+            .normalized = GL_FALSE,
             .stride = stride,
             .pointer = pointer
     };
