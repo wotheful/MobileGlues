@@ -104,24 +104,25 @@ int init_fpe() {
             "layout (location = 2) in vec4 vColor;\n"
             "layout (location = 4) in vec2 vTexCoord;\n"
             "out vec4 fColor;\n"
-            "out vec2 fTexCoord;\n"
+            "out vec2 texCoord0;\n"
             "void main() {\n"
             "   gl_Position = ProjMat * ModelViewMat * vec4(vPos, 1.0);\n"
             "   fColor = vColor;\n"
-            "   fTexCoord = vTexCoord;\n"
+            "   texCoord0 = vTexCoord;\n"
             "}\n";
 
     g_glstate.fpe_frag_shader_src =
             "#version 320 es\n"
             "precision highp float;\n"
             "precision highp int;\n"
+            "uniform sampler2D Sampler0;\n"
             "in vec4 fColor;\n"
-            "in vec2 fTexCoord;"
+            "in vec2 texCoord0;"
             "out vec4 FragColor;\n"
             "\n"
             "void main()\n"
             "{\n"
-            "    FragColor = vec4(fTexCoord, 1., 1.);\n"
+            "    FragColor = texture(Sampler0, texCoord0);\n"
             "}";
 
     g_glstate.fpe_vtx_shader = gles_glCreateShader(GL_VERTEX_SHADER);
@@ -217,6 +218,7 @@ int commit_fpe_state_on_draw(GLenum* mode, GLint* first, GLsizei* count) {
     LOAD_GLES_FUNC(glUseProgram)
     LOAD_GLES_FUNC(glGetUniformLocation)
     LOAD_GLES_FUNC(glUniformMatrix4fv)
+    LOAD_GLES_FUNC(glUniform1i)
 
     INIT_CHECK_GL_ERROR
 
@@ -335,6 +337,7 @@ int commit_fpe_state_on_draw(GLenum* mode, GLint* first, GLsizei* count) {
     CHECK_GL_ERROR_NO_INIT
     gles_glUniformMatrix4fv(projmat, 1, GL_FALSE, glm::value_ptr(g_glstate.transformation.matrices[matrix_idx(GL_PROJECTION)]));
     CHECK_GL_ERROR_NO_INIT
+    gles_glUniform1i(gles_glGetUniformLocation(g_glstate.fpe_program, "tex0"), 0);
 
     return ret;
 }
