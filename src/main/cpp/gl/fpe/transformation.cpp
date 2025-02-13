@@ -139,6 +139,16 @@ void glTranslated(GLdouble x, GLdouble y, GLdouble z ) {
     glTranslatef(x, y, z);
 }
 
+void glMultMatrixf(const GLfloat *m) {
+    LOG()
+
+    auto& transformation = g_glstate.transformation;
+    transformation.matrices[matrix_idx(transformation.matrix_mode)] *= glm::make_mat4(m);
+
+    LOG_D("Matrix 0x%x:", transformation.matrix_mode)
+    print_matrix(transformation.matrices[matrix_idx(transformation.matrix_mode)]);
+}
+
 void glPushMatrix( void ) {
     LOG()
     auto& transformation = g_glstate.transformation;

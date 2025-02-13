@@ -27,6 +27,8 @@ GLAPI GLAPIENTRY void glScalef( GLfloat x, GLfloat y, GLfloat z );
 GLAPI GLAPIENTRY void glTranslatef( GLfloat x, GLfloat y, GLfloat z );
 GLAPI GLAPIENTRY void glRotatef( GLfloat angle, GLfloat x, GLfloat y, GLfloat z );
 
+GLAPI GLAPIENTRY void glMultMatrixf(const GLfloat *m);
+
 GLAPI GLAPIENTRY void glRotated(GLdouble angle, GLdouble x, GLdouble y, GLdouble z );
 GLAPI GLAPIENTRY void glScaled(GLdouble x, GLdouble y, GLdouble z );
 GLAPI GLAPIENTRY void glTranslated(GLdouble x, GLdouble y, GLdouble z );

@@ -59,7 +59,7 @@ STUB_FUNCTION_HEAD(void, glFrustum, GLdouble left, GLdouble right, GLdouble bott
 STUB_FUNCTION_HEAD(void, glLoadMatrixd, const GLdouble *m ) STUB_FUNCTION_END_NO_RETURN(void, glLoadMatrixd,m)
 STUB_FUNCTION_HEAD(void, glLoadMatrixf, const GLfloat *m ) STUB_FUNCTION_END_NO_RETURN(void, glLoadMatrixf,m)
 STUB_FUNCTION_HEAD(void, glMultMatrixd, const GLdouble *m ) STUB_FUNCTION_END_NO_RETURN(void, glMultMatrixd,m)
-STUB_FUNCTION_HEAD(void, glMultMatrixf, const GLfloat *m ) STUB_FUNCTION_END_NO_RETURN(void, glMultMatrixf,m)
+//STUB_FUNCTION_HEAD(void, glMultMatrixf, const GLfloat *m ) STUB_FUNCTION_END_NO_RETURN(void, glMultMatrixf,m)
 //STUB_FUNCTION_HEAD(void, glRotated, GLdouble angle, GLdouble x, GLdouble y, GLdouble z ) STUB_FUNCTION_END_NO_RETURN(void, glRotated,angle,x,y,z)
 //STUB_FUNCTION_HEAD(void, glRotatef, GLfloat angle, GLfloat x, GLfloat y, GLfloat z ) STUB_FUNCTION_END_NO_RETURN(void, glRotatef,angle,x,y,z)
 //STUB_FUNCTION_HEAD(void, glScaled, GLdouble x, GLdouble y, GLdouble z ) STUB_FUNCTION_END_NO_RETURN(void, glScaled,x,y,z)
