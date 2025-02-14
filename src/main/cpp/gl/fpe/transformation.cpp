@@ -110,10 +110,11 @@ void glTranslatef( GLfloat x, GLfloat y, GLfloat z ) {
 
 void glRotatef( GLfloat angle, GLfloat x, GLfloat y, GLfloat z ) {
     LOG()
+    LOG_D("glRotatef, angle = %.2f, x = %.2f, y = %.2f, z = %.2f", angle, x, y, z)
     auto& transformation = g_glstate.transformation;
 
     transformation.matrices[matrix_idx(transformation.matrix_mode)] =
-            glm::rotate(transformation.matrices[matrix_idx(transformation.matrix_mode)], angle, glm::vec3(x, y, z));
+            glm::rotate(transformation.matrices[matrix_idx(transformation.matrix_mode)], (GLfloat)(angle * M_PI / 180.f), glm::vec3(x, y, z));
     LOG_D("Matrix 0x%x:", transformation.matrix_mode)
     print_matrix(transformation.matrices[matrix_idx(transformation.matrix_mode)]);
 }
@@ -156,6 +157,9 @@ void glPushMatrix( void ) {
     auto idx = matrix_idx(transformation.matrix_mode);
     auto& mat = transformation.matrices[idx];
     transformation.matrices_stack[idx].push_back(mat);
+
+    LOG_D("Matrix 0x%x:", transformation.matrix_mode)
+    print_matrix(transformation.matrices[matrix_idx(transformation.matrix_mode)]);
 }
 
 void glPopMatrix( void ) {
@@ -166,4 +170,7 @@ void glPopMatrix( void ) {
     auto& mat = transformation.matrices[idx];
     mat = transformation.matrices_stack[idx].back();
     transformation.matrices_stack[idx].pop_back();
+
+    LOG_D("Matrix 0x%x:", transformation.matrix_mode)
+    print_matrix(transformation.matrices[matrix_idx(transformation.matrix_mode)]);
 }
