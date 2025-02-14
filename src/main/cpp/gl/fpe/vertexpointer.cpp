@@ -113,7 +113,7 @@ void glColorPointer(GLint size, GLenum type, GLsizei stride, const GLvoid *point
 
 void glTexCoordPointer(GLint size, GLenum type, GLsizei stride, const GLvoid *pointer) {
     LOG_D("glTexCoordPointer, size = %d, type = 0x%x, stride = %d, pointer = 0x%x", size, type, stride, pointer)
-    g_glstate.vertexpointer_array.pointers[vp2idx(GL_TEXTURE_COORD_ARRAY + (g_glstate.state.client_active_texture - GL_TEXTURE0))] = {
+    g_glstate.vertexpointer_array.pointers[vp2idx(GL_TEXTURE_COORD_ARRAY)] = {
             .size = size,
             .usage = GL_TEXTURE_COORD_ARRAY + (g_glstate.state.client_active_texture - GL_TEXTURE0),
             .type = type,
