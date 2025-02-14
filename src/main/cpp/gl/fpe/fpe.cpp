@@ -216,6 +216,7 @@ int commit_fpe_state_on_draw(GLenum* mode, GLint* first, GLsizei* count) {
     LOAD_GLES_FUNC(glGetShaderInfoLog)
     LOAD_GLES_FUNC(glGetProgramiv)
     LOAD_GLES_FUNC(glVertexAttribPointer)
+    LOAD_GLES_FUNC(glVertexAttrib4fv)
     LOAD_GLES_FUNC(glEnableVertexAttribArray)
     LOAD_GLES_FUNC(glDisableVertexAttribArray)
     LOAD_GLES_FUNC(glUseProgram)
@@ -268,6 +269,17 @@ int commit_fpe_state_on_draw(GLenum* mode, GLint* first, GLsizei* count) {
                 LOG_D("attrib #%d: type = 0x%x, size = %d, stride = %d, usage = 0x%x, ptr = 0x%x, offset = %d", i, vp.type, vp.size, vp.stride, vp.usage, vp.pointer, (long)offset)
 
                 is_first = false;
+            } else if (vpa.pointers[i].usage == GL_COLOR_ARRAY) {
+                auto &vp = vpa.pointers[i];
+
+                LOG_D("attrib #%d: type = 0x%x, usage = 0x%x, value = (1., 1., 1., 1.)", i, vp.type, vp.usage)
+
+                static GLfloat att[] = { 1., 1., 1., 1. };
+                gles_glVertexAttrib4fv(i, att);
+                CHECK_GL_ERROR_NO_INIT
+
+                gles_glDisableVertexAttribArray(i);
+                CHECK_GL_ERROR_NO_INIT
             } else {
                 gles_glDisableVertexAttribArray(i);
                 CHECK_GL_ERROR_NO_INIT
