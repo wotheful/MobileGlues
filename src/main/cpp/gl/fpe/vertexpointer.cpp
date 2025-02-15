@@ -88,7 +88,7 @@ void glVertexPointer(GLint size,
 void glNormalPointer(GLenum type, GLsizei stride, const GLvoid *pointer) {
     LOG_D("glNormalPointer, type = 0x%x, stride = %d, pointer = 0x%x", type, stride, pointer)
     g_glstate.vertexpointer_array.pointers[vp2idx(GL_NORMAL_ARRAY)] = {
-            .size = 0,
+            .size = 3,
             .usage = GL_NORMAL_ARRAY,
             .type = type,
             .normalized = GL_FALSE,

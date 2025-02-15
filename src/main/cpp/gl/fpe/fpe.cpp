@@ -34,13 +34,13 @@ std::vector<uint32_t> quad_to_triangle(int n) {
     for (int i = 0; i < num_quads; i++) {
         int base_index = i * 4;
 
-        indices[i * 6] = base_index;
+        indices[i * 6 + 0] = base_index + 0;
         indices[i * 6 + 1] = base_index + 1;
         indices[i * 6 + 2] = base_index + 2;
 
         indices[i * 6 + 3] = base_index + 2;
         indices[i * 6 + 4] = base_index + 3;
-        indices[i * 6 + 5] = base_index;
+        indices[i * 6 + 5] = base_index + 0;
     }
 
     return indices;
@@ -100,13 +100,14 @@ int init_fpe() {
             "precision highp int;\n"
             "uniform mat4 ModelViewMat;\n"
             "uniform mat4 ProjMat;\n"
-            "layout (location = 0) in vec3 vPos;\n"
+            "layout (location = 0) in vec3 Pos;\n"
+            "layout (location = 1) in vec3 Normal;\n"
             "layout (location = 2) in vec4 Color;\n"
             "layout (location = 7) in vec2 UV0;\n"
             "out vec4 vertexColor;\n"
             "out vec2 texCoord0;\n"
             "void main() {\n"
-            "   gl_Position = ProjMat * ModelViewMat * vec4(vPos, 1.0);\n"
+            "   gl_Position = ProjMat * ModelViewMat * vec4(Pos, 1.0);\n"
             "   vertexColor = Color;\n"
             "   texCoord0 = UV0;\n"
             "}\n";
@@ -223,6 +224,7 @@ int commit_fpe_state_on_draw(GLenum* mode, GLint* first, GLsizei* count) {
     LOAD_GLES_FUNC(glGetUniformLocation)
     LOAD_GLES_FUNC(glUniformMatrix4fv)
     LOAD_GLES_FUNC(glUniform1i)
+    LOAD_GLES_FUNC(glGetIntegerv)
 
     INIT_CHECK_GL_ERROR
 
@@ -242,8 +244,16 @@ int commit_fpe_state_on_draw(GLenum* mode, GLint* first, GLsizei* count) {
     gles_glBindVertexArray(vpa.fpe_vao);
     CHECK_GL_ERROR_NO_INIT
 
-    gles_glBindBuffer(GL_ARRAY_BUFFER, g_glstate.vertexpointer_array.fpe_vbo);
+
+    GLint prev_vbo = 0;
+    gles_glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &prev_vbo);
     CHECK_GL_ERROR_NO_INIT
+
+    // Ugh...Why binding vbo is required BEFORE calling VertexAttrib* functions?
+    if (prev_vbo == 0) {
+        gles_glBindBuffer(GL_ARRAY_BUFFER, g_glstate.vertexpointer_array.fpe_vbo);
+        CHECK_GL_ERROR_NO_INIT
+    }
 
     if (vpa.dirty) {
         vpa.dirty = false;
@@ -287,33 +297,40 @@ int commit_fpe_state_on_draw(GLenum* mode, GLint* first, GLsizei* count) {
         }
     }
 
-    LOG_D("VB @ 0x%x, size = %d * %d = %d", vpa.starting_pointer, *count, vpa.stride, *count * vpa.stride)
-
-#if DEBUG || GLOBAL_DEBUG
-    for (int j = 0; j < *count; ++j) {
-        for (int i = 0; i < VERTEX_POINTER_COUNT; ++i) {
-            bool enabled = ((vpa.enabled_pointers >> i) & 1);
-
-            if (!enabled)
-                continue;
-
-            auto &vp = vpa.pointers[i];
-
-            // const void* ptr, GLenum type, int size, int stride, int offset, int i
-            log_vtx_attrib_data(vpa.starting_pointer, vp.type, vp.size, vp.stride,
-                                (const char*)vp.pointer - (const char*)vpa.starting_pointer, j);
-
-        }
-        LOG_D("")
-    }
-#endif
-
     int ret = 0;
 
-    LOG_D("glBufferData: size = %d, data = 0x%x -> GL_ARRAY_BUFFER (%d)", *count * vpa.stride, vpa.starting_pointer, g_glstate.vertexpointer_array.fpe_vbo)
+    // Making sure it is a valid pointer rather than an offset into the buffer
+    if (vpa.starting_pointer != nullptr && vpa.starting_pointer > (void*)vpa.stride) {
+        LOG_D("VB @ 0x%x, size = %d * %d = %d", vpa.starting_pointer, *count, vpa.stride, *count * vpa.stride)
 
-    gles_glBufferData(GL_ARRAY_BUFFER, *count * vpa.stride, vpa.starting_pointer, GL_DYNAMIC_DRAW);
-    CHECK_GL_ERROR_NO_INIT
+#if DEBUG || GLOBAL_DEBUG
+            //    for (int j = 0; j < *count; ++j) {
+//        for (int i = 0; i < VERTEX_POINTER_COUNT; ++i) {
+//            bool enabled = ((vpa.enabled_pointers >> i) & 1);
+//
+//            if (!enabled)
+//                continue;
+//
+//            auto &vp = vpa.pointers[i];
+//
+//            // const void* ptr, GLenum type, int size, int stride, int offset, int i
+//            log_vtx_attrib_data(vpa.starting_pointer, vp.type, vp.size, vp.stride,
+//                                (const char*)vp.pointer - (const char*)vpa.starting_pointer, j);
+//
+//        }
+//        LOG_D("")
+//    }
+#endif
+
+        LOG_D("glBufferData: size = %d, data = 0x%x -> GL_ARRAY_BUFFER (%d)", *count * vpa.stride,
+              vpa.starting_pointer, g_glstate.vertexpointer_array.fpe_vbo)
+
+        gles_glBufferData(GL_ARRAY_BUFFER, *count * vpa.stride, vpa.starting_pointer,
+                          GL_DYNAMIC_DRAW);
+        CHECK_GL_ERROR_NO_INIT
+    } else {
+        LOG_D("Using already bound VB")
+    }
 
     if (*mode == GL_QUADS) {
         vpa.fpe_ibo_buffer = quad_to_triangle(*count);
