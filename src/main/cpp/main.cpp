@@ -20,6 +20,8 @@
 extern "C" {
 #endif
 
+__attribute__((used)) const char* copyright = "Copyright (C) 2025 Swung0x48, BZLZHH, Tungsten. All rights reserved. Logo artwork kindly provided by Aou156.";
+
 extern char* (*MesaConvertShader)(const char *src, unsigned int type, unsigned int glsl, unsigned int essl);
 void init_libshaderconv() {
     const char *shaderconv_lib = "libshaderconv";
@@ -45,6 +47,11 @@ void init_config() {
         return;
     }
     config_refresh();
+}
+
+void show_copyright() {
+    LOG_V("MobileGlues Copyright: ");
+    LOG_V("  %s", copyright);
 }
 
 GLuint watermark_vao = 0;
@@ -222,6 +229,7 @@ void proc_init() {
     clear_log();
     start_log();
     LOG_V("Initializing %s @ %s", RENDERERNAME, __FUNCTION__);
+    show_copyright();
 
     load_libs();
     init_target_egl();

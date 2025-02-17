@@ -9,6 +9,7 @@
 struct shader_t {
     GLuint id;
     char * converted;
+    char * frag_data_changed_converted;
     int frag_data_changed;
 };
 

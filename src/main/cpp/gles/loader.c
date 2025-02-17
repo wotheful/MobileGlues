@@ -15,6 +15,7 @@
 #include "../gl/mg.h"
 #include "../gl/buffer.h"
 #include "../gl/getter.h"
+#include "../config/settings.h"
 
 #define DEBUG 0
 
@@ -56,6 +57,9 @@ static const char *egl_lib[] = {
         NULL
 };
 
+const char* GLES_ANGLE = "libGLESv2_angle.so";
+const char* EGL_ANGLE = "libEGL_angle.so";
+
 void *open_lib(const char **names, const char *override) {
     void *lib = NULL;
 
@@ -87,8 +91,8 @@ void load_libs() {
     static int first = 1;
     if (! first) return;
     first = 0;
-    const char *gles_override = GetEnvVar("LIBGL_GLES");
-    const char *egl_override = GetEnvVar("LIBGL_EGL");
+    const char *gles_override = global_settings.angle ? GLES_ANGLE : NULL;
+    const char *egl_override = global_settings.angle ? EGL_ANGLE : NULL;
     gles = open_lib(gles3_lib, gles_override);
     egl = open_lib(egl_lib, egl_override);
 }
@@ -127,47 +131,62 @@ void LogOpenGLExtensions() {
     }
 }
 
+struct gles_caps_t g_gles_caps;
+
 void InitGLESCapabilities() {
+    memset(&g_gles_caps, 0, sizeof(struct gles_caps_t));
+
     InitGLESBaseExtensions();
 
-    int has_GL_EXT_buffer_storage = 0;
-    int has_GL_ARB_timer_query = 0;
+//    int has_GL_EXT_buffer_storage = 0;
+//    int has_GL_ARB_timer_query = 0;
+//    int has_GL_QCOM_texture_lod_bias = 0;
     LOAD_GLES_FUNC(glGetStringi)
     LOAD_GLES_FUNC(glGetIntegerv)
 
     GLint num_es_extensions = 0;
     gles_glGetIntegerv(GL_NUM_EXTENSIONS, &num_es_extensions);
-    LOG_I("Detected %d OpenGL ES extensions.", num_es_extensions);
+    LOG_D("Detected %d OpenGL ES extensions.", num_es_extensions);
     for (GLint i = 0; i < num_es_extensions; ++i) {
         const GLubyte* extension = gles_glGetStringi(GL_EXTENSIONS, i);
         if (extension) {
-            LOG_I("%s", (const char*)extension);
+            LOG_D("%s", (const char*)extension);
             if (strcmp(extension, "GL_EXT_buffer_storage") == 0) {
-                has_GL_EXT_buffer_storage = 1;
+                g_gles_caps.GL_EXT_buffer_storage = 1;
             } else if (strcmp(extension, "GL_EXT_disjoint_timer_query") == 0) {
-                has_GL_ARB_timer_query = 1;
+                g_gles_caps.GL_EXT_disjoint_timer_query = 1;
+            } else if (strcmp(extension, "GL_QCOM_texture_lod_bias") == 0) {
+                g_gles_caps.GL_QCOM_texture_lod_bias = 1;
+            } else if (strcmp(extension, "GL_EXT_blend_func_extended") == 0) {
+                g_gles_caps.GL_EXT_blend_func_extended = 1;
             }
+            
         } else {
-            LOG_I("(null)");
+            LOG_D("(null)");
         }
     }
 
-    if (has_GL_EXT_buffer_storage) {
+    if (g_gles_caps.GL_EXT_buffer_storage) {
         AppendExtension("GL_ARB_buffer_storage");
     }
 
-    if (has_GL_ARB_timer_query) {
+    if (g_gles_caps.GL_EXT_disjoint_timer_query) {
         AppendExtension("GL_ARB_timer_query");
         AppendExtension("GL_EXT_timer_query");
+    }
+
+    if(global_settings.ext_gl43) {
+        AppendExtension("OpenGL43");
+    }
+    
+    if(global_settings.ext_compute_shader) {
+        AppendExtension("GL_ARB_compute_shader");
     }
 }
 
 void init_target_gles() {
-    LOG_D("Initializing %s @ %s", RENDERERNAME, __FUNCTION__);
-    LOG_D("Initializing %s @ gl_state", RENDERERNAME);
     init_gl_state();
 
-    LOG_D("Initializing %s @ init_gles_func", RENDERERNAME);
     memset(&g_gles_func, 0, sizeof(g_gles_func));
     INIT_GLES_FUNC(glActiveTexture)
     INIT_GLES_FUNC(glAttachShader)
@@ -533,6 +552,7 @@ void init_target_gles() {
     INIT_GLES_FUNC(glBufferStorageEXT)
     INIT_GLES_FUNC(glGetQueryObjectivEXT)
     INIT_GLES_FUNC(glGetQueryObjecti64vEXT)
+    INIT_GLES_FUNC(glBindFragDataLocationEXT)
 
     LOG_D("Initializing %s @ hardware", RENDERERNAME);
     set_hardware();

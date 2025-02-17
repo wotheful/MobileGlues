@@ -15,14 +15,25 @@
 #include "gl.h"
 #include "glcorearb.h"
 #include "log.h"
-#include "loader.h"
 #include "../gles/loader.h"
 #include "mg.h"
 
-GLAPI GLAPIENTRY void glMultiDrawElementsBaseVertex( GLenum mode, GLsizei *counts, GLenum type, const void * const *indices, GLsizei primcount, const GLint * basevertex);
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-GLAPI GLAPIENTRY void glMultiDrawElements(GLenum mode,const GLsizei * count,GLenum type,const void * const * indices,GLsizei primcount);
+GLAPI GLAPIENTRY void
+glMultiDrawElementsBaseVertex(GLenum mode, GLsizei *counts, GLenum type, const void *const *indices,
+                              GLsizei primcount, const GLint *basevertex);
+
+GLAPI GLAPIENTRY void
+glMultiDrawElements(GLenum mode, const GLsizei *count, GLenum type, const void *const *indices,
+                    GLsizei primcount);
 
 GLAPI GLAPIENTRY void glDrawArrays(GLenum mode, GLint first, GLsizei count);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif //MOBILEGLUES_DRAWING_H

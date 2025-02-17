@@ -8,9 +8,9 @@ set(CMAKE_CXX_STANDARD 17)
 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility=hidden -funwind-tables -g -D_THREAD_SAFE -fPIC -stdlib=libc++")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -w -fvisibility=hidden -funwind-tables -g -D_THREAD_SAFE -fPIC -stdlib=libc++")
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -std=gnu99 -funwind-tables -O3 -fvisibility=hidden")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -w -g -std=gnu99 -funwind-tables -O3 -fvisibility=hidden")
 
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libstdc++")
 
@@ -37,12 +37,16 @@ add_library(${CMAKE_PROJECT_NAME} SHARED
         gl/buffer.cpp
         gl/getter.cpp
         gl/glsl/glsl_for_es.cpp
+        gl/glsl/cache.cpp
+        gl/glsl/preConvertedGlsl.cpp
         glx/lookup.c
         egl/egl.c
         egl/loader.c
         gles/loader.c
         config/cJSON.c
         config/config.c
+        config/gpu_utils.c
+        config/settings.c
 
         gl/fpe/fpe.cpp
         gl/fpe/state.cpp
@@ -56,12 +60,25 @@ target_link_libraries(${CMAKE_PROJECT_NAME}
         ${CMAKE_SOURCE_DIR}/libraries/arm64-v8a/libglslang.a
         ${CMAKE_SOURCE_DIR}/libraries/arm64-v8a/libspirv-cross-c-shared.so
         ${CMAKE_SOURCE_DIR}/libraries/arm64-v8a/libshaderconv.so
+        ${CMAKE_SOURCE_DIR}/libraries/arm64-v8a/libGenericCodeGen.a
+        ${CMAKE_SOURCE_DIR}/libraries/arm64-v8a/libglslang-default-resource-limits.a
+        ${CMAKE_SOURCE_DIR}/libraries/arm64-v8a/libMachineIndependent.a
+        ${CMAKE_SOURCE_DIR}/libraries/arm64-v8a/libOSDependent.a
+        ${CMAKE_SOURCE_DIR}/libraries/arm64-v8a/libSPIRV-Tools-diff.a
+        ${CMAKE_SOURCE_DIR}/libraries/arm64-v8a/libSPIRV-Tools-link.a
+        ${CMAKE_SOURCE_DIR}/libraries/arm64-v8a/libSPIRV-Tools-lint.a
+        ${CMAKE_SOURCE_DIR}/libraries/arm64-v8a/libSPIRV-Tools-opt.a
+        ${CMAKE_SOURCE_DIR}/libraries/arm64-v8a/libSPIRV-Tools-reduce.a
+        ${CMAKE_SOURCE_DIR}/libraries/arm64-v8a/libSPIRV-Tools.a
+        ${CMAKE_SOURCE_DIR}/libraries/arm64-v8a/libSPIRV.a
+        ${CMAKE_SOURCE_DIR}/libraries/arm64-v8a/libSPVRemapper.a
         ${CMAKE_SOURCE_DIR}/libraries/arm64-v8a/libc++_shared.so
         android
         log
+        EGL
+        vulkan
 )
 
 target_include_directories(mobileglues PUBLIC
         ${CMAKE_SOURCE_DIR}/include
         )
-

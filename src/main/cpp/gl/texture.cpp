@@ -4,9 +4,9 @@
 
 #include "texture.h"
 
-#include <string.h>
+#include <cstring>
 #include <malloc.h>
-#include <stdlib.h>
+#include <vector>
 #include <unordered_map>
 #include <android/log.h>
 
@@ -17,6 +17,7 @@
 #include "../includes.h"
 #include "glsl/glsl_for_es.h"
 #include "mg.h"
+#include "framebuffer.h"
 
 #define DEBUG 0
 
@@ -200,7 +201,9 @@ void internal_convert(GLenum* internal_format, GLenum* type, GLenum* format) {
                 *format = GL_RGB;
             break;
 
+        case GL_RG16:
         case GL_RG16F:
+            *internal_format = GL_RG16F;
             if(type)
                 *type = GL_HALF_FLOAT;
             if(format)
@@ -243,11 +246,13 @@ void internal_convert(GLenum* internal_format, GLenum* type, GLenum* format) {
 void glTexParameterf(GLenum target, GLenum pname, GLfloat param) {
     LOG();
     pname = pname_convert(pname);
-
     LOG_D("glTexParameterf, target: 0x%x, pname: 0x%x, param: %f",target, pname, param);
 
     switch (pname) {
         case GL_TEXTURE_LOD_BIAS:
+        case GL_TEXTURE_LOD_BIAS_QCOM:
+            if (!g_gles_caps.GL_QCOM_texture_lod_bias)
+                LOG_D("Does not support GL_QCOM_texture_lod_bias, skipped!")
             return;
         case GL_TEXTURE_MIN_FILTER:
         case GL_TEXTURE_MAG_FILTER:
@@ -324,7 +329,7 @@ void glTexImage2D(GLenum target, GLint level,GLint internalFormat,GLsizei width,
     }
     LOAD_GLES(glTexImage2D, void, GLenum target, GLint level,GLint internalFormat,GLsizei width, GLsizei height,GLint border, GLenum format, GLenum type,const GLvoid* pixels);
     gles_glTexImage2D(target, level, internalFormat, width, height, border, format, type, pixels);
-    if (tex.format == GL_BGRA && internalFormat == GL_RGBA8) {
+    if (tex.format == GL_BGRA && internalFormat == GL_RGBA8 && width <= 128 && height <= 128) {  // xaero has 64x64 tiles...hack here
         LOG_D("Detected GL_BGRA format @ tex = %d, do swizzle", bound_texture);
         if (tex.swizzle_param[0] == 0) { // assert this as never called glTexParameteri(..., GL_TEXTURE_SWIZZLE_R, ...)
             tex.swizzle_param[0] = GL_RED;
@@ -715,7 +720,7 @@ void glBindTexture(GLenum target, GLuint texture) {
     gles_glBindTexture(target, texture);
     CHECK_GL_ERROR_NO_INIT
 
-    if (target == GL_TEXTURE_2D) { // only care about 2D textures for now
+    //if (target == GL_TEXTURE_2D) { // only care about 2D textures for now
         g_textures[texture] = {
                 .target = target,
                 .texture = texture,
@@ -723,7 +728,7 @@ void glBindTexture(GLenum target, GLuint texture) {
                 .swizzle_param = {0}
         };
         bound_texture = texture;
-    }
+    //}
 }
 
 void glDeleteTextures(GLsizei n, const GLuint *textures) {
@@ -812,13 +817,114 @@ void glReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format
     CHECK_GL_ERROR
 }
 
-//void glGenTextures(GLsizei n, GLuint *textures) {
-//    LOG()
-//    LOAD_GLES_FUNC(glGenTextures)
-//
-//    LOG_D("glGenTextures, n = %d, textures = 0x%x", n, textures);
-//
-//    gles_glGenTextures(n, textures);
-//
-//    CHECK_GL_ERROR
-//}
+template<typename T>
+void readDataComponents(const void* data, GLenum type, T* out, size_t maxComponents) {
+    const uint8_t* src = static_cast<const uint8_t*>(data);
+
+    switch(type) {
+        case GL_UNSIGNED_BYTE:
+            for(size_t i = 0; i < maxComponents; ++i) {
+                out[i] = static_cast<T>(src[i]);
+            }
+            break;
+        case GL_BYTE:
+            for(size_t i = 0; i < maxComponents; ++i) {
+                out[i] = static_cast<T>(*reinterpret_cast<const int8_t*>(src + i));
+            }
+            break;
+        case GL_UNSIGNED_SHORT:
+            for(size_t i = 0; i < maxComponents; ++i) {
+                out[i] = static_cast<T>(*reinterpret_cast<const uint16_t*>(src + i*2));
+            }
+            break;
+        case GL_SHORT:
+            for(size_t i = 0; i < maxComponents; ++i) {
+                out[i] = static_cast<T>(*reinterpret_cast<const int16_t*>(src + i*2));
+            }
+            break;
+        case GL_UNSIGNED_INT:
+            for(size_t i = 0; i < maxComponents; ++i) {
+                out[i] = static_cast<T>(*reinterpret_cast<const uint32_t*>(src + i*4));
+            }
+            break;
+        case GL_INT:
+            for(size_t i = 0; i < maxComponents; ++i) {
+                out[i] = static_cast<T>(*reinterpret_cast<const int32_t*>(src + i*4));
+            }
+            break;
+        case GL_FLOAT:
+            for(size_t i = 0; i < maxComponents; ++i) {
+                out[i] = static_cast<T>(*reinterpret_cast<const float*>(src + i*4));
+            }
+            break;
+        default:
+            break;
+    }
+}
+
+void glClearTexImage(GLuint texture, GLint level, GLenum format, GLenum type, const void *data)
+{
+    LOG()
+    LOG_D("glClearTexImage, texture: %d, level: %d, format: %d, type: %d", texture, level, format, type)
+    INIT_CHECK_GL_ERROR_FORCE
+    GLuint fbo;
+    glGenFramebuffers(1, &fbo);
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+    CHECK_GL_ERROR_NO_INIT
+
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, level);
+
+    CHECK_GL_ERROR_NO_INIT
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+        LOG_D("  -> exit")
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glDeleteFramebuffers(1, &fbo);
+        CHECK_GL_ERROR_NO_INIT
+        return;
+    }
+
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+    CHECK_GL_ERROR_NO_INIT
+
+    if (data != nullptr) {
+        if (format == GL_RGBA && type == GL_UNSIGNED_BYTE) {
+            const GLubyte* byteData = static_cast<const GLubyte*>(data);
+            glClearColor(byteData[0] / 255.0f, byteData[1] / 255.0f, byteData[2] / 255.0f, byteData[3] / 255.0f);
+        }
+        else if (format == GL_RGB && type == GL_UNSIGNED_BYTE) {
+            const GLubyte* byteData = static_cast<const GLubyte*>(data);
+            glClearColor(byteData[0] / 255.0f, byteData[1] / 255.0f, byteData[2] / 255.0f, 1.0f);
+        }
+        else if (format == GL_RGBA && type == GL_FLOAT) {
+            const GLfloat* floatData = static_cast<const GLfloat*>(data);
+            glClearColor(floatData[0], floatData[1], floatData[2], floatData[3]);
+        }
+        else if (format == GL_RGB && type == GL_FLOAT) {
+            const GLfloat* floatData = static_cast<const GLfloat*>(data);
+            glClearColor(floatData[0], floatData[1], floatData[2], 1.0f);
+        }
+        else if (format == GL_DEPTH_COMPONENT && type == GL_FLOAT) {
+            const GLfloat* depthData = static_cast<const GLfloat*>(data);
+            glClearDepthf(depthData[0]);
+            glClear(GL_DEPTH_BUFFER_BIT);
+        }
+        else if (format == GL_STENCIL_INDEX && type == GL_UNSIGNED_BYTE) {
+            const GLubyte* stencilData = static_cast<const GLubyte*>(data);
+            glClearStencil(stencilData[0]);
+            glClear(GL_STENCIL_BUFFER_BIT);
+        }
+    }
+    CHECK_GL_ERROR_NO_INIT
+
+    if (format == GL_DEPTH_COMPONENT || format == GL_STENCIL_INDEX) {
+        glClear(GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+        CHECK_GL_ERROR_NO_INIT
+    } else {
+        glClear(GL_COLOR_BUFFER_BIT);
+        CHECK_GL_ERROR_NO_INIT
+    }
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glDeleteFramebuffers(1, &fbo);
+    CHECK_GL_ERROR_NO_INIT
+}

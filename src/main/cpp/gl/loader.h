@@ -1,8 +1,0 @@
-//
-// Created by Swung 0x48 on 2024/10/10.
-//
-
-#ifndef MOBILEGLUES_GL_LOADER_H
-#define MOBILEGLUES_GL_LOADER_H
-
-#endif //MOBILEGLUES_GL_LOADER_H

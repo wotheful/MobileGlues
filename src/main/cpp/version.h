@@ -8,11 +8,12 @@
 #define VERSION_ALPHA 1
 #define VERSION_RELEASE 2
 
-#define MAJOR 0
+#define MAJOR 1
 #define MINOR 0
-#define REVISION 1
+#define REVISION 3
+#define PATCH 1
 
-const int version_type = VERSION_ALPHA;
+const int version_type = VERSION_RELEASE;
 
 #define MOBILEGLUES_VERSION_H
 

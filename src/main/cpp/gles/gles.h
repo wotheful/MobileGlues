@@ -376,6 +376,7 @@ GL_FUNC_TYPEDEF(void*, glMapBufferRange, GLenum target, GLintptr offset, GLsizei
 GL_FUNC_TYPEDEF(void, glBufferStorageEXT, GLenum target, GLsizeiptr size, const void* data, GLbitfield flags)
 GL_FUNC_TYPEDEF(void, glGetQueryObjectivEXT, GLuint id, GLenum pname, GLint *params)
 GL_FUNC_TYPEDEF(void, glGetQueryObjecti64vEXT, GLuint id, GLenum pname, GLint64 *params)
+GL_FUNC_TYPEDEF(void, glBindFragDataLocationEXT, GLuint program, GLuint colorNumber, const GLchar *name)
 
 #define GL_FUNC_DECL(name) \
 name##_PTR name;
@@ -745,6 +746,7 @@ struct gles_func_t {
     GL_FUNC_DECL(glBufferStorageEXT)
     GL_FUNC_DECL(glGetQueryObjectivEXT)
     GL_FUNC_DECL(glGetQueryObjecti64vEXT)
+    GL_FUNC_DECL(glBindFragDataLocationEXT)
 };
 
 extern struct gles_func_t g_gles_func;

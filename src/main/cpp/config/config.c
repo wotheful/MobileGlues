@@ -10,11 +10,13 @@
 
 static cJSON *config_json = NULL;
 
-void config_refresh() {
+int initialized = 0;
+
+int config_refresh() {
     FILE *file = fopen(CONFIG_FILE_PATH, "r");
     if (file == NULL) {
         LOG_E("Unable to open config file %s", CONFIG_FILE_PATH);
-        return;
+        return 0;
     }
 
     fseek(file, 0, SEEK_END);
@@ -25,7 +27,7 @@ void config_refresh() {
     if (file_content == NULL) {
         LOG_E("Unable to allocate memory for file content");
         fclose(file);
-        return;
+        return 0;
     }
 
     fread(file_content, 1, file_size, file);
@@ -33,11 +35,15 @@ void config_refresh() {
     file_content[file_size] = '\0';
 
     config_json = cJSON_Parse(file_content);
+    free(file_content);
+
     if (config_json == NULL) {
         LOG_E("Error parsing config JSON: %s\n", cJSON_GetErrorPtr());
+        return 0;
     }
 
-    free(file_content);
+    initialized = 1;
+    return 1;
 }
 
 int config_get_int(char* name) {

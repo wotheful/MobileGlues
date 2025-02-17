@@ -17,7 +17,6 @@ extern "C" {
 void *proc_address(void *lib, const char *name);
 extern void *gles, *egl;
 
-
 void init_target_gles();
 
 #define WARN_NULL(name) if (name == NULL) { LOG_W("%s line %d function %s: " #name " is NULL\n", __FILE__, __LINE__, __func__); }
@@ -176,6 +175,15 @@ GLAPI GLAPIENTRY type name(__VA_ARGS__) {
 #define STUB_FUNCTION_END_NO_RETURN(type,name,...)                          \
     LOG_W("No function: %s @ %s(...)", RENDERERNAME, __FUNCTION__);         \
 }
+
+struct gles_caps_t {
+    int GL_EXT_buffer_storage;
+    int GL_EXT_disjoint_timer_query;
+    int GL_QCOM_texture_lod_bias;
+    int GL_EXT_blend_func_extended;
+};
+
+extern struct gles_caps_t g_gles_caps;
 
 #ifdef __cplusplus
 }

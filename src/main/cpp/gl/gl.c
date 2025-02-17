@@ -6,18 +6,15 @@
 #include "gl.h"
 #include "glcorearb.h"
 #include "log.h"
-#include "loader.h"
 #include "../gles/loader.h"
 #include "mg.h"
 
 #define DEBUG 0
 
 GLAPI GLAPIENTRY void glClearDepth(GLclampd depth) {
-	LOG();
-	glClearDepthf(depth);
-	glClear(GL_DEPTH_BUFFER_BIT);
+    LOG();
+    glClearDepthf(depth);
 }
-
 
 void glHint(GLenum target, GLenum mode) {
     LOG();

@@ -5,7 +5,6 @@
 #include "gl.h"
 #include "glcorearb.h"
 #include "log.h"
-#include "loader.h"
 #include "../gles/loader.h"
 #include "mg.h"
 #define DEBUG false
@@ -634,7 +633,7 @@ STUB_FUNCTION_HEAD(void, glTextureView, GLuint texture, GLenum target, GLuint or
 STUB_FUNCTION_HEAD(void, glVertexAttribLFormat, GLuint attribindex, GLint size, GLenum type, GLuint relativeoffset); STUB_FUNCTION_END_NO_RETURN(void, glVertexAttribLFormat,attribindex,size,type,relativeoffset)
 //STUB_FUNCTION_HEAD(void, glPopDebugGroup,void); STUB_FUNCTION_END_NO_RETURN(void, glPopDebugGroup,)
 //STUB_FUNCTION_HEAD(void, glBufferStorage, GLenum target, GLsizeiptr size, const void* data, GLbitfield flags); STUB_FUNCTION_END_NO_RETURN(void, glBufferStorage,target,size,data,flags)
-STUB_FUNCTION_HEAD(void, glClearTexImage, GLuint texture, GLint level, GLenum format, GLenum type, const void* data); STUB_FUNCTION_END_NO_RETURN(void, glClearTexImage,texture,level,format,type,data)
+//STUB_FUNCTION_HEAD(void, glClearTexImage, GLuint texture, GLint level, GLenum format, GLenum type, const void* data); STUB_FUNCTION_END_NO_RETURN(void, glClearTexImage,texture,level,format,type,data)
 STUB_FUNCTION_HEAD(void, glClearTexSubImage, GLuint texture, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLenum type, const void* data); STUB_FUNCTION_END_NO_RETURN(void, glClearTexSubImage,texture,level,xoffset,yoffset,zoffset,width,height,depth,format,type,data)
 STUB_FUNCTION_HEAD(void, glBindBuffersBase, GLenum target, GLuint first, GLsizei count, const GLuint* buffers); STUB_FUNCTION_END_NO_RETURN(void, glBindBuffersBase,target,first,count,buffers)
 STUB_FUNCTION_HEAD(void, glBindBuffersRange, GLenum target, GLuint first, GLsizei count, const GLuint* buffers, const GLintptr* offsets, const GLsizeiptr* sizes); STUB_FUNCTION_END_NO_RETURN(void, glBindBuffersRange,target,first,count,buffers,offsets,sizes)

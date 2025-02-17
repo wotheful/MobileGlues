@@ -3,7 +3,9 @@
 //
 
 #include "getter.h"
+#include "../config/settings.h"
 #include <string>
+#include <vector>
 
 #define DEBUG 0
 
@@ -45,7 +47,14 @@ GLenum glGetError() {
     LOAD_GLES_FUNC(glGetError);
     GLuint err = gles_glGetError();
     if (err != GL_NO_ERROR) {
-        LOG_E(" -> %d", err);
+        if(global_settings.ignore_error >= 2) {
+            // no logging without DEBUG
+            LOG_W("glGetError\n -> %d", err)
+            LOG_W("Now try to cheat.")
+            return GL_NO_ERROR;
+        } else {
+            LOG_E(" -> %d", err)
+        }
     }
     return err;
 }
@@ -85,7 +94,10 @@ void InitGLESBaseExtensions() {
              //"ARB_compute_shader "
              "GL_ARB_get_program_binary "
              "GL_ARB_multitexture "
-             ;
+             "GL_ARB_shader_storage_buffer_object "
+             "GL_ARB_shader_image_load_store "
+             "GL_ARB_clear_texture "
+             "GL_ARB_get_program_binary ";
 }
 
 void AppendExtension(const char* ext) {
@@ -111,11 +123,35 @@ const char* getBeforeThirdSpace(const char* str) {
     return buffer;
 }
 
-
 const char* getGpuName() {
     LOAD_GLES_FUNC(glGetString);
     const char *gpuName = (const char *) gles_glGetString(GL_RENDERER);
-    return gpuName ? gpuName : "<unknown>";
+
+    if (!gpuName) {
+        return "<unknown>";
+    }
+
+    if (strncmp(gpuName, "ANGLE", 5) == 0) {
+        std::string gpuStr(gpuName);
+
+        size_t firstParen = gpuStr.find('(');
+        size_t secondParen = gpuStr.find('(', firstParen + 1);
+        size_t lastParen = gpuStr.rfind('(');
+
+        std::string gpu = gpuStr.substr(secondParen + 1, lastParen - secondParen - 2);
+
+        size_t vulkanStart = gpuStr.find("Vulkan ");
+        size_t vulkanEnd = gpuStr.find(' ', vulkanStart + 7);
+        std::string vulkanVersion = gpuStr.substr(vulkanStart + 7, vulkanEnd - (vulkanStart + 7));
+
+        std::string formattedGpuName = gpu + " | ANGLE | Vulkan " + vulkanVersion;
+
+        char* result = new char[formattedGpuName.size() + 1];
+        std::strcpy(result, formattedGpuName.c_str());
+        return result;
+    }
+
+    return gpuName;
 }
 
 void set_es_version() {
@@ -171,8 +207,11 @@ const GLubyte * glGetString( GLenum name ) {
                 std::string realVersion = " " + std::to_string(MAJOR) + "." +
                                       std::to_string(MINOR) + "." +
                                       std::to_string(REVISION);
-                std::string suffix = version_type == VERSION_ALPHA ? " | §4§l如果您在公开平台看到这一提示, 则发布者已违规!§r" :
-                                     realVersion + std::string(version_type == VERSION_DEVELOPMENT?".Dev":"");
+                if (PATCH) {
+                    realVersion += "." + std::to_string(PATCH);
+                }
+                std::string suffix = realVersion + (version_type == VERSION_ALPHA ? " | §4§l如果您在公开平台看到这一提示, 则发布者已违规!§r" :
+                                     std::string(version_type == VERSION_DEVELOPMENT?".Dev":""));
                 versionString += suffix;
             }
             return (const GLubyte *)versionString.c_str();

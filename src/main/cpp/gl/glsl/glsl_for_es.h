@@ -5,18 +5,18 @@
 #include "../gl.h"
 #include "../glcorearb.h"
 #include "../log.h"
-#include "../loader.h"
 #include "../gles/loader.h"
-
 #include <string.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 #include "../mg.h"
     
-__attribute__((visibility("default"))) extern char *GLSLtoGLSLES_1(char *glsl_code, GLenum glsl_type, unsigned int esversion);
-__attribute__((visibility("default"))) extern char *GLSLtoGLSLES_2(char *glsl_code, GLenum glsl_type, uint essl_version);
-__attribute__((visibility("default"))) extern int getGLSLVersion(const char* glsl_code);
+char *GLSLtoGLSLES(char *glsl_code, GLenum glsl_type, uint esversion, uint glsl_version);
+char *GLSLtoGLSLES_1(char *glsl_code, GLenum glsl_type, uint esversion);
+char *GLSLtoGLSLES_2(char *glsl_code, GLenum glsl_type, uint essl_version);
+int getGLSLVersion(const char* glsl_code);
 #ifdef __cplusplus
 }
 #endif

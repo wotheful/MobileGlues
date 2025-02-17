@@ -8,9 +8,13 @@
 #include <fstream>
 #include "../log.h"
 #include "glslang/SPIRV/GlslangToSpv.h"
+#include "preConvertedGlsl.h"
 #include <string>
 #include <regex>
 #include <strstream>
+#include "cache.h"
+
+//#define FEATURE_PRE_CONVERTED_GLSL
 
 #define DEBUG 0
 
@@ -314,6 +318,7 @@ std::string removeLayoutBinding(const std::string& glslCode) {
     result = std::regex_replace(result, bindingRegex2, "layout(");
     return result;
 }
+
 // TODO
 std::string makeRGBWriteonly(const std::string& input) {
     std::regex pattern(R"(.*layout\([^)]*rgba[^)]*\).*?)");
@@ -431,7 +436,181 @@ std::string addPrecisionToSampler2DShadow(const std::string& glslCode) {
     return result;
 }
 
+void trim(char* str) {
+    char* end;
+    while (isspace((unsigned char)*str)) str++;
+    if (*str == 0) return;
+    end = str + strlen(str) - 1;
+    while (end > str && isspace((unsigned char)*end)) end--;
+    *(end + 1) = 0;
+}
+
+int startsWith(const char *str, const char *prefix) {
+    if (!str || !prefix) return 0;
+    while (*prefix) {
+        if (*str++ != *prefix++) return 0;
+    }
+    return 1;
+}
+
+char* process_uniform_declarations(char* glslCode) {
+    char* cursor = glslCode;
+    char name[256], type[256], initial_value[1024];
+    int modifiedCodeIndex = 0;
+    size_t maxLength = 1024 * 10;
+    char* modifiedGlslCode = (char*)malloc(maxLength * sizeof(char));
+    if (!modifiedGlslCode) return nullptr;
+
+    while (*cursor) {
+        if (strncmp(cursor, "uniform", 7) == 0) {
+            char* cursor_start = cursor;
+
+            cursor += 7;
+
+            while (isspace((unsigned char)*cursor)) cursor++;
+
+            // may be precision qualifier
+            char* precision = nullptr;
+            if (startsWith(cursor, "highp")) {
+                precision = " highp";
+                cursor += 5;
+                while (isspace((unsigned char)*cursor)) cursor++;
+            } else if (startsWith(cursor, "lowp")) {
+                precision = " lowp";
+                cursor += 4;
+                while (isspace((unsigned char)*cursor)) cursor++;
+            } else if (startsWith(cursor, "mediump")) {
+                precision = " mediump";
+                cursor += 7;
+                while (isspace((unsigned char)*cursor)) cursor++;
+            }
+
+            int i = 0;
+            while (isalnum((unsigned char)*cursor) || *cursor == '_') {
+                type[i++] = *cursor++;
+            }
+            type[i] = '\0';
+
+            while (isspace((unsigned char)*cursor)) cursor++;
+
+            // may be precision qualifier
+            if(!precision)
+            {
+                if (startsWith(cursor, "highp")) {
+                    precision = " highp";
+                    cursor += 5;
+                    while (isspace((unsigned char)*cursor)) cursor++;
+                } else if (startsWith(cursor, "lowp")) {
+                    precision = " lowp";
+                    cursor += 4;
+                    while (isspace((unsigned char)*cursor)) cursor++;
+                } else if (startsWith(cursor, "mediump")) {
+                    precision = " mediump";
+                    cursor += 7;
+                    while (isspace((unsigned char)*cursor)) cursor++;
+                } else {
+                    precision = "";
+                }
+            }
+
+            while (isspace((unsigned char)*cursor)) cursor++;
+
+            i = 0;
+            while (isalnum((unsigned char)*cursor) || *cursor == '_') {
+                name[i++] = *cursor++;
+            }
+            name[i] = '\0';
+            while (isspace((unsigned char)*cursor)) cursor++;
+
+            initial_value[0] = '\0';
+            if (*cursor == '=') {
+                cursor++;
+                i = 0;
+                while (*cursor && *cursor != ';') {
+                    initial_value[i++] = *cursor++;
+                }
+                initial_value[i] = '\0';
+                trim(initial_value);
+            }
+
+            while (*cursor != ';' && *cursor) {
+                cursor++;
+            }
+
+            char* cursor_end = cursor;
+
+            int spaceLeft = maxLength - modifiedCodeIndex;
+            int len = 0;
+
+            if (*initial_value) {
+                len = snprintf(modifiedGlslCode + modifiedCodeIndex, spaceLeft, "uniform%s %s %s;", precision, type, name);
+            } else {
+                // use original declaration
+                size_t length = cursor_end - cursor_start + 1;
+                if (length < spaceLeft) {
+                    memcpy(modifiedGlslCode + modifiedCodeIndex, cursor_start, length);
+                    len = (int)length;
+                } else {
+                    fprintf(stderr, "Error: Not enough space in buffer\n");
+                }
+                // len = snprintf(modifiedGlslCode + modifiedCodeIndex, spaceLeft, "uniform%s %s %s;", precision, type, name);
+            }
+
+            if (len < 0 || len >= spaceLeft) {
+                free(modifiedGlslCode);
+                return nullptr;
+            }
+            modifiedCodeIndex += len;
+
+            while (*cursor == ';') cursor++;
+
+        } else {
+            modifiedGlslCode[modifiedCodeIndex++] = *cursor++;
+        }
+
+        while (modifiedCodeIndex >= maxLength - 1) {
+            maxLength *= 2;
+            char* temp = (char*)realloc(modifiedGlslCode, maxLength);
+            if (!temp) {
+                free(modifiedGlslCode);
+                return nullptr;
+            }
+            modifiedGlslCode = temp;
+        }
+    }
+
+    modifiedGlslCode[modifiedCodeIndex] = '\0';
+    return modifiedGlslCode;
+}
+
+static Cache glslCache;
+static bool isGlslConvertedSuccessfully;
+char* GLSLtoGLSLES(char* glsl_code, GLenum glsl_type, uint essl_version, uint glsl_version) {
+    const char* cachedESSL = glslCache.get(glsl_code);
+    if (cachedESSL) {
+        LOG_D("GLSL Hit Cache:\n%s\n-->\n%s", glsl_code, cachedESSL)
+        return (char*)cachedESSL;
+    }
+    
+    isGlslConvertedSuccessfully = false;
+    char* converted = glsl_version<140?GLSLtoGLSLES_1(glsl_code, glsl_type, essl_version):GLSLtoGLSLES_2(glsl_code, glsl_type, essl_version);
+    if (converted && isGlslConvertedSuccessfully) {
+        converted = process_uniform_declarations(converted);
+        glslCache.put(glsl_code, converted);
+    }
+    return converted ? converted : glsl_code;
+}
+
 char* GLSLtoGLSLES_2(char* glsl_code, GLenum glsl_type, uint essl_version) {
+#ifdef FEATURE_PRE_CONVERTED_GLSL
+    if (getGLSLVersion(glsl_code) == 430) {
+        char* converted = preConvertedGlsl(glsl_code);
+        if (converted) {
+            LOG_D("Find pre-converted glsl, now use it.")
+            return converted;
+        }
+    }
+#endif
     glslang::InitializeProcess();
     EShLanguage shader_language;
     switch (glsl_type) {
@@ -521,6 +700,7 @@ char* GLSLtoGLSLES_2(char* glsl_code, GLenum glsl_type, uint essl_version) {
     size_t count;
     size_t i;
 
+    LOG_D("spirv_code.size(): %d",spirv_code.size() );
     spvc_context_create(&context);
     spvc_context_parse_spirv(context, spirv, word_count, &ir);
     spvc_context_create_compiler(context, SPVC_BACKEND_GLSL, ir, SPVC_CAPTURE_MODE_TAKE_OWNERSHIP, &compiler_glsl);
@@ -531,6 +711,11 @@ char* GLSLtoGLSLES_2(char* glsl_code, GLenum glsl_type, uint essl_version) {
     spvc_compiler_options_set_bool(options, SPVC_COMPILER_OPTION_GLSL_ES, SPVC_TRUE);
     spvc_compiler_install_compiler_options(compiler_glsl, options);
     spvc_compiler_compile(compiler_glsl, &result);
+    LOG_D("Shader Linked.4" );
+    if (!result) {
+        LOG_D("Error: unexpected error in spirv-cross.");
+        return glsl_code;
+    }
     essl=result;
     spvc_context_destroy(context);
 
@@ -538,7 +723,7 @@ char* GLSLtoGLSLES_2(char* glsl_code, GLenum glsl_type, uint essl_version) {
     //essl = removeLocationBinding(essl);
     //essl = addPrecisionToSampler2DShadow(essl);
     essl = forceSupporterOutput(essl);
-    essl = makeRGBWriteonly(essl);
+    //essl = makeRGBWriteonly(essl);
 
     char* result_essl = new char[essl.length() + 1];
     std::strcpy(result_essl, essl.c_str());
@@ -547,6 +732,7 @@ char* GLSLtoGLSLES_2(char* glsl_code, GLenum glsl_type, uint essl_version) {
 
     free(shader_source);
     glslang::FinalizeProcess();
+    isGlslConvertedSuccessfully = true;
     return result_essl;
 }
 
@@ -556,5 +742,6 @@ char * GLSLtoGLSLES_1(char* glsl_code, GLenum glsl_type, unsigned int esversion)
     char * result = MesaConvertShader(glsl_code, glsl_type == GL_VERTEX_SHADER ? 35633 : 35632, 460LL, esversion);
     char * ret = (char*)malloc(sizeof(char) * strlen(result) + 1);
     strcpy(ret, result);
+    isGlslConvertedSuccessfully = true;
     return ret;
 }
