@@ -6,16 +6,25 @@
 
 #include "gl.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct shader_t {
     GLuint id;
-    char * converted;
-    char * frag_data_changed_converted;
+    char *converted;
+    char *frag_data_changed_converted;
     int frag_data_changed;
 };
 
 extern struct shader_t shaderInfo;
 
-GLAPI GLAPIENTRY void glShaderSource(GLuint shader, GLsizei count, const GLchar *const* string, const GLint *length);
+GLAPI GLAPIENTRY void glShaderSource(GLuint shader, GLsizei count, const GLchar *const *string, const GLint *length);
+
 GLAPI GLAPIENTRY void glGetShaderiv(GLuint shader, GLenum pname, GLint *params);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif //FOLD_CRAFT_LAUNCHER_GL_LOADER_H

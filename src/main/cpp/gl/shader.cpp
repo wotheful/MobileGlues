@@ -50,7 +50,7 @@ void glShaderSource(GLuint shader, GLsizei count, const GLchar *const* string, c
     for (int i=0; i<count; i++) l+=(length && length[i] >= 0)?length[i]:strlen(string[i]);
     char* source = NULL;
     char* converted = NULL;
-    source = malloc(l+1);
+    source = (char*)malloc(l+1);
     memset(source, 0, l+1);
     if(length) {
         for (int i=0; i<count; i++) {
