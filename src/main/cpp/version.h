@@ -10,8 +10,8 @@
 
 #define MAJOR 1
 #define MINOR 0
-#define REVISION 3
-#define PATCH 1
+#define REVISION 4
+#define PATCH 0
 
 const int version_type = VERSION_RELEASE;
 
