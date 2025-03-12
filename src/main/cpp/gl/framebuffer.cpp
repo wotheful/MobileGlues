@@ -14,7 +14,7 @@ GLint MAX_DRAW_BUFFERS = 0;
 
 GLint getMaxDrawBuffers() {
     if (!MAX_DRAW_BUFFERS) {
-        LOAD_GLES(glGetIntegerv, void, GLenum pname, GLint *params)
+        LOAD_GLES_FUNC(glGetIntegerv)
         gles_glGetIntegerv(GL_MAX_DRAW_BUFFERS, &MAX_DRAW_BUFFERS);
     }
     return MAX_DRAW_BUFFERS;
@@ -35,7 +35,7 @@ void rebind_framebuffer(GLenum old_attachment, GLenum target_attachment) {
 
     struct attachment_t attachment = attach[old_attachment - GL_COLOR_ATTACHMENT0];
 
-    LOAD_GLES(glFramebufferTexture2D, void, GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level)
+    LOAD_GLES_FUNC(glFramebufferTexture2D)
     gles_glFramebufferTexture2D(bound_framebuffer->current_target, target_attachment, attachment.textarget, attachment.texture, attachment.level);
 }
 
@@ -46,29 +46,29 @@ void glBindFramebuffer(GLenum target, GLuint framebuffer) {
 
     LOG_D("glBindFramebuffer(0x%x, %d)", target, framebuffer)
 
-    LOAD_GLES(glBindFramebuffer, void, GLenum target, GLuint framebuffer)
+    LOAD_GLES_FUNC(glBindFramebuffer)
     gles_glBindFramebuffer(target, framebuffer);
     CHECK_GL_ERROR_NO_INIT
 
     if (!bound_framebuffer) {
-        bound_framebuffer = malloc(sizeof(struct framebuffer_t));
+        bound_framebuffer = (struct framebuffer_t*)malloc(sizeof(struct framebuffer_t));
         memset(bound_framebuffer, 0, sizeof(struct framebuffer_t));
     }
 
     switch (target) {
         case GL_DRAW_FRAMEBUFFER:
             free(bound_framebuffer->draw_attachment);
-            bound_framebuffer->draw_attachment = malloc(getMaxDrawBuffers() * sizeof(struct attachment_t));
+            bound_framebuffer->draw_attachment = (struct attachment_t*)malloc(getMaxDrawBuffers() * sizeof(struct attachment_t));
             break;
         case GL_READ_FRAMEBUFFER:
             free(bound_framebuffer->read_attachment);
-            bound_framebuffer->read_attachment = malloc(getMaxDrawBuffers() * sizeof(struct attachment_t));
+            bound_framebuffer->read_attachment = (struct attachment_t*)malloc(getMaxDrawBuffers() * sizeof(struct attachment_t));
             break;
         case GL_FRAMEBUFFER:
             free(bound_framebuffer->draw_attachment);
-            bound_framebuffer->draw_attachment = malloc(getMaxDrawBuffers() * sizeof(struct attachment_t));
+            bound_framebuffer->draw_attachment = (struct attachment_t*)malloc(getMaxDrawBuffers() * sizeof(struct attachment_t));
             free(bound_framebuffer->read_attachment);
-            bound_framebuffer->read_attachment = malloc(getMaxDrawBuffers() * sizeof(struct attachment_t));
+            bound_framebuffer->read_attachment = (struct attachment_t*)malloc(getMaxDrawBuffers() * sizeof(struct attachment_t));
             break;
         default:
             break;
@@ -98,7 +98,7 @@ void glFramebufferTexture2D(GLenum target, GLenum attachment, GLenum textarget, 
         bound_framebuffer->current_target = target;
     }
 
-    LOAD_GLES(glFramebufferTexture2D, void, GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level)
+    LOAD_GLES_FUNC(glFramebufferTexture2D)
     gles_glFramebufferTexture2D(target, attachment, textarget, texture, level);
 
     CHECK_GL_ERROR
@@ -107,12 +107,13 @@ void glFramebufferTexture2D(GLenum target, GLenum attachment, GLenum textarget, 
 void glDrawBuffer(GLenum buffer) {
     LOG()
 
-    LOAD_GLES(glDrawBuffers, void, GLsizei n, const GLenum *bufs)
+    LOAD_GLES_FUNC(glDrawBuffers)
+    LOAD_GLES_FUNC(glGetIntegerv)
 
     GLint currentFBO;
-    glGetIntegerv(GL_FRAMEBUFFER_BINDING, &currentFBO);
+    gles_glGetIntegerv(GL_FRAMEBUFFER_BINDING, &currentFBO);
 
-    if (currentFBO == 0) { // 默认帧缓冲
+    if (currentFBO == 0) {
         GLenum buffers[1] = {GL_NONE};
         switch (buffer) {
             case GL_FRONT:
@@ -122,28 +123,25 @@ void glDrawBuffer(GLenum buffer) {
                 gles_glDrawBuffers(1, buffers);
                 break;
             default:
-                // 生成错误：GL_INVALID_ENUM
                 break;
         }
-    } else { // FBO场景
+    } else {
         GLint maxAttachments;
-        glGetIntegerv(GL_MAX_COLOR_ATTACHMENTS, &maxAttachments);
+        gles_glGetIntegerv(GL_MAX_COLOR_ATTACHMENTS, &maxAttachments);
 
         if (buffer == GL_NONE) {
-            GLenum *buffers = (GLenum *)alloca(maxAttachments * sizeof(GLenum));
+            auto *buffers = (GLenum *)alloca(maxAttachments * sizeof(GLenum));
             for (int i = 0; i < maxAttachments; i++) {
                 buffers[i] = GL_NONE;
             }
             gles_glDrawBuffers(maxAttachments, buffers);
         } else if (buffer >= GL_COLOR_ATTACHMENT0 &&
                    buffer < GL_COLOR_ATTACHMENT0 + maxAttachments) {
-            GLenum *buffers = (GLenum *)alloca(maxAttachments * sizeof(GLenum));
+            auto *buffers = (GLenum *)alloca(maxAttachments * sizeof(GLenum));
             for (int i = 0; i < maxAttachments; i++) {
                 buffers[i] = (i == (buffer - GL_COLOR_ATTACHMENT0)) ? buffer : GL_NONE;
             }
             gles_glDrawBuffers(maxAttachments, buffers);
-        } else {
-            // 生成错误：GL_INVALID_ENUM
         }
     }
 }
@@ -165,10 +163,18 @@ void glDrawBuffers(GLsizei n, const GLenum *bufs) {
         }
     }
 
-    LOAD_GLES(glDrawBuffers, void, GLsizei n, const GLenum *bufs)
+    LOAD_GLES_FUNC(glDrawBuffers)
     gles_glDrawBuffers(n, new_bufs);
 
     CHECK_GL_ERROR
+}
+
+void glReadBuffer(GLenum src) {
+    LOG()
+    LOG_D("glReadBuffer, src = %s", glEnumToString(src))
+
+    LOAD_GLES_FUNC(glReadBuffer)
+    gles_glReadBuffer(src);
 }
 
 GLenum glCheckFramebufferStatus(GLenum target) {
@@ -176,8 +182,8 @@ GLenum glCheckFramebufferStatus(GLenum target) {
     LOAD_GLES_FUNC(glCheckFramebufferStatus)
     GLenum status = gles_glCheckFramebufferStatus(target);
     if(global_settings.ignore_error >= 2 && status != GL_FRAMEBUFFER_COMPLETE) {
-        LOG_W_FORCE("Framebuffer %d isn't GL_FRAMEBUFFER_COMPLETE: %d", target, status);
-        LOG_W_FORCE("Now try to cheat.");
+        LOG_W_FORCE("Framebuffer %d isn't GL_FRAMEBUFFER_COMPLETE: %d", target, status)
+        LOG_W_FORCE("Now try to cheat.")
         return GL_FRAMEBUFFER_COMPLETE;
     }
     return status;

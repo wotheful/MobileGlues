@@ -6,9 +6,21 @@
 #include "log.h"
 #include "shader.h"
 #include "program.h"
+#include <regex>
+#include <cstring>
+#include <iostream>
 #include "../config/settings.h"
 
 #define DEBUG 0
+
+char* removeLayoutLocations(const char* input) {
+    std::string code(input);
+    std::regex pattern(R"(layout\s*\(\s*location\s*=\s*\d+\s*\))");
+    std::string result = std::regex_replace(code, pattern, "");
+    char* output = new char[result.length() + 1];
+    strcpy(output, result.c_str());
+    return output;
+}
 
 void glBindFragDataLocation(GLuint program, GLuint color, const GLchar *name) {
     LOG()
@@ -19,29 +31,49 @@ void glBindFragDataLocation(GLuint program, GLuint color, const GLchar *name) {
 //    } else {
 //        LOG_W("Warning: No GL_EXT_blend_func_extended, skipping glBindFragDataLocation...");
 //    }
-    char* origin_glsl = NULL;
+    
+    if (strlen(name) > 8 && strncmp(name, "outColor", 8) == 0) {
+        const char* numberStr = name + 8;
+        bool isNumber = true;
+        for (int i = 0; numberStr[i] != '\0'; ++i) {
+            if (!isdigit(numberStr[i])) {
+                isNumber = false;
+                break;
+            }
+        }
 
+        if (isNumber) {
+            unsigned int extractedColor = static_cast<unsigned int>(std::stoul(numberStr));
+            if (extractedColor == color) {
+                // outColor was bound in glsl process. exit now
+                LOG_D("Find outColor* with color *, skipping")
+                return;
+            }
+        }
+    }
+
+    char* origin_glsl = nullptr;
     if (shaderInfo.frag_data_changed) {
         size_t glslLen  = strlen(shaderInfo.frag_data_changed_converted) + 1;
         origin_glsl = (char *)malloc(glslLen);
-        if (origin_glsl == NULL) {
-            LOG_E("Memory reallocation failed for frag_data_changed_converted\n");
+        if (origin_glsl == nullptr) {
+            LOG_E("Memory reallocation failed for frag_data_changed_converted\n")
             return;
         }
         strcpy(origin_glsl, shaderInfo.frag_data_changed_converted);
     } else {
-        size_t glslLen  = strlen(shaderInfo.converted) + 1;
+        size_t glslLen  = shaderInfo.converted.length() + 1;
         origin_glsl = (char *)malloc(glslLen);
-        if (origin_glsl == NULL) {
-            LOG_E("Memory reallocation failed for converted\n");
+        if (origin_glsl == nullptr) {
+            LOG_E("Memory reallocation failed for converted\n")
             return;
         }
-        strcpy(origin_glsl, shaderInfo.converted);
+        strcpy(origin_glsl, shaderInfo.converted.c_str());
     }
 
     int len = strlen(name);
     int tlen = len + 32;
-    char *targetPattern = malloc(sizeof(char) * tlen);
+    char *targetPattern = (char*)malloc(sizeof(char) * tlen);
     if (!targetPattern) {
         LOG_E("Memory allocation failed for targetPattern")
         return;
@@ -49,10 +81,10 @@ void glBindFragDataLocation(GLuint program, GLuint color, const GLchar *name) {
     sprintf(targetPattern, "out[ ]+[A-Za-z0-9 ]+[ ]+%s", name);
     regex_t regex;
     regmatch_t pmatch[1];
-    char *origin = NULL;
-    char *result = NULL;
+    char *origin = nullptr;
+    char *result = nullptr;
     if (regcomp(&regex, targetPattern, REG_EXTENDED) != 0) {
-        LOG_E("Failed to compile regex\n");
+        LOG_E("Failed to compile regex\n")
         return;
     }
     char *searchStart = origin_glsl;
@@ -60,7 +92,7 @@ void glBindFragDataLocation(GLuint program, GLuint color, const GLchar *name) {
         size_t matchLen = pmatch[0].rm_eo - pmatch[0].rm_so;
         origin = (char *) malloc(matchLen + 1);
         if (!origin) {
-            LOG_E("Memory allocation failed\n");
+            LOG_E("Memory allocation failed\n")
             break;
         }
         strncpy(origin, searchStart + pmatch[0].rm_so, matchLen);
@@ -70,10 +102,13 @@ void glBindFragDataLocation(GLuint program, GLuint color, const GLchar *name) {
                 strlen(origin) + 30; // "layout (location = )" + colorNumber + null terminator
         result = (char *) malloc(resultLen);
         if (!result) {
-            LOG_E("Memory allocation failed\n");
+            LOG_E("Memory allocation failed\n")
             free(origin);
             break;
         }
+
+        origin = removeLayoutLocations(origin);
+        
         snprintf(result, resultLen, "layout (location = %d) %s", color, origin);
 
         char *temp = strstr(searchStart, origin);
@@ -84,7 +119,7 @@ void glBindFragDataLocation(GLuint program, GLuint color, const GLchar *name) {
 
             char *newConverted = (char *) malloc(newLen);
             if (!newConverted) {
-                LOG_E("Memory allocation failed\n");
+                LOG_E("Memory allocation failed\n")
                 free(origin);
                 free(result);
                 break;
@@ -98,12 +133,11 @@ void glBindFragDataLocation(GLuint program, GLuint color, const GLchar *name) {
             size_t newLen_2 = strlen(newConverted) + 1;
             shaderInfo.frag_data_changed_converted = (char *) realloc(
                     shaderInfo.frag_data_changed_converted, newLen_2);
-            if (shaderInfo.frag_data_changed_converted == NULL) {
-                LOG_E("Memory reallocation failed for frag_data_changed_converted\n");
+            if (shaderInfo.frag_data_changed_converted == nullptr) {
+                LOG_E("Memory reallocation failed for frag_data_changed_converted\n")
                 return;
             }
             strcpy(shaderInfo.frag_data_changed_converted, newConverted);
-
             free(newConverted);
         }
 
@@ -122,20 +156,20 @@ void glLinkProgram(GLuint program) {
     LOG()
 
     LOG_D("glLinkProgram(%d)", program)
-    if (shaderInfo.converted && shaderInfo.frag_data_changed) {
-        LOAD_GLES(glShaderSource, void, GLuint shader, GLsizei count, const GLchar *const* string, const GLint *length)
-        LOAD_GLES(glCompileShader, void, GLuint shader)
-        LOAD_GLES(glDetachShader, void, GLuint program, GLuint shader)
-        LOAD_GLES(glAttachShader, void, GLuint program, GLuint shader)
-        gles_glShaderSource(shaderInfo.id, 1, (const GLchar * const*) &shaderInfo.frag_data_changed_converted, NULL);
+    if (!shaderInfo.converted.empty() && shaderInfo.frag_data_changed) {
+        LOAD_GLES_FUNC(glShaderSource)
+        LOAD_GLES_FUNC(glCompileShader)
+        LOAD_GLES_FUNC(glDetachShader)
+        LOAD_GLES_FUNC(glAttachShader)
+        gles_glShaderSource(shaderInfo.id, 1, (const GLchar * const*) &shaderInfo.frag_data_changed_converted, nullptr);
         gles_glCompileShader(shaderInfo.id);
-        LOAD_GLES(glGetShaderiv, void, GLuint shader, GLenum pname, GLint *params)
+        LOAD_GLES_FUNC(glGetShaderiv)
         GLint status = 0;
         gles_glGetShaderiv(shaderInfo.id, GL_COMPILE_STATUS, &status);
         if(status!=GL_TRUE) {
             char tmp[500];
-            LOAD_GLES(glGetShaderInfoLog, void, GLuint shader, GLsizei bufSize, GLsizei *length, GLchar *infoLog);
-            gles_glGetShaderInfoLog(shaderInfo.id, 500, NULL, tmp);
+            LOAD_GLES_FUNC(glGetShaderInfoLog)
+            gles_glGetShaderInfoLog(shaderInfo.id, 500, nullptr, tmp);
             LOG_E("Failed to compile patched shader, log:\n%s", tmp)
         }
         gles_glDetachShader(program, shaderInfo.id);
@@ -143,10 +177,10 @@ void glLinkProgram(GLuint program) {
         CHECK_GL_ERROR
     }
     shaderInfo.id = 0;
-    shaderInfo.converted = NULL;
-    shaderInfo.frag_data_changed_converted = NULL;
+    shaderInfo.converted = "";
+    shaderInfo.frag_data_changed_converted = nullptr;
     shaderInfo.frag_data_changed = 0;
-    LOAD_GLES(glLinkProgram, void, GLuint program)
+    LOAD_GLES_FUNC(glLinkProgram)
     gles_glLinkProgram(program);
 
     CHECK_GL_ERROR
@@ -159,9 +193,9 @@ void glGetProgramiv(GLuint program, GLenum pname, GLint *params) {
     if(global_settings.ignore_error >= 1 && (pname == GL_LINK_STATUS || pname == GL_VALIDATE_STATUS) && !*params) {
         GLchar infoLog[512];
         LOAD_GLES_FUNC(glGetShaderInfoLog)
-        gles_glGetShaderInfoLog(program, 512, NULL, infoLog);
-        LOG_W_FORCE("Program %d linking failed: \n%s", program, infoLog);
-        LOG_W_FORCE("Now try to cheat.");
+        gles_glGetShaderInfoLog(program, 512, nullptr, infoLog);
+        LOG_W_FORCE("Program %d linking failed: \n%s", program, infoLog)
+        LOG_W_FORCE("Now try to cheat.")
         *params = GL_TRUE;
     }
     CHECK_GL_ERROR

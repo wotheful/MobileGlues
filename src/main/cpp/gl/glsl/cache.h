@@ -5,15 +5,9 @@
 #ifndef MOBILEGLUES_PLUGIN_CACHE_H
 #define MOBILEGLUES_PLUGIN_CACHE_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 #include "../mg.h"
 #include "../../config/config.h"
 #include "../../config/settings.h"
-#ifdef __cplusplus
-}
-#endif
 
 #include <list>
 #include <unordered_map>
@@ -29,6 +23,7 @@ public:
     bool load();
     void save();
 
+    static Cache& get_instance();
 private:
     struct CacheEntry {
         std::array<uint8_t, 32> sha256;
@@ -45,7 +40,7 @@ private:
     std::unordered_map<std::array<uint8_t, 32>, ListIterator, SHA256Hash> cacheMap;
     size_t cacheSize = 0;
 
-    std::array<uint8_t, 32> computeSHA256(const char* data);
+    static std::array<uint8_t, 32> computeSHA256(const char* data);
     void maintainCacheSize();
 };
 

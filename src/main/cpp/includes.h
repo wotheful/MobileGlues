@@ -15,9 +15,14 @@
 #include "egl/egl.h"
 #include "egl/loader.h"
 
-#define _mglues_dlopen(name) dlopen(name, RTLD_LAZY)
-#define _mglues_dlclose(handle) dlclose(handle)
-#define _mglues_dlsym(handle, name) dlsym(handle, name)
+#if PROFILING
+#include <perfetto.h>
+PERFETTO_DEFINE_CATEGORIES(
+        perfetto::Category("glcalls")
+                .SetDescription("Calls from OpenGL"),
+        perfetto::Category("internal")
+                .SetDescription("Internal calls"));
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -30,11 +35,5 @@ void proc_init();
 #ifdef __cplusplus
 }
 #endif
-
-
-EGLContext mglues_eglCreateContext (EGLDisplay dpy, EGLConfig config, EGLContext share_context, const EGLint *attrib_list);
-EGLBoolean mglues_eglDestroyContext(EGLDisplay dpy, EGLContext ctx);
-EGLBoolean mglues_eglMakeCurrent(EGLDisplay dpy, EGLSurface draw, EGLSurface read, EGLContext ctx);
-
 
 #endif //MOBILEGLUES_INCLUDES_H

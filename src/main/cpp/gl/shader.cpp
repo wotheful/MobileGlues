@@ -2,7 +2,7 @@
 // Created by BZLZHH on 2025/1/26.
 //
 
-#include <ctype.h>
+#include <cctype>
 #include "shader.h"
 
 #include "gl.h"
@@ -34,58 +34,75 @@ bool can_run_essl3(unsigned int esversion, const char *glsl) {
     return esversion >= glsl_version;
 }
 
-
-bool is_direct_shader(char *glsl)
+bool is_direct_shader(const char *glsl)
 {
     bool es3_ability = can_run_essl3(hardware->es_version, glsl);
     return es3_ability;
 }
 
 void glShaderSource(GLuint shader, GLsizei count, const GLchar *const* string, const GLint *length) {    
-    LOG();
+    LOG()
     shaderInfo.id = 0;
-    shaderInfo.converted = NULL;
+    shaderInfo.converted = "";
     shaderInfo.frag_data_changed = 0;
-    int l = 0;
+    size_t l = 0;
     for (int i=0; i<count; i++) l+=(length && length[i] >= 0)?length[i]:strlen(string[i]);
-    char* source = NULL;
-    char* converted = NULL;
-    source = (char*)malloc(l+1);
-    memset(source, 0, l+1);
-    if(length) {
-        for (int i=0; i<count; i++) {
+    std::string glsl_src, essl_src;
+    glsl_src.reserve(l + 1);
+    if (length) {
+        for (int i = 0; i < count; i++) {
             if(length[i] >= 0)
-                strncat(source, string[i], length[i]);
+                glsl_src += std::string_view(string[i], length[i]);
             else
-                strcat(source, string[i]);
+                glsl_src += string[i];
         }
     } else {
-        for (int i=0; i<count; i++)
-            strcat(source, string[i]);
+        for (int i=0; i < count; i++)
+            glsl_src += string[i];
     }
-    LOAD_GLES2(glShaderSource, void, GLuint shader, GLsizei count, const GLchar *const*string, const GLint *length);
+
+//    char* source = nullptr;
+//    char* converted = nullptr;
+//    source = (char*)malloc(l+1);
+//    memset(source, 0, l+1);
+//    if(length) {
+//        for (int i=0; i<count; i++) {
+//            if(length[i] >= 0)
+//                strncat(source, string[i], length[i]);
+//            else
+//                strcat(source, string[i]);
+//        }
+//    } else {
+//        for (int i=0; i<count; i++)
+//            strcat(source, string[i]);
+//    }
+    LOAD_GLES_FUNC(glShaderSource)
     if (gles_glShaderSource) {
-        if(is_direct_shader(source)){
-            LOG_D("[INFO] [Shader] Direct shader source: ");
-            LOG_D("%s", source);
-            converted = strdup(source);
+        if(is_direct_shader(glsl_src.c_str())){
+            LOG_D("[INFO] [Shader] Direct shader source: ")
+            LOG_D("%s", glsl_src.c_str())
+            essl_src = glsl_src;
         } else {
-            int glsl_version = getGLSLVersion(source);
-            LOG_D("[INFO] [Shader] Shader source: ");
-            LOG_D("%s", source);
+            int glsl_version = getGLSLVersion(glsl_src.c_str());
+            LOG_D("[INFO] [Shader] Shader source: ")
+            LOG_D("%s", glsl_src.c_str())
             GLint shaderType;
-            glGetShaderiv(shader, GL_SHADER_TYPE, &shaderType);
-            converted = GLSLtoGLSLES(source, shaderType, hardware->es_version, glsl_version);
-            if (!converted) {
-                LOG_E("Failed to convert shader %d.", shader);
+            LOAD_GLES_FUNC(glGetShaderiv)
+            gles_glGetShaderiv(shader, GL_SHADER_TYPE, &shaderType);
+            essl_src = getCachedESSL(glsl_src.c_str(), hardware->es_version);
+            if (essl_src.empty())
+                essl_src = GLSLtoGLSLES(glsl_src.c_str(), shaderType, hardware->es_version, glsl_version);
+            if (essl_src.empty()) {
+                LOG_E("Failed to convert shader %d.", shader)
                 return;
             }
-            LOG_D("\n[INFO] [Shader] Converted Shader source: \n%s", converted);
+            LOG_D("\n[INFO] [Shader] Converted Shader source: \n%s", essl_src.c_str())
         }
-        if (converted) {
+        if (!essl_src.empty()) {
             shaderInfo.id = shader;
-            shaderInfo.converted = converted;
-            gles_glShaderSource(shader, count, (const GLchar * const*)&converted, NULL);
+            shaderInfo.converted = essl_src;
+            const char* s[] = { essl_src.c_str() };
+            gles_glShaderSource(shader, count, s, nullptr);
         }
         else
             LOG_E("Failed to convert glsl.")
@@ -97,14 +114,14 @@ void glShaderSource(GLuint shader, GLsizei count, const GLchar *const* string, c
 
 void glGetShaderiv(GLuint shader, GLenum pname, GLint *params) {
     LOG()
-    LOAD_GLES_FUNC(glGetShaderiv);
+    LOAD_GLES_FUNC(glGetShaderiv)
     gles_glGetShaderiv(shader, pname, params);
     if(global_settings.ignore_error >= 1 && pname == GL_COMPILE_STATUS && !*params) {
         GLchar infoLog[512];
-        LOAD_GLES_FUNC(glGetShaderInfoLog);
-        gles_glGetShaderInfoLog(shader, 512, NULL, infoLog);
-        LOG_W_FORCE("Shader %d compilation failed: \n%s", shader, infoLog);
-        LOG_W_FORCE("Now try to cheat.");
+        LOAD_GLES_FUNC(glGetShaderInfoLog)
+        gles_glGetShaderInfoLog(shader, 512, nullptr, infoLog);
+        LOG_W_FORCE("Shader %d compilation failed: \n%s", shader, infoLog)
+        LOG_W_FORCE("Now try to cheat.")
         *params = GL_TRUE;
     }
     CHECK_GL_ERROR

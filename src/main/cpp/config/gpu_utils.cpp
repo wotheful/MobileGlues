@@ -53,7 +53,7 @@ const char* getGPUInfo() {
     const char* renderer = NULL;
     void* lib = open_lib(gles3_lib, NULL);
     if (lib) {
-        gles_glGetString = dlsym(lib, "glGetString");
+        gles_glGetString = (const GLubyte * (*)( GLenum ))dlsym(lib, "glGetString");
         if (gles_glGetString) {
             renderer = (const char*)gles_glGetString(GL_RENDERER);
         }
@@ -66,22 +66,29 @@ const char* getGPUInfo() {
     return renderer;
 }
 
+int isAdreno(const char* gpu) {
+//    const char* gpu = getGPUInfo();
+    if (!gpu)
+        return 0;
+    return strstr(gpu, "Adreno") != NULL;
+}
+
 int isAdreno740(const char* gpu) {
 //    const char* gpu = getGPUInfo();
     if (!gpu)
         return 0;
-    return strstr(gpu, "Adreno") && strstr(gpu, "740");
+    return isAdreno(gpu) && (strstr(gpu, "740") != NULL);
 }
 
 int isAdreno830(const char* gpu) {
 //    const char* gpu = getGPUInfo();
     if (!gpu)
         return 0;
-    return strstr(gpu, "Adreno") && strstr(gpu, "830");
+    return isAdreno(gpu) && (strstr(gpu, "830") != NULL);
 }
 
 int hasVulkan13() {
-    VkResult result;
+    VkResult result = VK_SUCCESS;
     uint32_t instanceExtensionCount = 0;
 
     result = vkEnumerateInstanceExtensionProperties(NULL, &instanceExtensionCount, NULL);
@@ -91,17 +98,24 @@ int hasVulkan13() {
 
     VkApplicationInfo appInfo = {};
     appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
+    appInfo.pNext = NULL;
     appInfo.pApplicationName = "Vulkan Check";
     appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
-    appInfo.pEngineName = "No Engine";
+    appInfo.pEngineName = "MobileGlues";
     appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
     appInfo.apiVersion = VK_API_VERSION_1_3;
 
     VkInstanceCreateInfo createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
+    createInfo.pNext = NULL;
+    createInfo.flags = 0;
     createInfo.pApplicationInfo = &appInfo;
+    createInfo.enabledLayerCount = 0;
+    createInfo.ppEnabledLayerNames = NULL;
+    createInfo.enabledExtensionCount = 0;
+    createInfo.ppEnabledExtensionNames = 0;
 
-    VkInstance instance;
+    VkInstance instance = {};
     result = vkCreateInstance(&createInfo, NULL, &instance);
     if (result != VK_SUCCESS) {
         return 0;
@@ -114,7 +128,8 @@ int hasVulkan13() {
         return 0;
     }
 
-    VkPhysicalDevice physicalDevices[gpuCount];
+    VkPhysicalDevice* physicalDevices = (VkPhysicalDevice*)malloc(sizeof(VkPhysicalDevice) * gpuCount);
+    //VkPhysicalDevice physicalDevices[gpuCount];
     vkEnumeratePhysicalDevices(instance, &gpuCount, physicalDevices);
 
     for (uint32_t i = 0; i < gpuCount; i++) {
@@ -126,6 +141,8 @@ int hasVulkan13() {
             return 1;
         }
     }
+
+    free(physicalDevices);
 
     vkDestroyInstance(instance, NULL);
     return 0;

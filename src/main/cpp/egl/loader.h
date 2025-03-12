@@ -5,6 +5,11 @@
 #ifndef FOLD_CRAFT_LAUNCHER_EGL_LOADER_H
 #define FOLD_CRAFT_LAUNCHER_EGL_LOADER_H
 
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "egl.h"
 
 
@@ -173,6 +178,12 @@ EGLBoolean mglues_eglMakeCurrent(EGLDisplay dpy, EGLSurface draw, EGLSurface rea
 */
 
 void init_target_egl();
+void destroy_temp_egl_ctx();
+
+
+#ifdef __cplusplus
+}
+#endif
 
 
 #ifdef __cplusplus

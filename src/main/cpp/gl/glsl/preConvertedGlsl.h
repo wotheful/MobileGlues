@@ -5,11 +5,17 @@
 #ifndef MOBILEGLUES_PLUGIN_PRECONVERTEDGLSL_H
 #define MOBILEGLUES_PLUGIN_PRECONVERTEDGLSL_H
 
-extern "C" {
 #include "../log.h"
 #include "../mg.h"
-};
 
-char* preConvertedGlsl(char* glsl_code);
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+char *preConvertedGlsl(char *glsl_code);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif //MOBILEGLUES_PLUGIN_PRECONVERTEDGLSL_H

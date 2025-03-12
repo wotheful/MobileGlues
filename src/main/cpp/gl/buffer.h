@@ -3,9 +3,6 @@
 //
 
 #ifndef MOBILEGLUES_BUFFER_H
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 #include "../includes.h"
 #include "gl.h"
@@ -14,26 +11,35 @@ extern "C" {
 #include "../gles/loader.h"
 #include "mg.h"
 
+#include <vector>
+
 typedef struct {
     GLenum target;
     GLuint buffer_id;
     void *mapped_ptr;
+#if GLOBAL_DEBUG || DEBUG
+    void *client_ptr;
+#endif
     GLsizeiptr size;
     GLbitfield flags;
     GLboolean is_dirty;
 } BufferMapping;
 
-static BufferMapping g_active_mapping = {0};
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 static GLenum get_binding_query(GLenum target);
-
-GLboolean force_unmap();
 
 GLAPI GLAPIENTRY GLboolean glUnmapBuffer(GLenum target);
 
 GLAPI GLAPIENTRY void *glMapBuffer(GLenum target, GLenum access);
 
+GLAPI GLAPIENTRY void glBufferData(GLenum target, GLsizeiptr size, const void *data, GLenum usage);
+
 GLAPI GLAPIENTRY void glBufferStorage(GLenum target, GLsizeiptr size, const void* data, GLbitfield flags);
+
+GLAPI GLAPIENTRY void glBindBuffer(GLenum target, GLuint buffer);
 
 #ifdef __cplusplus
 }

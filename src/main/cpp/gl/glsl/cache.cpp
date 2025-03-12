@@ -150,33 +150,42 @@ void Cache::maintainCacheSize() {
 
 
 bool Cache::load() {
-    ifstream file(GLSL_CACHE_FILE_PATH, ios::binary);
-    if (!file) return false;
-
-    size_t count;
-    file.read(reinterpret_cast<char*>(&count), sizeof(count));
-
-    while (count--) {
-        array<uint8_t, 32> hash{};
-        size_t esslSize;
-
-        file.read(reinterpret_cast<char*>(hash.data()), hash.size());
-        file.read(reinterpret_cast<char*>(&esslSize), sizeof(esslSize));
-
-        string essl(esslSize, '\0');
-        file.read(essl.data(), esslSize);
-
-        if (cacheMap.count(hash)) continue;
-
-        size_t entryMemory = sizeof(CacheEntry::sha256) + sizeof(size_t) + esslSize;
-        cacheSize += entryMemory;
-
-        cacheList.emplace_back(CacheEntry{hash, move(essl), esslSize});
-        cacheMap[hash] = prev(cacheList.end());
+    try {
+        ifstream file(GLSL_CACHE_FILE_PATH, ios::binary);
+        if (!file) return false;
+    
+        size_t count;
+        file.read(reinterpret_cast<char*>(&count), sizeof(count));
+    
+        while (count--) {
+            array<uint8_t, 32> hash{};
+            size_t esslSize;
+    
+            file.read(reinterpret_cast<char*>(hash.data()), hash.size());
+            file.read(reinterpret_cast<char*>(&esslSize), sizeof(esslSize));
+    
+            string essl(esslSize, '\0');
+            file.read(essl.data(), (long)esslSize);
+    
+            if (cacheMap.count(hash)) continue;
+    
+            size_t entryMemory = sizeof(CacheEntry::sha256) + sizeof(size_t) + esslSize;
+            cacheSize += entryMemory;
+    
+            cacheList.emplace_back(CacheEntry{hash, move(essl), esslSize});
+            cacheMap[hash] = prev(cacheList.end());
+        }
+    
+        maintainCacheSize();
+        return true;
+    } catch (...) {
+        LOG_W_FORCE("Error while loading glsl cache file. Clearing it...")
+        cacheMap.clear();
+        cacheSize = 0;
+        cacheList.clear();
+        save();
+        return false;
     }
-
-    maintainCacheSize();
-    return true;
 }
 
 
@@ -190,9 +199,14 @@ void Cache::save() {
     file.write(reinterpret_cast<const char*>(&count), sizeof(count));
 
     for (const auto& entry : cacheList) {
-        file.write(reinterpret_cast<const char*>(entry.sha256.data()), entry.sha256.size());
+        file.write(reinterpret_cast<const char*>(entry.sha256.data()), (long)entry.sha256.size());
         size_t esslSize = entry.size;
         file.write(reinterpret_cast<const char*>(&esslSize), sizeof(esslSize));
-        file.write(entry.essl.data(), esslSize);
+        file.write(entry.essl.data(), (long)esslSize);
     }
+}
+
+Cache& Cache::get_instance() {
+    static Cache s_cache;
+    return s_cache;
 }

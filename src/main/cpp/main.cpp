@@ -12,13 +12,10 @@
 #include "gles/loader.h"
 #include "gl/envvars.h"
 #include "gl/log.h"
+#include "config/settings.h"
 #include "gl/fpe/fpe.hpp"
 
 #define DEBUG 0
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 __attribute__((used)) const char* copyright = "Copyright (C) 2025 Swung0x48, BZLZHH, Tungsten. All rights reserved. Logo artwork kindly provided by Aou156.";
 
@@ -32,7 +29,7 @@ void init_libshaderconv() {
         LOG_D("%s not found\n", shaderconv_lib);
     }
     else {
-        MesaConvertShader = (char *(*)(const char *, unsigned int, unsigned int, unsigned int))dlsym(glslconv, func_name);
+        MesaConvertShader = (char * (*)(const char *,unsigned int,unsigned int,unsigned int))dlsym(glslconv, func_name);
         if (MesaConvertShader) {
             LOG_D("%s loaded\n", shaderconv_lib);
         } else {
@@ -222,13 +219,29 @@ void draw_watermark() {
     LOG_D("restore ok")
 }
 
+#if PROFILING
 
-void load_libs();
+PERFETTO_TRACK_EVENT_STATIC_STORAGE();
+
+void init_perfetto() {
+    perfetto::TracingInitArgs args;
+
+    args.backends |= perfetto::kSystemBackend;
+
+    perfetto::Tracing::Initialize(args);
+    perfetto::TrackEvent::Register();
+}
+#endif
+
 void proc_init() {
     init_config();
+
     clear_log();
     start_log();
-    LOG_V("Initializing %s @ %s", RENDERERNAME, __FUNCTION__);
+
+    init_settings();
+
+    LOG_V("Initializing %s ...", RENDERERNAME);
     show_copyright();
 
     load_libs();
@@ -237,14 +250,12 @@ void proc_init() {
 
     init_libshaderconv();
 
-    init_watermark_res();
+    //init_watermark_res();
+#if PROFILING
+    init_perfetto();
+#endif
 
-//    if (init_fpe() != 0)
-//        abort();
-
+    // Cleanup
+    destroy_temp_egl_ctx();
     g_initialized = 1;
 }
-
-#ifdef __cplusplus
-}
-#endif

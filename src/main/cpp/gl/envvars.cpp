@@ -1,9 +1,9 @@
 #include "envvars.h"
 #include "glext.h"
 #include "../includes.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdarg.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstdarg>
 
 const char* GetEnvVar(const char *name)
 {
@@ -12,7 +12,7 @@ const char* GetEnvVar(const char *name)
 
 int HasEnvVar(const char *name)
 {
-	return GetEnvVar(name)!=NULL;
+	return GetEnvVar(name) != nullptr;
 }
 
 int ReturnEnvVarInt(const char *name)
@@ -79,4 +79,3 @@ int GetEnvVarFmt(const char *name,const char *fmt,...)
 	}
 	return cnt;
 }
-
