@@ -46,6 +46,7 @@ std::vector<uint32_t> quad_to_triangle(int n) {
     return indices;
 }
 
+#if DEBUG || GLOBAL_DEBUG
 void log_vtx_attrib_data(const void* ptr, GLenum type, int size, int stride, int offset, int idx) {
     const char* p = (const char*) ptr + idx * stride + offset;
     switch (type) {
@@ -68,6 +69,7 @@ void log_vtx_attrib_data(const void* ptr, GLenum type, int size, int stride, int
         }
     }
 }
+#endif
 
 bool fpe_inited = false;
 int init_fpe() {
