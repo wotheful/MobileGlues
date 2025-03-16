@@ -5,6 +5,8 @@
 #ifndef MOBILEGLUES_GLES_H
 #define MOBILEGLUES_GLES_H
 
+#include "loader.h"
+
 #define GL_TEXTURE_LOD_BIAS_QCOM          0x8C96
 
 #define APIENTRY_GLES

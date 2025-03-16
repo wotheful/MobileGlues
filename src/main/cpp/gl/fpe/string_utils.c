@@ -6,12 +6,12 @@
 
 const char* AllSeparators = " \t\n\r.,;()[]{}-<>+*/%&\\\"'^$=!:?";
 
-char* gl4es_resize_if_needed(char* pBuffer, int *size, int addsize);
+char* mg_resize_if_needed(char* pBuffer, int *size, int addsize);
 
-char* gl4es_inplace_replace(char* pBuffer, int* size, const char* S, const char* D)
+char* mg_inplace_replace(char* pBuffer, int* size, const char* S, const char* D)
 {
     int lS = strlen(S), lD = strlen(D);
-    pBuffer = gl4es_resize_if_needed(pBuffer, size, (lD-lS)*gl4es_count_string(pBuffer, S));
+    pBuffer = mg_resize_if_needed(pBuffer, size, (lD-lS)*mg_count_string(pBuffer, S));
     char* p = pBuffer;
     while((p = strstr(p, S)))
     {
@@ -30,9 +30,9 @@ char* gl4es_inplace_replace(char* pBuffer, int* size, const char* S, const char*
     return pBuffer;
 }
 
-char* gl4es_inplace_insert(char* pBuffer, const char* S, char* master, int* size)
+char* mg_inplace_insert(char* pBuffer, const char* S, char* master, int* size)
 {
-    char* m = gl4es_resize_if_needed(master, size, strlen(S));
+    char* m = mg_resize_if_needed(master, size, strlen(S));
     if(m!=master) {
         pBuffer += (m-master);
         master = m;
@@ -45,14 +45,14 @@ char* gl4es_inplace_insert(char* pBuffer, const char* S, char* master, int* size
     return master;
 }
 
-char* gl4es_getline(char* pBuffer, int num)
+char* mg_getline(char* pBuffer, int num)
 {
     char *p = pBuffer;
     while(num-- && (p=strstr(p, "\n"))) p+=strlen("\n");
     return (p)?p:pBuffer;
 }
 
-int gl4es_countline(const char* pBuffer)
+int mg_countline(const char* pBuffer)
 {
     int n=0;
     const char* p = pBuffer;
@@ -63,11 +63,11 @@ int gl4es_countline(const char* pBuffer)
     return n;
 }
 
-int gl4es_getline_for(const char* pBuffer, const char* S)
+int mg_getline_for(const char* pBuffer, const char* S)
 {
     int n=0;
     const char* p = pBuffer;
-    const char* end = gl4es_find_string(pBuffer, S);
+    const char* end = mg_find_string(pBuffer, S);
     if(!end)
         return 0;
     while((p=strstr(p, "\n"))) {
@@ -79,7 +79,7 @@ int gl4es_getline_for(const char* pBuffer, const char* S)
     return n;
 }
 
-int gl4es_count_string(const char* pBuffer, const char* S)
+int mg_count_string(const char* pBuffer, const char* S)
 {
     const char* p = pBuffer;
     int lS = strlen(S);
@@ -95,7 +95,7 @@ int gl4es_count_string(const char* pBuffer, const char* S)
     return n;
 }
 
-const char* gl4es_find_string(const char* pBuffer, const char* S)
+const char* mg_find_string(const char* pBuffer, const char* S)
 {
     const char* p = pBuffer;
     int lS = strlen(S);
@@ -110,7 +110,7 @@ const char* gl4es_find_string(const char* pBuffer, const char* S)
     return NULL;
 }
 
-char* gl4es_find_string_nc(char* pBuffer, const char* S)
+char* mg_find_string_nc(char* pBuffer, const char* S)
 {
     char* p = pBuffer;
     int lS = strlen(S);
@@ -125,7 +125,7 @@ char* gl4es_find_string_nc(char* pBuffer, const char* S)
     return NULL;
 }
 
-char* gl4es_resize_if_needed(char* pBuffer, int *size, int addsize) {
+char* mg_resize_if_needed(char* pBuffer, int *size, int addsize) {
     char* p = pBuffer;
     int newsize = strlen(pBuffer)+addsize+1;
     if (newsize>*size) {
@@ -136,14 +136,14 @@ char* gl4es_resize_if_needed(char* pBuffer, int *size, int addsize) {
     return p;
 }
 
-char* gl4es_append(char* pBuffer, int* size, const char* S) {
+char* mg_append(char* pBuffer, int* size, const char* S) {
     char* p =pBuffer;
-    p = gl4es_resize_if_needed(pBuffer, size, strlen(S));
+    p = mg_resize_if_needed(pBuffer, size, strlen(S));
     strcat(p, S);
     return p;
 }
 
-static int gl4es_is_blank(char c)  {
+static int mg_is_blank(char c)  {
     switch(c) {
         case ' ':
         case '\t':
@@ -158,54 +158,54 @@ static int gl4es_is_blank(char c)  {
             return 0;
     }
 }
-char* gl4es_str_next(char *pBuffer, const char* S) {
+char* mg_str_next(char *pBuffer, const char* S) {
     if(!pBuffer) return NULL;
     char *p = strstr(pBuffer, S);
     return (p)?p:(p+strlen(S));
 }
 
-char* gl4es_next_str(char* pBuffer) {
+char* mg_next_str(char* pBuffer) {
     if(!pBuffer) return NULL;
-    while(gl4es_is_blank(*pBuffer))
+    while(mg_is_blank(*pBuffer))
         ++pBuffer;
     return pBuffer;
 }
 
-char* gl4es_prev_str(char* Str, char* pBuffer) {
+char* mg_prev_str(char* Str, char* pBuffer) {
     if(!pBuffer) return NULL;
     if(pBuffer == Str)
         return Str;
     // go to previous non blank
     do {
         --pBuffer;
-    } while(gl4es_is_blank(*pBuffer) && (pBuffer!=Str));
+    } while(mg_is_blank(*pBuffer) && (pBuffer!=Str));
     // go to blank
-    while((pBuffer!=Str) && !gl4es_is_blank(*(pBuffer-1)))
+    while((pBuffer!=Str) && !mg_is_blank(*(pBuffer-1)))
         --pBuffer;
     return pBuffer;
 }
 
-char* gl4es_next_blank(char* pBuffer) {
+char* mg_next_blank(char* pBuffer) {
     if(!pBuffer) return NULL;
-    while(!gl4es_is_blank(*pBuffer))
+    while(!mg_is_blank(*pBuffer))
         ++pBuffer;
     return pBuffer;
 }
 
-char* gl4es_next_line(char* pBuffer) {
+char* mg_next_line(char* pBuffer) {
     if(!pBuffer) return NULL;
     while(*pBuffer && *pBuffer!='\n')
         ++pBuffer;
     return pBuffer;
 }
 
-const char* gl4es_get_next_str(char* pBuffer) {
+const char* mg_get_next_str(char* pBuffer) {
     static char buff[100] = {0};
     buff[0] = '\0';
     if(!pBuffer) return NULL;
-    char* p1 = gl4es_next_str(pBuffer);
+    char* p1 = mg_next_str(pBuffer);
     if(!p1) return buff;
-    char* p2 = gl4es_next_blank(p1);
+    char* p2 = mg_next_blank(p1);
     if(!p2) return buff;
     int i=0;
     while(p1!=p2 && i<99)
@@ -214,7 +214,7 @@ const char* gl4es_get_next_str(char* pBuffer) {
     return buff;
 }
 
-int gl4es_countstring_simple(char* pBuffer, const char* S)
+int mg_countstring_simple(char* pBuffer, const char* S)
 {
     char* p = pBuffer;
     int lS = strlen(S);
@@ -228,10 +228,10 @@ int gl4es_countstring_simple(char* pBuffer, const char* S)
     return n;
 }
 
-char* gl4es_inplace_replace_simple(char* pBuffer, int* size, const char* S, const char* D)
+char* mg_inplace_replace_simple(char* pBuffer, int* size, const char* S, const char* D)
 {
     int lS = strlen(S), lD = strlen(D);
-    pBuffer = gl4es_resize_if_needed(pBuffer, size, (lD-lS)*gl4es_countstring_simple(pBuffer, S));
+    pBuffer = mg_resize_if_needed(pBuffer, size, (lD-lS)*mg_countstring_simple(pBuffer, S));
     char* p = pBuffer;
     while((p = strstr(p, S)))
     {

@@ -197,6 +197,10 @@ void InitGLESCapabilities() {
     if (global_settings.ext_compute_shader) {
         AppendExtension("GL_ARB_compute_shader");
     }
+
+    // FPE caps, defined by fpe shaders
+    g_gles_caps.maxplanes = 6;
+    g_gles_caps.maxlights = 8;
 }
 
 void init_target_gles() {
