@@ -42,11 +42,14 @@ void glGetIntegerv(GLenum pname, GLint *params) {
             (*params) = 0;
             break;
         case GL_MAX_TEXTURE_IMAGE_UNITS: {
-            LOAD_GLES_FUNC(glGetIntegerv)
-            int es_params = 16;
-            gles_glGetIntegerv(pname, &es_params);
-            CHECK_GL_ERROR
-            (*params) = es_params * 2;
+            if (g_gles_caps.maxtex <= 0) {
+                LOAD_GLES_FUNC(glGetIntegerv)
+                int es_params = 16;
+                gles_glGetIntegerv(pname, &es_params);
+                CHECK_GL_ERROR
+                g_gles_caps.maxtex = (es_params < 32) ? 32 : es_params;
+            }
+            (*params) = g_gles_caps.maxtex;
             break;
         }
         default:
