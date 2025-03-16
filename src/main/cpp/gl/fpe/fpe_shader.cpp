@@ -9,6 +9,9 @@
 #include "../gles/loader.h"
 
 #define DEBUG 0
+#if GLOBAL_DEBUG || DEBUG
+#pragma clang optimize off
+#endif
 
 const char* fpeshader_signature = "// MobileGlues FPE shader generated\n";
 
