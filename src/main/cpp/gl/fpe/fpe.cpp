@@ -101,80 +101,128 @@ int init_fpe() {
     LOAD_GLES_FUNC(glVertexAttribPointer)
     LOAD_GLES_FUNC(glEnableVertexAttribArray)
 
-    shaderconv_need_s vs_need = {
-            .need_color = 1,
-            .need_secondary = 0,
-            .need_fogcoord = 0,
-            .need_texcoord = 1,
-            .need_notexarray = 0,
-            .need_normalmatrix = 0,
-            .need_mvmatrix = 1,
-            .need_mvpmatrix = 0,
-            .need_clean = 0,
-            .need_clipvertex = 0,
-            .need_texs = 0
-    };
+//    shaderconv_need_s vs_need = {
+//            .need_color = 1,
+//            .need_secondary = 0,
+//            .need_fogcoord = 0,
+//            .need_texcoord = 1,
+//            .need_notexarray = 0,
+//            .need_normalmatrix = 0,
+//            .need_mvmatrix = 1,
+//            .need_mvpmatrix = 0,
+//            .need_clean = 0,
+//            .need_clipvertex = 0,
+//            .need_texs = 0
+//    };
+//
+//    shaderconv_need_s fs_need = vs_need;
+//
+//    fpe_state_t fpe_state = {0};
+//    memset(&fpe_state, 0, sizeof(fpe_state_t));
+//    fpe_state.plane = 0;
+//    fpe_state.fogmode = 1;
+//    fpe_state.fogdist = 0;
+//    fpe_state.fogsource = 0;
+//    fpe_state.fog = 1;
+//    fpe_state.colorsum = 0;
+//    fpe_state.lighting = 0;
+//    fpe_state.normalize = 1;
+//    fpe_state.rescaling = 0;
+//    fpe_state.alphafunc = FPE_GREATER;
+//    fpe_state.alphatest = 1;
+//
+//    auto vs = fpe_VertexShader(&vs_need, &fpe_state);
+//    auto fs = fpe_FragmentShader(&fs_need, &fpe_state);
+//    LOG_D("fpe_VS: \n%s\n", vs);
+//    LOG_D("fpe_FS: \n%s\n", fs);
+//
+//    auto es_vs = ConvertShader(vs, 1, &vs_need);
+//    LOG_D("fpe_ES_VS: \n%s\n", es_vs);
+//    auto es_fs = ConvertShader(fs, 1, &fs_need);
+//    LOG_D("fpe_ES_PS: \n%s\n", es_fs);
+//
+//    g_glstate.fpe_vtx_shader_src =
+//            "#version 320 es\n"
+//            "precision highp float;\n"
+//            "precision highp int;\n"
+//            "uniform mat4 ModelViewMat;\n"
+//            "uniform mat4 ProjMat;\n"
+//            "layout (location = 0) in vec3 Pos;\n"
+//            "layout (location = 1) in vec3 Normal;\n"
+//            "layout (location = 2) in vec4 Color;\n"
+//            "layout (location = 7) in vec2 UV0;\n"
+//            "out vec4 vertexColor;\n"
+//            "out vec2 texCoord0;\n"
+//            "void main() {\n"
+//            "   gl_Position = ProjMat * ModelViewMat * vec4(Pos, 1.0);\n"
+//            "   vertexColor = Color;\n"
+//            "   texCoord0 = UV0;\n"
+//            "}\n";
+//
+//    g_glstate.fpe_frag_shader_src =
+//            "#version 320 es\n"
+//            "precision highp float;\n"
+//            "precision highp int;\n"
+//            "uniform sampler2D Sampler0;\n"
+//            "in vec4 vertexColor;\n"
+//            "in vec2 texCoord0;\n"
+//            "out vec4 FragColor;\n"
+//            "\n"
+//            "void main() {\n"
+//            "   vec4 color = texture(Sampler0, texCoord0) * vertexColor;"
+//            "   if (color.a < 0.1) {\n"
+//            "       discard;\n"
+//            "   }\n"
+//            "   FragColor = color;\n"
+//            "}";
 
-    shaderconv_need_s fs_need = vs_need;
+    shaderconv_need_s vs_need = { 0 };
+    vs_need.need_color = 1;
+    vs_need.need_secondary = 0;
+    vs_need.need_fogcoord = 0;
+    vs_need.need_texcoord = 1;
+    vs_need.need_notexarray = 0;
+    vs_need.need_normalmatrix = 0;
+    vs_need.need_mvmatrix = 1;
+    vs_need.need_mvpmatrix = 1;
+    vs_need.need_clean = 0;
+    vs_need.need_clipvertex = 0;
+    vs_need.need_texs = 0;
 
-    fpe_state_t fpe_state = {0};
+    shaderconv_need_s fs_need = { 0 };
+    fs_need.need_color = 1;
+    fs_need.need_secondary = 0;
+    fs_need.need_fogcoord = 0;
+    fs_need.need_texcoord = 1;
+    fs_need.need_notexarray = 0;
+    fs_need.need_normalmatrix = 0;
+    fs_need.need_mvmatrix = 1;
+    fs_need.need_mvpmatrix = 1;
+    fs_need.need_clean = 0;
+    fs_need.need_clipvertex = 0;
+    fs_need.need_texs = 0x1;
+
+    fpe_state_t fpe_state = { 0 };
     memset(&fpe_state, 0, sizeof(fpe_state_t));
     fpe_state.plane = 0;
-    fpe_state.fogmode = 1;
+    fpe_state.fogmode = 0;
     fpe_state.fogdist = 0;
     fpe_state.fogsource = 0;
-    fpe_state.fog = 1;
+    fpe_state.fog = 0;
     fpe_state.colorsum = 0;
     fpe_state.lighting = 0;
     fpe_state.normalize = 1;
     fpe_state.rescaling = 0;
     fpe_state.alphafunc = FPE_GREATER;
     fpe_state.alphatest = 1;
+    fpe_state.texture[0].textype = FPE_TEX_2D;
 
-    auto* vs = fpe_VertexShader(&vs_need, &fpe_state);
-    auto* fs = fpe_FragmentShader(&fs_need, &fpe_state);
-    LOG_D("fpe_VS: \n%s\n", *vs);
-    LOG_D("fpe_FS: \n%s\n", *fs);
+    auto raw_vs = fpe_VertexShader(&vs_need, &fpe_state);
+    auto raw_fs = fpe_FragmentShader(&fs_need, &fpe_state);
 
-    auto es_vs = ConvertShader(*vs, 1, &vs_need);
-    LOG_D("fpe_ES_VS: \n%s\n", es_vs);
-    auto es_fs = ConvertShader(*fs, 1, &fs_need);
-    LOG_D("fpe_ES_PS: \n%s\n", es_fs);
+    g_glstate.fpe_vtx_shader_src = ConvertShader(raw_vs, 1, &vs_need);
+    g_glstate.fpe_frag_shader_src = ConvertShader(raw_fs, 0, &fs_need);
 
-    g_glstate.fpe_vtx_shader_src =
-            "#version 320 es\n"
-            "precision highp float;\n"
-            "precision highp int;\n"
-            "uniform mat4 ModelViewMat;\n"
-            "uniform mat4 ProjMat;\n"
-            "layout (location = 0) in vec3 Pos;\n"
-            "layout (location = 1) in vec3 Normal;\n"
-            "layout (location = 2) in vec4 Color;\n"
-            "layout (location = 7) in vec2 UV0;\n"
-            "out vec4 vertexColor;\n"
-            "out vec2 texCoord0;\n"
-            "void main() {\n"
-            "   gl_Position = ProjMat * ModelViewMat * vec4(Pos, 1.0);\n"
-            "   vertexColor = Color;\n"
-            "   texCoord0 = UV0;\n"
-            "}\n";
-
-    g_glstate.fpe_frag_shader_src =
-            "#version 320 es\n"
-            "precision highp float;\n"
-            "precision highp int;\n"
-            "uniform sampler2D Sampler0;\n"
-            "in vec4 vertexColor;\n"
-            "in vec2 texCoord0;\n"
-            "out vec4 FragColor;\n"
-            "\n"
-            "void main() {\n"
-            "   vec4 color = texture(Sampler0, texCoord0) * vertexColor;"
-            "   if (color.a < 0.1) {\n"
-            "       discard;\n"
-            "   }\n"
-            "   FragColor = color;\n"
-            "}";
 
     g_glstate.fpe_vtx_shader = gles_glCreateShader(GL_VERTEX_SHADER);
     CHECK_GL_ERROR_NO_INIT
@@ -404,19 +452,28 @@ int commit_fpe_state_on_draw(GLenum* mode, GLint* first, GLsizei* count) {
     LOG_D("GL_PROJECTION: ")
     print_matrix(proj);
 
+    auto mvp_mat =
+            g_glstate.transformation.matrices[matrix_idx(GL_PROJECTION)] * g_glstate.transformation.matrices[matrix_idx(GL_MODELVIEW)];
+
     gles_glUseProgram(g_glstate.fpe_program);
     CHECK_GL_ERROR_NO_INIT
     gles_glBindVertexArray(g_glstate.vertexpointer_array.fpe_vao);
     CHECK_GL_ERROR_NO_INIT
-    GLint mvmat = gles_glGetUniformLocation(g_glstate.fpe_program, "ModelViewMat");
+    GLint u_mvpmat = gles_glGetUniformLocation(g_glstate.fpe_program, "_mg_ModelViewProjectionMatrix");
     CHECK_GL_ERROR_NO_INIT
-    GLint projmat = gles_glGetUniformLocation(g_glstate.fpe_program, "ProjMat");
+    gles_glUniformMatrix4fv(u_mvpmat, 1, GL_FALSE, glm::value_ptr(mvp_mat));
+
+
+//    GLint mvmat = gles_glGetUniformLocation(g_glstate.fpe_program, "ModelViewMat");
+//    CHECK_GL_ERROR_NO_INIT
+//    GLint projmat = gles_glGetUniformLocation(g_glstate.fpe_program, "ProjMat");
+//    CHECK_GL_ERROR_NO_INIT
+//    gles_glUniformMatrix4fv(mvmat, 1, GL_FALSE, glm::value_ptr(g_glstate.transformation.matrices[matrix_idx(GL_MODELVIEW)]));
+//    CHECK_GL_ERROR_NO_INIT
+//    gles_glUniformMatrix4fv(projmat, 1, GL_FALSE, glm::value_ptr(g_glstate.transformation.matrices[matrix_idx(GL_PROJECTION)]));
+//    CHECK_GL_ERROR_NO_INIT
+    gles_glUniform1i(gles_glGetUniformLocation(g_glstate.fpe_program, "_mg_TexSampler_0"), 0);
     CHECK_GL_ERROR_NO_INIT
-    gles_glUniformMatrix4fv(mvmat, 1, GL_FALSE, glm::value_ptr(g_glstate.transformation.matrices[matrix_idx(GL_MODELVIEW)]));
-    CHECK_GL_ERROR_NO_INIT
-    gles_glUniformMatrix4fv(projmat, 1, GL_FALSE, glm::value_ptr(g_glstate.transformation.matrices[matrix_idx(GL_PROJECTION)]));
-    CHECK_GL_ERROR_NO_INIT
-    gles_glUniform1i(gles_glGetUniformLocation(g_glstate.fpe_program, "Sampler0"), 0);
 
     return ret;
 }

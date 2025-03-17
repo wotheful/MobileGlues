@@ -1,17 +1,23 @@
+#define _CRT_SECURE_NO_WARNINGS
 #include "fpe_shader.h"
 
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
+#include <malloc.h>
 
 #include "string_utils.h"
 //#include "init.h"
 #include "fpe_defines.h"
-#include "../gles/loader.h"
 
+#define GLOBAL_DEBUG 1
 #define DEBUG 1
 #if GLOBAL_DEBUG || DEBUG
 #pragma clang optimize off
 #endif
+
+#define LOG_D(...) \
+    printf(__VA_ARGS__);
 
 const char* fpeshader_signature = "// MobileGlues FPE shader generated\n";
 
@@ -24,7 +30,7 @@ static int comments = 1;
 const char* texvecsize[] = {"vec4", "vec2", "vec2", "vec3", "vec2"};
 const char* texxyzsize[] = {"stpq", "st",    "st",  "stp",   "st"};
 //                          2D              Rectangle      3D          CubeMap          Stream
-const char* texname[] = {"texture2DProj", "texture2D", "texture2D", "textureCube", "textureStreamIMG"};    // textureRectange and 3D are emulated with 2D
+const char* texname[] = {"texture2D", "texture2D", "texture2D", "textureCube", "textureStreamIMG"};    // textureRectange and 3D are emulated with 2D
 const char* texnoproj[] = {"texture2D", "texture2D", "texture2D", "textureCube", "textureStreamIMG"};    // textureRectange and 3D are emulated with 2D
 const char* texsampler[] = {"sampler2D", "sampler2D", "sampler2D", "samplerCube", "samplerStreamIMG"};
 int texnsize[] = {2, 2, 3, 3, 2};
@@ -94,7 +100,7 @@ int fpe_texenvSecondary(fpe_state_t* state) {
                 src_r[2] = state->texenv[i].texsrcrgb2;
                 src_r[3] = state->texenv[i].texsrcrgb3;
                 if(combine_rgb==FPE_CR_DOT3_RGBA) {
-                        src_r[2] = -1;
+                    src_r[2] = -1;
                 } else {
                     if(combine_rgb==FPE_CR_REPLACE) {
                         src_r[1] = src_r[2] = -1;
@@ -109,7 +115,7 @@ int fpe_texenvSecondary(fpe_state_t* state) {
             }
         }
     }
-    return 0;   
+    return 0;
 }
 
 char* fpe_packed64(uint64_t x, int s, int k) {
@@ -172,7 +178,7 @@ char* ConvertShader(const char* pEntry, int isVertex, shaderconv_need_t *need)
     int maskbefore = 4|(isVertex?1:2);
     int maskafter = 8|(isVertex?1:2);
 #if DEBUG || GLOBAL_DEBUG
-        printf("Shader source%s:\n%s\n", fpeShader?" (FPEShader generated)":"", pEntry);
+    printf("Shader source%s:\n%s\n", fpeShader?" (FPEShader generated)":"", pEntry);
 #endif
     int comments = DEBUG || GLOBAL_DEBUG;
 
@@ -253,7 +259,7 @@ char* ConvertShader(const char* pEntry, int isVertex, shaderconv_need_t *need)
 #ifndef _MSC_VER
         char e[l];
 #else
-        char* e = _alloca(l);
+        char* e = (char*)_alloca(l);
 #endif
         memset(e, 0, l);
         strncpy(e, ext, l-1);
@@ -993,11 +999,11 @@ char* ConvertShader(const char* pEntry, int isVertex, shaderconv_need_t *need)
 }
 
 
-const char* const* fpe_VertexShader(shaderconv_need_t* need, fpe_state_t *state) {
+char* fpe_VertexShader(shaderconv_need_t* need, fpe_state_t *state) {
 #define ShadAppend(S) shad = mg_append(shad, &shad_cap, S)
     // vertex is first called, so 1st time init is only here
     if(!shad_cap) shad_cap = 1024;
-    if(!shad) shad = (char*)malloc(shad_cap);
+    char* shad = (char*)malloc(shad_cap);
     // state can be NULL, so provide a 0 default
     fpe_state_t default_state = {0};
     int is_default = !!need;
@@ -1044,7 +1050,7 @@ const char* const* fpe_VertexShader(shaderconv_need_t* need, fpe_state_t *state)
 
     if(comments) {
         sprintf(buff, "// ** Vertex Shader **\n// lighting=%d (twosided=%d, separate=%d, color_material=%d)\n// secondary=%d, planes=%s\n// point=%d%s\n",
-            lighting, twosided, light_separate, color_material, secondary, fpe_binary(planes, 6), point, need?" with need":"");
+                lighting, twosided, light_separate, color_material, secondary, fpe_binary(planes, 6), point, need?" with need":"");
         ShadAppend(buff);
         headers+=mg_countline(buff);
         if(need) {
@@ -1070,41 +1076,41 @@ const char* const* fpe_VertexShader(shaderconv_need_t* need, fpe_state_t *state)
         }
     }
     if(lighting) {
-        sprintf(buff, 
-            "struct _mg_FPELightSourceParameters1\n"
-            "{\n"
-            "%s"
-            "   highp vec4 specular;\n"
-            "   highp vec4 position;\n"
-            "   highp vec3 spotDirection;\n"
-            "   highp float spotExponent;\n"
-            "   highp float spotCosCutoff;\n"
-            "   highp float constantAttenuation;\n"
-            "   highp float linearAttenuation;\n"
-            "   highp float quadraticAttenuation;\n"
-            "};\n", 
-            (color_material)?
-            "   highp vec4 ambient;\n"
-            "   highp vec4 diffuse;\n"
-            : ""
-            );
+        sprintf(buff,
+                "struct _mg_FPELightSourceParameters1\n"
+                "{\n"
+                "%s"
+                "   highp vec4 specular;\n"
+                "   highp vec4 position;\n"
+                "   highp vec3 spotDirection;\n"
+                "   highp float spotExponent;\n"
+                "   highp float spotCosCutoff;\n"
+                "   highp float constantAttenuation;\n"
+                "   highp float linearAttenuation;\n"
+                "   highp float quadraticAttenuation;\n"
+                "};\n",
+                (color_material)?
+                "   highp vec4 ambient;\n"
+                "   highp vec4 diffuse;\n"
+                                : ""
+        );
         ShadAppend(buff);
         headers += mg_countline(buff);
-        sprintf(buff, 
-            "struct _mg_FPELightSourceParameters0\n"
-            "{\n"
-            "%s"
-            "   highp vec4 specular;\n"
-            "   highp vec4 position;\n"
-            "   highp vec3 spotDirection;\n"
-            "   highp float spotExponent;\n"
-            "   highp float spotCosCutoff;\n"
-            "};\n", 
-            (color_material)?
-            "   highp vec4 ambient;\n"
-            "   highp vec4 diffuse;\n"
-            : ""
-            );
+        sprintf(buff,
+                "struct _mg_FPELightSourceParameters0\n"
+                "{\n"
+                "%s"
+                "   highp vec4 specular;\n"
+                "   highp vec4 position;\n"
+                "   highp vec3 spotDirection;\n"
+                "   highp float spotExponent;\n"
+                "   highp float spotCosCutoff;\n"
+                "};\n",
+                (color_material)?
+                "   highp vec4 ambient;\n"
+                "   highp vec4 diffuse;\n"
+                                : ""
+        );
         ShadAppend(buff);
         headers += mg_countline(buff);
 
@@ -1114,7 +1120,7 @@ const char* const* fpe_VertexShader(shaderconv_need_t* need, fpe_state_t *state)
                 "   highp vec4 ambient;\n"
                 "   highp vec4 diffuse;\n"
                 "   highp vec4 specular;\n"
-                "};\n"                
+                "};\n"
         );
         ShadAppend(buff);
         headers += mg_countline(buff);
@@ -1168,12 +1174,12 @@ const char* const* fpe_VertexShader(shaderconv_need_t* need, fpe_state_t *state)
         }
     }
     if(fog) {
-        #if 0   // vertex fog
+#if 0   // vertex fog
         ShadAppend("varying mediump float FogF;\n");
         headers++;
         if(fogsource==FPE_FOG_SRC_DEPTH && need_vertex<1)
             need_vertex = 1;
-        #else   // pixel fog
+#else   // pixel fog
         if(fogsource==FPE_FOG_SRC_COORD)
             sprintf(buff, "varying %s float FogSrc;\n", fogp);
         else {
@@ -1186,7 +1192,7 @@ const char* const* fpe_VertexShader(shaderconv_need_t* need, fpe_state_t *state)
             }
         }
         ShadAppend(buff);
-        #endif
+#endif
     }
     // textures coordinates
     for (int i=0; i<g_gles_caps.maxtex; i++) {
@@ -1266,12 +1272,12 @@ const char* const* fpe_VertexShader(shaderconv_need_t* need, fpe_state_t *state)
             sprintf(bm_specular, "%s", (color_material && state->cm_back_mode==FPE_CM_SPECULAR)?"gl_Color.xyz * _mg_LightSource_":"_mg_BackLightProduct_");
         }
 
-        if(color_material && 
-            (state->cm_front_mode==FPE_CM_EMISSION 
+        if(color_material &&
+           (state->cm_front_mode==FPE_CM_EMISSION
             || state->cm_front_mode==FPE_CM_AMBIENT
             || state->cm_front_mode==FPE_CM_AMBIENTDIFFUSE
-            || (twosided && 
-                (state->cm_back_mode==FPE_CM_EMISSION || state->cm_back_mode==FPE_CM_AMBIENT || state->cm_back_mode==FPE_CM_AMBIENTDIFFUSE)))) 
+            || (twosided &&
+                (state->cm_back_mode==FPE_CM_EMISSION || state->cm_back_mode==FPE_CM_AMBIENT || state->cm_back_mode==FPE_CM_AMBIENTDIFFUSE))))
         {
             sprintf(buff, "Color = %s;\n", fm_emission);
             ShadAppend(buff);
@@ -1279,7 +1285,7 @@ const char* const* fpe_VertexShader(shaderconv_need_t* need, fpe_state_t *state)
                 sprintf(buff, "BackColor = %s;\n", bm_emission);
                 ShadAppend(buff);
             }
-            
+
             sprintf(buff, "Color += %s*gl_LightModel.ambient;\n", fm_ambient);
             ShadAppend(buff);
             if(twosided) {
@@ -1358,8 +1364,8 @@ const char* const* fpe_VertexShader(shaderconv_need_t* need, fpe_state_t *state)
                     } else {
                         sprintf(buff, "back_aa = _mg_BackLightProduct_%d.ambient.xyz;\n", i);
                         ShadAppend(buff);
-                        need_lightproduct[1][i] = 1;                     
-                    }                        
+                        need_lightproduct[1][i] = 1;
+                    }
                 }
                 sprintf(buff, "nVP = dot(normal, VP);\n");
                 ShadAppend(buff);
@@ -1454,7 +1460,7 @@ const char* const* fpe_VertexShader(shaderconv_need_t* need, fpe_state_t *state)
         tg[0] = state->texgen[i].texgen_s;
         tg[1] = state->texgen[i].texgen_t;
         tg[2] = state->texgen[i].texgen_r;
-        tg[3] = state->texgen[i].texgen_q;        
+        tg[3] = state->texgen[i].texgen_q;
         if(t) {
             int ntc = texnsize[t-1];
             if(comments) {
@@ -1612,7 +1618,7 @@ const char* const* fpe_VertexShader(shaderconv_need_t* need, fpe_state_t *state)
             sprintf(buff, "// Fog On: mode=%X, source=%X distance=%X\n", fogmode, fogsource, fogdist);
             ShadAppend(buff);
         }
-        #if 0    // vertex fog
+#if 0    // vertex fog
         char fogsrc[50];
         if(fogsource==FPE_FOG_SRC_COORD)
             strcpy(fogsrc, "gl_FogCoord");
@@ -1634,27 +1640,30 @@ const char* const* fpe_VertexShader(shaderconv_need_t* need, fpe_state_t *state)
                 ShadAppend("FogF = clamp((gl_Fog.end - fog_c) * gl_Fog.scale, 0., 1.);\n");
                 break;
         }
-        #else   // pixel fog
+#else   // pixel fog
         if(fogsource==FPE_FOG_SRC_COORD)
             sprintf(buff, "FogSrc = gl_FogCoord;\n");
         else switch(fogdist) {
-            case FPE_FOG_DIST_RADIAL: sprintf(buff, "FogSrc = vertex.xyz;\n"); break;
-            case FPE_FOG_DIST_PLANE:
-            default: sprintf(buff, "FogSrc = vertex.z;\n");
-        }
+                case FPE_FOG_DIST_RADIAL: sprintf(buff, "FogSrc = vertex.xyz;\n"); break;
+                case FPE_FOG_DIST_PLANE:
+                default: sprintf(buff, "FogSrc = vertex.z;\n");
+            }
         ShadAppend(buff);
-        #endif
+#endif
     }
-        
+
 
     ShadAppend("}\n");
 
     LOG_D("FPE Shader: \n%s\n", shad)
 
-    return (const char* const*)&shad;
+    return shad;
 }
 
-const char* const* fpe_FragmentShader(shaderconv_need_t* need, fpe_state_t *state) {
+char* fpe_FragmentShader(shaderconv_need_t* need, fpe_state_t *state) {
+    if (!shad_cap) shad_cap = 1024;
+    char* shad = (char*)malloc(shad_cap);
+
     // state can be NULL, so provide a 0 default
     fpe_state_t default_state = {0};
     int is_default = !need;
@@ -1700,7 +1709,7 @@ const char* const* fpe_FragmentShader(shaderconv_need_t* need, fpe_state_t *stat
 
     if(shaderblend)
         ShadAppend("#extension GL_ARM_shader_framebuffer_fetch : enable\n");
-    
+
     if(comments) {
         sprintf(buff, "// ** Fragment Shader **\n// lighting=%d, alpha=%d, secondary=%d, planes=%s, texturing=%d point=%d\n", lighting, alpha_test, secondary, fpe_binary(planes, 6), texturing, point);
         ShadAppend(buff);
@@ -1721,19 +1730,19 @@ const char* const* fpe_FragmentShader(shaderconv_need_t* need, fpe_state_t *stat
         }
     }
     if(fog) {
-        #if 0   // vertex fog
+#if 0   // vertex fog
         ShadAppend("varying mediump float FogF;\n");
         headers++;
-        #else   // pixel fog
+#else   // pixel fog
         if(fogsource==FPE_FOG_SRC_COORD) {
             sprintf(buff, "varying %s float FogSrc;\n", fogp);
         } else switch(fogdist) {
-            case FPE_FOG_DIST_RADIAL: sprintf(buff, "varying %s vec3 FogSrc;\n", fogp); break;
-            case FPE_FOG_DIST_PLANE: sprintf(buff, "varying %s float FogSrc;\n", fogp); break;
-            default: sprintf(buff, "varying %s float FogSrc;\n", fogp);
-        }
+                case FPE_FOG_DIST_RADIAL: sprintf(buff, "varying %s vec3 FogSrc;\n", fogp); break;
+                case FPE_FOG_DIST_PLANE: sprintf(buff, "varying %s float FogSrc;\n", fogp); break;
+                default: sprintf(buff, "varying %s float FogSrc;\n", fogp);
+            }
         ShadAppend(buff);
-        #endif
+#endif
     }
     if(planes) {
         //ShadAppend("varying vec4 clipvertex;\n");
@@ -1779,7 +1788,7 @@ const char* const* fpe_FragmentShader(shaderconv_need_t* need, fpe_state_t *stat
     if(alpha_test && alpha_func>FPE_NEVER) {
         ShadAppend(mg_alphaRefSource);
         headers++;
-    } 
+    }
 
     ShadAppend("void main() {\n");
 
@@ -1909,91 +1918,91 @@ const char* const* fpe_FragmentShader(shaderconv_need_t* need, fpe_state_t *stat
                         break;
                     case FPE_COMBINE:
                     case FPE_COMBINE4:
-                        {
-                            int constant = 0;
-                            // parse the combine state
-                            int combine_rgb = state->texcombine[i]&0xf;
-                            int combine_alpha = (state->texcombine[i]>>4)&0xf;
-                            int src_r[4], op_r[4];
-                            int src_a[4], op_a[4];
-                                src_a[0] = state->texenv[i].texsrcalpha0;
-                                op_a[0] = state->texenv[i].texopalpha0;
-                                src_r[0] = state->texenv[i].texsrcrgb0;
-                                op_r[0] = state->texenv[i].texoprgb0;
-                                src_a[1] = state->texenv[i].texsrcalpha1;
-                                op_a[1] = state->texenv[i].texopalpha1;
-                                src_r[1] = state->texenv[i].texsrcrgb1;
-                                op_r[1] = state->texenv[i].texoprgb1;
-                                src_a[2] = state->texenv[i].texsrcalpha2;
-                                op_a[2] = state->texenv[i].texopalpha2;
-                                src_r[2] = state->texenv[i].texsrcrgb2;
-                                op_r[2] = state->texenv[i].texoprgb2;
-                                src_a[3] = state->texenv[i].texsrcalpha3;
-                                op_a[3] = state->texenv[i].texopalpha3;
-                                src_r[3] = state->texenv[i].texsrcrgb3;
-                                op_r[3] = state->texenv[i].texoprgb3;
-                            if(combine_rgb==FPE_CR_DOT3_RGBA) {
-                                    src_a[0] = src_a[1] = src_a[2] = -1;
-                                    op_a[0] = op_a[1] = op_a[2] = -1;
-                                    src_r[2] = op_r[2] = -1;
-                                    src_r[3] = op_r[3] = -1;
-                                    src_a[3] = op_a[3] = -1;
+                    {
+                        int constant = 0;
+                        // parse the combine state
+                        int combine_rgb = state->texcombine[i]&0xf;
+                        int combine_alpha = (state->texcombine[i]>>4)&0xf;
+                        int src_r[4], op_r[4];
+                        int src_a[4], op_a[4];
+                        src_a[0] = state->texenv[i].texsrcalpha0;
+                        op_a[0] = state->texenv[i].texopalpha0;
+                        src_r[0] = state->texenv[i].texsrcrgb0;
+                        op_r[0] = state->texenv[i].texoprgb0;
+                        src_a[1] = state->texenv[i].texsrcalpha1;
+                        op_a[1] = state->texenv[i].texopalpha1;
+                        src_r[1] = state->texenv[i].texsrcrgb1;
+                        op_r[1] = state->texenv[i].texoprgb1;
+                        src_a[2] = state->texenv[i].texsrcalpha2;
+                        op_a[2] = state->texenv[i].texopalpha2;
+                        src_r[2] = state->texenv[i].texsrcrgb2;
+                        op_r[2] = state->texenv[i].texoprgb2;
+                        src_a[3] = state->texenv[i].texsrcalpha3;
+                        op_a[3] = state->texenv[i].texopalpha3;
+                        src_r[3] = state->texenv[i].texsrcrgb3;
+                        op_r[3] = state->texenv[i].texoprgb3;
+                        if(combine_rgb==FPE_CR_DOT3_RGBA) {
+                            src_a[0] = src_a[1] = src_a[2] = -1;
+                            op_a[0] = op_a[1] = op_a[2] = -1;
+                            src_r[2] = op_r[2] = -1;
+                            src_r[3] = op_r[3] = -1;
+                            src_a[3] = op_a[3] = -1;
+                        } else {
+                            if(combine_alpha==FPE_CR_REPLACE) {
+                                src_a[1] = src_a[2] = src_a[3] = -1;
+                                op_a[1] = op_a[2] = op_a[3] = -1;
+                            } else if (combine_alpha>=FPE_CR_MOD_ADD || combine_alpha==FPE_CR_INTERPOLATE) {
+                                // need all 3
+                                src_a[3] = -1; op_a[3] = -1;
                             } else {
-                                if(combine_alpha==FPE_CR_REPLACE) {
-                                    src_a[1] = src_a[2] = src_a[3] = -1;
-                                    op_a[1] = op_a[2] = op_a[3] = -1;
-                                } else if (combine_alpha>=FPE_CR_MOD_ADD || combine_alpha==FPE_CR_INTERPOLATE) {
-                                    // need all 3
-                                    src_a[3] = -1; op_a[3] = -1;
+                                if(texenv==FPE_COMBINE4 && (combine_alpha==FPE_CR_ADD || combine_alpha==FPE_CR_ADD_SIGNED)) {
+                                    // need all 4
                                 } else {
-                                    if(texenv==FPE_COMBINE4 && (combine_alpha==FPE_CR_ADD || combine_alpha==FPE_CR_ADD_SIGNED)) {
-                                        // need all 4
-                                    } else {
-                                        src_a[2] = src_a[3] = -1;
-                                        op_a[2] = op_a[3] = -1;
-                                    }
-                                }
-                                if(combine_rgb==FPE_CR_REPLACE) {
-                                    src_r[1] = src_r[2] = src_r[3] = -1;
-                                    op_r[1] = op_r[2] = op_r[3] = -1;
-                                } else if (combine_rgb>=FPE_CR_MOD_ADD || combine_rgb==FPE_CR_INTERPOLATE) {
-                                    // need all 3
-                                    src_r[3] = -1; op_r[3] = -1;
-                                } else {
-                                    if(texenv==FPE_COMBINE4 && (combine_rgb==FPE_CR_ADD || combine_rgb==FPE_CR_ADD_SIGNED)) {
-                                        // need all 4
-                                    } else {
-                                        src_r[2] = src_r[3] = -1;
-                                        op_r[2] = op_r[3] = -1;
-                                    }
+                                    src_a[2] = src_a[3] = -1;
+                                    op_a[2] = op_a[3] = -1;
                                 }
                             }
-                            // is texture constants needed ?
-                            for (int j=0; j<4; j++) {
-                                if (src_a[j]==FPE_SRC_CONSTANT || src_r[j]==FPE_SRC_CONSTANT)
-                                    constant=1;
-                            }
-                            if(comments) {
-                                sprintf(buff, " //  Combine RGB: fct=%d, Src/Op: 0=%d/%d 1=%d/%d 2=%d/%d 3=%d/%d\n", combine_rgb, src_r[0], op_r[0], src_r[1], op_r[1], src_r[2], op_r[2], src_r[3], op_r[3]);
-                                ShadAppend(buff);
-                                sprintf(buff, " //  Combine Alpha: fct=%d, Src/Op: 0=%d/%d 1=%d/%d 2=%d/%d 3=%d/%d\n", combine_alpha, src_a[0], op_a[0], src_a[1], op_a[1], src_a[2], op_a[2], src_a[3], op_a[3]);
-                                ShadAppend(buff);
-                            }
-                            if(constant) {
-                                // yep, create the Uniform
-                                sprintf(buff, "uniform lowp vec4 _mg_TextureEnvColor_%d;\n", i);
-                                shad = mg_inplace_insert(mg_getline(shad, headers), buff, shad, &shad_cap);
-                                headers+=mg_countline(buff);                            
-                            }
-                            for (int j=0; j<4; j++) {
-                                if(src_r[j]==src_a[j] && op_r[j]==FPE_OP_SRCCOLOR && op_a[j]==FPE_OP_ALPHA) {
-                                    sprintf(buff, "Arg%d = %s;\n", j, fpe_texenvSrc(src_r[j], i, twosided));
-                                    ShadAppend(buff);
-                                } else if(src_r[j]==src_a[j] && op_r[j]==FPE_OP_MINUSCOLOR && op_a[j]==FPE_OP_MINUSALPHA) {
-                                    sprintf(buff, "Arg%d = vec4(1.) - %s;\n", j, fpe_texenvSrc(src_r[j], i, twosided));
-                                    ShadAppend(buff);
+                            if(combine_rgb==FPE_CR_REPLACE) {
+                                src_r[1] = src_r[2] = src_r[3] = -1;
+                                op_r[1] = op_r[2] = op_r[3] = -1;
+                            } else if (combine_rgb>=FPE_CR_MOD_ADD || combine_rgb==FPE_CR_INTERPOLATE) {
+                                // need all 3
+                                src_r[3] = -1; op_r[3] = -1;
+                            } else {
+                                if(texenv==FPE_COMBINE4 && (combine_rgb==FPE_CR_ADD || combine_rgb==FPE_CR_ADD_SIGNED)) {
+                                    // need all 4
                                 } else {
-                                    if(op_r[j]!=-1)
+                                    src_r[2] = src_r[3] = -1;
+                                    op_r[2] = op_r[3] = -1;
+                                }
+                            }
+                        }
+                        // is texture constants needed ?
+                        for (int j=0; j<4; j++) {
+                            if (src_a[j]==FPE_SRC_CONSTANT || src_r[j]==FPE_SRC_CONSTANT)
+                                constant=1;
+                        }
+                        if(comments) {
+                            sprintf(buff, " //  Combine RGB: fct=%d, Src/Op: 0=%d/%d 1=%d/%d 2=%d/%d 3=%d/%d\n", combine_rgb, src_r[0], op_r[0], src_r[1], op_r[1], src_r[2], op_r[2], src_r[3], op_r[3]);
+                            ShadAppend(buff);
+                            sprintf(buff, " //  Combine Alpha: fct=%d, Src/Op: 0=%d/%d 1=%d/%d 2=%d/%d 3=%d/%d\n", combine_alpha, src_a[0], op_a[0], src_a[1], op_a[1], src_a[2], op_a[2], src_a[3], op_a[3]);
+                            ShadAppend(buff);
+                        }
+                        if(constant) {
+                            // yep, create the Uniform
+                            sprintf(buff, "uniform lowp vec4 _mg_TextureEnvColor_%d;\n", i);
+                            shad = mg_inplace_insert(mg_getline(shad, headers), buff, shad, &shad_cap);
+                            headers+=mg_countline(buff);
+                        }
+                        for (int j=0; j<4; j++) {
+                            if(src_r[j]==src_a[j] && op_r[j]==FPE_OP_SRCCOLOR && op_a[j]==FPE_OP_ALPHA) {
+                                sprintf(buff, "Arg%d = %s;\n", j, fpe_texenvSrc(src_r[j], i, twosided));
+                                ShadAppend(buff);
+                            } else if(src_r[j]==src_a[j] && op_r[j]==FPE_OP_MINUSCOLOR && op_a[j]==FPE_OP_MINUSALPHA) {
+                                sprintf(buff, "Arg%d = vec4(1.) - %s;\n", j, fpe_texenvSrc(src_r[j], i, twosided));
+                                ShadAppend(buff);
+                            } else {
+                                if(op_r[j]!=-1)
                                     switch(op_r[j]) {
                                         case FPE_OP_SRCCOLOR:
                                             sprintf(buff, "Arg%d.rgb = %s.rgb;\n", j, fpe_texenvSrc(src_r[j], i, twosided));
@@ -2012,7 +2021,7 @@ const char* const* fpe_FragmentShader(shaderconv_need_t* need, fpe_state_t *stat
                                             ShadAppend(buff);
                                             break;
                                     }
-                                    if(op_a[j]!=-1)
+                                if(op_a[j]!=-1)
                                     switch(op_a[j]) {
                                         case FPE_OP_ALPHA:
                                             sprintf(buff, "Arg%d.a = %s.a;\n", j, fpe_texenvSrc(src_a[j], i, twosided));
@@ -2023,87 +2032,87 @@ const char* const* fpe_FragmentShader(shaderconv_need_t* need, fpe_state_t *stat
                                             ShadAppend(buff);
                                             break;
                                     }
-                                }
                             }
-                            if(combine_rgb!=FPE_CR_DOT3_RGBA && combine_rgb!=FPE_CR_DOT3_RGB && combine_rgb==combine_alpha) {
-                                switch(combine_alpha) {
-                                    case FPE_CR_REPLACE:
-                                        ShadAppend("fColor = Arg0;\n");
-                                        break;
-                                    case FPE_CR_MODULATE:
-                                        ShadAppend("fColor = Arg0 * Arg1;\n");
-                                        break;
-                                    case FPE_CR_ADD:
-                                        if(texenv==FPE_COMBINE4)
-                                            ShadAppend("fColor = Arg0*Arg1 + Arg2*Arg3;\n");
-                                        else
-                                            ShadAppend("fColor = Arg0 + Arg1;\n");
-                                        break;
-                                    case FPE_CR_ADD_SIGNED:
-                                        if(texenv==FPE_COMBINE4)
-                                            ShadAppend("fColor = Arg0*Arg1 + Arg2*Arg3 - vec4(0.5);\n");
-                                        else
-                                            ShadAppend("fColor = Arg0 + Arg1 - vec4(0.5);\n");
-                                        break;
-                                    case FPE_CR_INTERPOLATE:
-                                        ShadAppend("fColor = Arg0*Arg2 + Arg1*(vec4(1.)-Arg2);\n");
-                                        break;
-                                    case FPE_CR_SUBTRACT:
-                                        ShadAppend("fColor = Arg0 - Arg1;\n");
-                                        break;
-                                    case FPE_CR_MOD_ADD:
-                                        ShadAppend("fColor = Arg0*Arg2 + Arg1;\n");
-                                        break;
-                                    case FPE_CR_MOD_ADD_SIGNED:
-                                        ShadAppend("fColor = Arg0*Arg2 + Arg1 - vec4(0.5);\n");
-                                        break;
-                                    case FPE_CR_MOD_SUB:
-                                        ShadAppend("fColor = Arg0*Arg2 - Arg1;\n");
-                                        break;
-                                }
-                            } else {
-                                switch(combine_rgb) {
-                                    case FPE_CR_REPLACE:
-                                        ShadAppend("fColor.rgb = Arg0.rgb;\n");
-                                        break;
-                                    case FPE_CR_MODULATE:
-                                        ShadAppend("fColor.rgb = Arg0.rgb * Arg1.rgb;\n");
-                                        break;
-                                    case FPE_CR_ADD:
-                                        if(texenv==FPE_COMBINE4)
-                                            ShadAppend("fColor.rgb = Arg0.rgb*Arg1.rgb + Arg2.rgb*Arg3.rgb;\n");
-                                        else
-                                            ShadAppend("fColor.rgb = Arg0.rgb + Arg1.rgb;\n");
-                                        break;
-                                    case FPE_CR_ADD_SIGNED:
-                                        if(texenv==FPE_COMBINE4)
-                                            ShadAppend("fColor.rgb = Arg0.rgb*Arg1.rgb + Arg2.rgb*Arg3.rgb - vec3(0.5);\n");
-                                        else
-                                            ShadAppend("fColor.rgb = Arg0.rgb + Arg1.rgb - vec3(0.5);\n");
-                                        break;
-                                    case FPE_CR_INTERPOLATE:
-                                        ShadAppend("fColor.rgb = Arg0.rgb*Arg2.rgb + Arg1.rgb*(vec3(1.)-Arg2.rgb);\n");
-                                        break;
-                                    case FPE_CR_SUBTRACT:
-                                        ShadAppend("fColor.rgb = Arg0.rgb - Arg1.rgb;\n");
-                                        break;
-                                    case FPE_CR_DOT3_RGB:
-                                        ShadAppend("fColor.rgb = vec3(4.*((Arg0.r-0.5)*(Arg1.r-0.5)+(Arg0.g-0.5)*(Arg1.g-0.5)+(Arg0.b-0.5)*(Arg1.b-0.5)));\n");
-                                        break;
-                                    case FPE_CR_DOT3_RGBA:
-                                        ShadAppend("fColor = vec4(4.*((Arg0.r-0.5)*(Arg1.r-0.5)+(Arg0.g-0.5)*(Arg1.g-0.5)+(Arg0.b-0.5)*(Arg1.b-0.5)));\n");
-                                        break;
-                                    case FPE_CR_MOD_ADD:
-                                        ShadAppend("fColor.rgb = Arg0.rgb*Arg2.rgb + Arg1.rgb;\n");
-                                        break;
-                                    case FPE_CR_MOD_ADD_SIGNED:
-                                        ShadAppend("fColor.rgb = Arg0.rgb*Arg2.rgb + Arg1.rgb - vec3(0.5);\n");
-                                        break;
-                                    case FPE_CR_MOD_SUB:
-                                        ShadAppend("fColor.rgb = Arg0.rgb*Arg2.rgb - Arg1.rgb;\n");
-                                        break;
-                                }
-                                if(combine_rgb!=FPE_CR_DOT3_RGBA) 
+                        }
+                        if(combine_rgb!=FPE_CR_DOT3_RGBA && combine_rgb!=FPE_CR_DOT3_RGB && combine_rgb==combine_alpha) {
+                            switch(combine_alpha) {
+                                case FPE_CR_REPLACE:
+                                    ShadAppend("fColor = Arg0;\n");
+                                    break;
+                                case FPE_CR_MODULATE:
+                                    ShadAppend("fColor = Arg0 * Arg1;\n");
+                                    break;
+                                case FPE_CR_ADD:
+                                    if(texenv==FPE_COMBINE4)
+                                        ShadAppend("fColor = Arg0*Arg1 + Arg2*Arg3;\n");
+                                    else
+                                        ShadAppend("fColor = Arg0 + Arg1;\n");
+                                    break;
+                                case FPE_CR_ADD_SIGNED:
+                                    if(texenv==FPE_COMBINE4)
+                                        ShadAppend("fColor = Arg0*Arg1 + Arg2*Arg3 - vec4(0.5);\n");
+                                    else
+                                        ShadAppend("fColor = Arg0 + Arg1 - vec4(0.5);\n");
+                                    break;
+                                case FPE_CR_INTERPOLATE:
+                                    ShadAppend("fColor = Arg0*Arg2 + Arg1*(vec4(1.)-Arg2);\n");
+                                    break;
+                                case FPE_CR_SUBTRACT:
+                                    ShadAppend("fColor = Arg0 - Arg1;\n");
+                                    break;
+                                case FPE_CR_MOD_ADD:
+                                    ShadAppend("fColor = Arg0*Arg2 + Arg1;\n");
+                                    break;
+                                case FPE_CR_MOD_ADD_SIGNED:
+                                    ShadAppend("fColor = Arg0*Arg2 + Arg1 - vec4(0.5);\n");
+                                    break;
+                                case FPE_CR_MOD_SUB:
+                                    ShadAppend("fColor = Arg0*Arg2 - Arg1;\n");
+                                    break;
+                            }
+                        } else {
+                            switch(combine_rgb) {
+                                case FPE_CR_REPLACE:
+                                    ShadAppend("fColor.rgb = Arg0.rgb;\n");
+                                    break;
+                                case FPE_CR_MODULATE:
+                                    ShadAppend("fColor.rgb = Arg0.rgb * Arg1.rgb;\n");
+                                    break;
+                                case FPE_CR_ADD:
+                                    if(texenv==FPE_COMBINE4)
+                                        ShadAppend("fColor.rgb = Arg0.rgb*Arg1.rgb + Arg2.rgb*Arg3.rgb;\n");
+                                    else
+                                        ShadAppend("fColor.rgb = Arg0.rgb + Arg1.rgb;\n");
+                                    break;
+                                case FPE_CR_ADD_SIGNED:
+                                    if(texenv==FPE_COMBINE4)
+                                        ShadAppend("fColor.rgb = Arg0.rgb*Arg1.rgb + Arg2.rgb*Arg3.rgb - vec3(0.5);\n");
+                                    else
+                                        ShadAppend("fColor.rgb = Arg0.rgb + Arg1.rgb - vec3(0.5);\n");
+                                    break;
+                                case FPE_CR_INTERPOLATE:
+                                    ShadAppend("fColor.rgb = Arg0.rgb*Arg2.rgb + Arg1.rgb*(vec3(1.)-Arg2.rgb);\n");
+                                    break;
+                                case FPE_CR_SUBTRACT:
+                                    ShadAppend("fColor.rgb = Arg0.rgb - Arg1.rgb;\n");
+                                    break;
+                                case FPE_CR_DOT3_RGB:
+                                    ShadAppend("fColor.rgb = vec3(4.*((Arg0.r-0.5)*(Arg1.r-0.5)+(Arg0.g-0.5)*(Arg1.g-0.5)+(Arg0.b-0.5)*(Arg1.b-0.5)));\n");
+                                    break;
+                                case FPE_CR_DOT3_RGBA:
+                                    ShadAppend("fColor = vec4(4.*((Arg0.r-0.5)*(Arg1.r-0.5)+(Arg0.g-0.5)*(Arg1.g-0.5)+(Arg0.b-0.5)*(Arg1.b-0.5)));\n");
+                                    break;
+                                case FPE_CR_MOD_ADD:
+                                    ShadAppend("fColor.rgb = Arg0.rgb*Arg2.rgb + Arg1.rgb;\n");
+                                    break;
+                                case FPE_CR_MOD_ADD_SIGNED:
+                                    ShadAppend("fColor.rgb = Arg0.rgb*Arg2.rgb + Arg1.rgb - vec3(0.5);\n");
+                                    break;
+                                case FPE_CR_MOD_SUB:
+                                    ShadAppend("fColor.rgb = Arg0.rgb*Arg2.rgb - Arg1.rgb;\n");
+                                    break;
+                            }
+                            if(combine_rgb!=FPE_CR_DOT3_RGBA)
                                 switch(combine_alpha) {
                                     case FPE_CR_REPLACE:
                                         ShadAppend("fColor.a = Arg0.a;\n");
@@ -2139,21 +2148,21 @@ const char* const* fpe_FragmentShader(shaderconv_need_t* need, fpe_state_t *stat
                                         ShadAppend("fColor.a = Arg0.a*Arg2.a - Arg1.a;\n");
                                         break;
                                 }
-                            }
-                            if((state->texenv[i].texrgbscale) && (state->texenv[i].texalphascale)) {
-                                sprintf(buff, "fColor *= _mg_TexEnvRGBScale_%d;\n", i);
+                        }
+                        if((state->texenv[i].texrgbscale) && (state->texenv[i].texalphascale)) {
+                            sprintf(buff, "fColor *= _mg_TexEnvRGBScale_%d;\n", i);
+                            ShadAppend(buff);
+                        } else {
+                            if(state->texenv[i].texrgbscale) {
+                                sprintf(buff, "fColor.rgb *= _mg_TexEnvRGBScale_%d;\n", i);
                                 ShadAppend(buff);
-                            } else {
-                                if(state->texenv[i].texrgbscale) {
-                                    sprintf(buff, "fColor.rgb *= _mg_TexEnvRGBScale_%d;\n", i);
-                                    ShadAppend(buff);
-                                }
-                                if(state->texenv[i].texalphascale) {
-                                    sprintf(buff, "fColor.a *= _mg_TexEnvAlphaScale_%d;\n", i);
-                                    ShadAppend(buff);
-                                }
+                            }
+                            if(state->texenv[i].texalphascale) {
+                                sprintf(buff, "fColor.a *= _mg_TexEnvAlphaScale_%d;\n", i);
+                                ShadAppend(buff);
                             }
                         }
+                    }
                         break;
                 }
                 if(needclamp)
@@ -2174,7 +2183,7 @@ const char* const* fpe_FragmentShader(shaderconv_need_t* need, fpe_state_t *stat
         } else {
             // FPE_LESS FPE_EQUAL FPE_LEQUAL FPE_GREATER FPE_NOTEQUAL FPE_GEQUAL
             // but need to negate the operator
-            const char* alpha_test_op[] = {">=","!=",">","<=","==","<"}; 
+            const char* alpha_test_op[] = {">=","!=",">","<=","==","<"};
             sprintf(buff, "if (floor(fColor.a*255.) %s _mg_AlphaRef) discard;\n", alpha_test_op[alpha_func-FPE_LESS]);
             ShadAppend(buff);
         }
@@ -2197,17 +2206,17 @@ const char* const* fpe_FragmentShader(shaderconv_need_t* need, fpe_state_t *stat
             sprintf(buff, "// Fog On: mode=%X, source=%X\n", fogmode, fogsource);
             ShadAppend(buff);
         }
-        #if 0   // vertex fog
+#if 0   // vertex fog
         ShadAppend("fColor.rgb = mix(gl_Fog.color.rgb, fColor.rgb, FogF);\n");
-        #else   // pixel fog
+#else   // pixel fog
         char fogsrc[50];
         if(fogsource==FPE_FOG_SRC_COORD)
             strcpy(fogsrc, "FogSrc");
         else switch(fogdist) {
-            case FPE_FOG_DIST_RADIAL: strcpy(fogsrc, "length(FogSrc)"); break;
-            case FPE_FOG_DIST_PLANE: strcpy(fogsrc, "FogSrc"); break;
-            default: strcpy(fogsrc, "abs(FogSrc)");
-        }
+                case FPE_FOG_DIST_RADIAL: strcpy(fogsrc, "length(FogSrc)"); break;
+                case FPE_FOG_DIST_PLANE: strcpy(fogsrc, "FogSrc"); break;
+                default: strcpy(fogsrc, "abs(FogSrc)");
+            }
         sprintf(buff, "%s float fog_c = %s;\n", fogp, fogsrc);
         ShadAppend(buff);
         switch(fogmode) {
@@ -2223,7 +2232,7 @@ const char* const* fpe_FragmentShader(shaderconv_need_t* need, fpe_state_t *stat
         }
         ShadAppend(buff);
         ShadAppend("fColor.rgb = mix(gl_Fog.color.rgb, fColor.rgb, FogF);\n");
-        #endif
+#endif
     }
     //Blend (probably not needed)
 //    if(shaderblend) {
@@ -2466,7 +2475,7 @@ const char* const* fpe_FragmentShader(shaderconv_need_t* need, fpe_state_t *stat
 
     LOG_D("FPE Shader: \n%s\n", shad)
 
-    return (const char* const*)&shad;
+    return shad;
 }
 
 const char* const* fpe_CustomVertexShader(const char* initial, fpe_state_t* state, int default_fragment)
@@ -2482,7 +2491,7 @@ const char* const* fpe_CustomVertexShader(const char* initial, fpe_state_t* stat
     ShadAppend(initial);
 
     int color = default_fragment?(strstr(initial, "_mg_Color")?0:1):0;   // need to add a simple color variant?
-if(default_fragment) printf("fpe_CustomVertexShader(%p, %p, %d)\n%s\ncolor=%d\n", initial, state, default_fragment, initial, color);
+    if(default_fragment) printf("fpe_CustomVertexShader(%p, %p, %d)\n%s\ncolor=%d\n", initial, state, default_fragment, initial, color);
     // add some uniform and varying
     if(planes) {
         for (int i=0; i< g_gles_caps.maxplanes; i++) {
@@ -2563,10 +2572,10 @@ const char* const* fpe_CustomFragmentShader(const char* initial, fpe_state_t* st
         }
     }
     if(shaderblend && (
-        (state->blendsrcrgb>=FPE_BLEND_CONSTANT_COLOR && state->blendsrcrgb<=FPE_BLEND_ONE_MINUS_CONSTANT_ALPHA)
-     || (state->blenddstrgb>=FPE_BLEND_CONSTANT_COLOR && state->blenddstrgb<=FPE_BLEND_ONE_MINUS_CONSTANT_ALPHA)
-     || (state->blendsrcalpha>=FPE_BLEND_CONSTANT_COLOR && state->blendsrcalpha<=FPE_BLEND_ONE_MINUS_CONSTANT_ALPHA)
-     || (state->blenddstalpha>=FPE_BLEND_CONSTANT_COLOR && state->blenddstalpha<=FPE_BLEND_ONE_MINUS_CONSTANT_ALPHA)
+            (state->blendsrcrgb>=FPE_BLEND_CONSTANT_COLOR && state->blendsrcrgb<=FPE_BLEND_ONE_MINUS_CONSTANT_ALPHA)
+            || (state->blenddstrgb>=FPE_BLEND_CONSTANT_COLOR && state->blenddstrgb<=FPE_BLEND_ONE_MINUS_CONSTANT_ALPHA)
+            || (state->blendsrcalpha>=FPE_BLEND_CONSTANT_COLOR && state->blendsrcalpha<=FPE_BLEND_ONE_MINUS_CONSTANT_ALPHA)
+            || (state->blenddstalpha>=FPE_BLEND_CONSTANT_COLOR && state->blenddstalpha<=FPE_BLEND_ONE_MINUS_CONSTANT_ALPHA)
     )) {
         sprintf(buff, "uniform mediump vec4 _mg_BlendColor;\n");
         ShadAppend(buff);
@@ -2604,7 +2613,7 @@ const char* const* fpe_CustomFragmentShader(const char* initial, fpe_state_t* st
             if(alpha_test && alpha_func>FPE_NEVER) {
                 shad = mg_inplace_insert(mg_getline(shad, headline), mg_alphaRefSource, shad, &shad_cap);
                 headline+=mg_countline(mg_alphaRefSource);
-            } 
+            }
             if(comments) {
                 sprintf(buff, "// Alpha Test, fct=%X\n", alpha_func);
                 ShadAppend(buff);
@@ -2616,7 +2625,7 @@ const char* const* fpe_CustomFragmentShader(const char* initial, fpe_state_t* st
             } else {
                 // FPE_LESS FPE_EQUAL FPE_LEQUAL FPE_GREATER FPE_NOTEQUAL FPE_GEQUAL
                 // but need to negate the operator
-                const char* alpha_test_op[] = {">=","!=",">","<=","==","<"}; 
+                const char* alpha_test_op[] = {">=","!=",">","<=","==","<"};
                 sprintf(buff, " if (floor(%s.a*255.) %s _mg_AlphaRef) discard;\n", is_fragcolor?"_mg_FragColor":"gl_FragData[0]", alpha_test_op[alpha_func-FPE_LESS]);
                 ShadAppend(buff);
             }
@@ -2626,7 +2635,7 @@ const char* const* fpe_CustomFragmentShader(const char* initial, fpe_state_t* st
         if(shaderblend) {
             const char* frgcolor = is_fragcolor?"_mg_FragColor":"gl_FragData[0]";
             const char* dstcolor = "gl_LastFragColorARM";
-            
+
             for(int i=0; i<2; ++i) {
                 const char* blend = i?"dstblend":"srcblend";
                 int blendrgb= i?state->blenddstrgb:state->blendsrcrgb;
