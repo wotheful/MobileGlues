@@ -140,6 +140,20 @@
 
 #define MAX_TEX 16
 #define MAX_LIGHT 8
+#define MAX_STACK_PROJECTION	16
+#define MAX_STACK_TEXTURE	16
+#define MAX_STACK_MODELVIEW	64
+#define MAX_STACK_COLOR 16
+#define MAX_STACK_ARB_MATRIX 8
+#define MAX_CLIP_PLANES 6
+#define MAX_VATTRIB 32
+#define MAX_MAP_SIZE 256
+#define MAX_ARB_MATRIX  8
+#define MAX_VTX_PROG_ENV_PARAMS 96
+#define MAX_VTX_PROG_LOC_PARAMS 96
+#define MAX_FRG_PROG_ENV_PARAMS 24
+#define MAX_FRG_PROG_LOC_PARAMS 24
+#define MAX_DRAW_BUFFERS    16
 
 typedef struct fpe_texgen_s {
     unsigned int texgen_s:1;              // texgen S enabled on 1 bit

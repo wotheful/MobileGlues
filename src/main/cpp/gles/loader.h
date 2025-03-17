@@ -151,6 +151,9 @@ struct gles_caps_t {
     int maxtex;
     int maxplanes;
     int maxlights;
+    int maxvarying;
+    int highp;
+    int notexarray;
 
     int GL_EXT_buffer_storage;
     int GL_EXT_disjoint_timer_query;
