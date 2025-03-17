@@ -6,7 +6,7 @@
 #include "glm/gtc/type_ptr.hpp"
 #include "fpe_shader.h"
 
-#define DEBUG 0
+#define DEBUG 1
 
 #if GLOBAL_DEBUG || DEBUG
 #pragma clang optimize off
@@ -130,9 +130,14 @@ int init_fpe() {
     fpe_state.alphatest = 1;
 
     auto* vs = fpe_VertexShader(&vs_need, &fpe_state);
-    auto* ps = fpe_FragmentShader(&vs_need, &fpe_state);
-    LOG_D("fpe_VS: %s\n", vs);
-    LOG_D("fpe_FS: %s\n", ps);
+    auto* fs = fpe_FragmentShader(&vs_need, &fpe_state);
+    LOG_D("fpe_VS: \n%s\n", *vs);
+    LOG_D("fpe_FS: \n%s\n", *fs);
+
+    auto es_vs = GLSLtoGLSLES(*vs, GL_VERTEX_SHADER, hardware->es_version, 100);
+    LOG_D("fpe_ES_VS: \n%s\n", es_vs.c_str());
+    auto es_fs = GLSLtoGLSLES(*fs, GL_FRAGMENT_SHADER, hardware->es_version, 100);
+    LOG_D("fpe_ES_PS: \n%s\n", es_fs.c_str());
 
     g_glstate.fpe_vtx_shader_src =
             "#version 320 es\n"
