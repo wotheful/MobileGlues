@@ -73,6 +73,10 @@ struct fixed_function_state_t {
     GLenum fog_mode = GL_EXP; // glFogi(GL_FOG_MODE)
     GLint fog_index = 0; // glFogi(GL_FOG_INDEX)
     GLenum fog_coord_src = GL_FRAGMENT_DEPTH; // glFogi(GL_FOG_COORD_SRC)
+    GLenum shade_model = GL_SMOOTH; // glShadeModel
+    GLenum light_model_color_ctrl = GL_SINGLE_COLOR; // glLightModel(GL_LIGHT_MODEL_COLOR_CONTROL)
+    int light_model_local_viewer = 0; // glLightModel(GL_LIGHT_MODEL_LOCAL_VIEWER)
+    int light_model_two_side = 0; // glLightModel(GL_LIGHT_MODEL_TWO_SIDE)
 
     struct fixed_function_bool_t fpe_bools;
 };
@@ -87,6 +91,9 @@ struct fixed_function_uniform_t {
     GLfloat fog_end = 1.f;
     // glFogfv/iv
     glm::vec4 fog_color = { 0., 0., 0., 0. };
+
+    // glLightModel
+    glm::vec4 light_model_ambient = {0.2, 0.2, 0.2, 1.0};
 
     // glLightf/i/fv/iv
     light_t lights[MAX_LIGHTS];

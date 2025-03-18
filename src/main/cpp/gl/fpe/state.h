@@ -24,12 +24,18 @@ GLAPI void GLAPIENTRY glFogf( GLenum pname, GLfloat param );
 GLAPI void GLAPIENTRY glFogi( GLenum pname, GLint param );
 GLAPI void GLAPIENTRY glFogfv( GLenum pname, const GLfloat *params );
 GLAPI void GLAPIENTRY glFogiv( GLenum pname, const GLint *params );
+
+GLAPI void GLAPIENTRY glShadeModel( GLenum mode );
 GLAPI void GLAPIENTRY glLightf( GLenum light, GLenum pname, GLfloat param );
 GLAPI void GLAPIENTRY glLighti( GLenum light, GLenum pname, GLint param );
 GLAPI void GLAPIENTRY glLightfv( GLenum light, GLenum pname,
                                  const GLfloat *params );
 GLAPI void GLAPIENTRY glLightiv( GLenum light, GLenum pname,
                                  const GLint *params );
+GLAPI void GLAPIENTRY glLightModelf( GLenum pname, GLfloat param );
+GLAPI void GLAPIENTRY glLightModeli( GLenum pname, GLint param );
+GLAPI void GLAPIENTRY glLightModelfv( GLenum pname, const GLfloat *params );
+GLAPI void GLAPIENTRY glLightModeliv( GLenum pname, const GLint *params );
 
 #ifdef __cplusplus
 }

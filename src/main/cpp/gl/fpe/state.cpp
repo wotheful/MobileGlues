@@ -92,7 +92,7 @@ void glFogf( GLenum pname, GLfloat param ) {
             return;
 
         default:
-            LOG_D("Invalid %s pname: %s", __func__, pname);
+            LOG_D("ERROR: Invalid %s pname: %s", __func__, pname);
     }
 }
 
@@ -117,7 +117,7 @@ void glFogi( GLenum pname, GLint param ) {
             glFogf(pname, (GLfloat)param);
             return;
         default:
-            LOG_D("Invalid %s pname: %s", __func__, pname);
+            LOG_D("ERROR: Invalid %s pname: %s", __func__, pname);
     }
 }
 
@@ -142,7 +142,7 @@ void glFogfv( GLenum pname, const GLfloat *params ) {
             break;
         }
         default:
-            LOG_D("Invalid %s pname: %s", __func__, pname);
+            LOG_D("ERROR: Invalid %s pname: %s", __func__, pname);
     }
 }
 
@@ -170,8 +170,14 @@ void glFogiv( GLenum pname, const GLint *params ) {
             glFogf(pname, (GLfloat)params[0]);
             break;
         default:
-            LOG_D("Invalid %s pname: %s", __func__, pname);
+            LOG_D("ERROR: Invalid %s pname: %s", __func__, pname);
     }
+}
+
+void glShadeModel( GLenum mode ) {
+    LOG()
+    LOG_D("glShadeModel(%s)", glEnumToString(mode))
+    g_glstate.fpe_state.shade_model = mode;
 }
 
 void glLightf( GLenum light, GLenum pname, GLfloat param ) {
@@ -197,7 +203,7 @@ void glLightf( GLenum light, GLenum pname, GLfloat param ) {
             lightref.quadratic_attenuation = param;
             break;
         default:
-            LOG_D("Invalid %s pname: %s", __func__, pname);
+            LOG_D("ERROR: Invalid %s pname: %s", __func__, pname);
     }
 }
 
@@ -248,12 +254,15 @@ void glLightfv( GLenum light, GLenum pname,
             break;
         }
         default:
-            LOG_D("Invalid %s pname: %s", __func__, pname);
+            LOG_D("ERROR: Invalid %s pname: %s", __func__, pname);
     }
 }
 
 void glLightiv( GLenum light, GLenum pname,
                                  const GLint *params ) {
+    LOG()
+    LOG_D("glLightiv(%s, %s, [...])", glEnumToString(light), glEnumToString(pname))
+
     switch (pname) {
         case GL_SPOT_CUTOFF:
         case GL_SPOT_EXPONENT:
@@ -272,6 +281,77 @@ void glLightiv( GLenum light, GLenum pname,
             glLightfv(light, pname, glm::value_ptr(vec));
         }
         default:
-            LOG_D("Invalid %s pname: %s", __func__, pname);
+            LOG_D("ERROR: Invalid %s pname: %s", __func__, pname);
+    }
+}
+
+void glLightModelf( GLenum pname, GLfloat param ) {
+    LOG()
+    LOG_D("glLightModelf(%s, %f)", glEnumToString(pname), param)
+
+    switch (pname) {
+        case GL_LIGHT_MODEL_LOCAL_VIEWER:
+        case GL_LIGHT_MODEL_COLOR_CONTROL:
+        case GL_LIGHT_MODEL_TWO_SIDE:
+            glLightModeli(pname, (GLint)param);
+        default:
+            LOG_D("ERROR: Invalid %s pname: %s", __func__, pname);
+    }
+}
+
+void glLightModeli( GLenum pname, GLint param ) {
+    LOG()
+    LOG_D("glLightModelf(%s, %d)", glEnumToString(pname), param)
+
+    switch (pname) {
+        case GL_LIGHT_MODEL_COLOR_CONTROL:
+            g_glstate.fpe_state.light_model_color_ctrl = param;
+            break;
+        case GL_LIGHT_MODEL_LOCAL_VIEWER:
+            g_glstate.fpe_state.light_model_local_viewer = param;
+            break;
+        case GL_LIGHT_MODEL_TWO_SIDE:
+            g_glstate.fpe_state.light_model_two_side = param;
+            break;
+        default:
+            LOG_D("ERROR: Invalid %s pname: %s", __func__, pname);
+    }
+}
+
+void glLightModelfv( GLenum pname, const GLfloat *params ) {
+    LOG()
+    LOG_D("glLightModelfv(%s, [...])", glEnumToString(pname))
+
+    switch (pname) {
+        case GL_LIGHT_MODEL_AMBIENT:
+            g_glstate.fpe_uniform.light_model_ambient = glm::make_vec4(params);
+            break;
+        case GL_LIGHT_MODEL_COLOR_CONTROL:
+        case GL_LIGHT_MODEL_LOCAL_VIEWER:
+        case GL_LIGHT_MODEL_TWO_SIDE:
+            glLightModelf(pname, params[0]);
+            break;
+        default:
+            LOG_D("ERROR: Invalid %s pname: %s", __func__, pname);
+    }
+}
+
+void glLightModeliv( GLenum pname, const GLint *params ) {
+    LOG()
+    LOG_D("glLightModeliv(%s, [...])", glEnumToString(pname))
+
+    switch (pname) {
+        case GL_LIGHT_MODEL_AMBIENT: {
+            glm::vec4 v = glm::make_vec4(params);
+            glLightModelfv(pname, glm::value_ptr(v));
+            break;
+        }
+        case GL_LIGHT_MODEL_COLOR_CONTROL:
+        case GL_LIGHT_MODEL_LOCAL_VIEWER:
+        case GL_LIGHT_MODEL_TWO_SIDE:
+            glLightModeli(pname, params[0]);
+            break;
+        default:
+            LOG_D("ERROR: Invalid %s pname: %s", __func__, pname);
     }
 }
