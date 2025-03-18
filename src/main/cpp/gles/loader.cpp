@@ -199,12 +199,8 @@ void InitGLESCapabilities() {
     }
 
     // FPE caps, defined by fpe shaders
-    g_gles_caps.maxtex = 32;
     g_gles_caps.maxplanes = 6;
     g_gles_caps.maxlights = 8;
-    g_gles_caps.maxvarying = 8;
-    g_gles_caps.highp = 1;
-    g_gles_caps.notexarray = 1;
 }
 
 void init_target_gles() {

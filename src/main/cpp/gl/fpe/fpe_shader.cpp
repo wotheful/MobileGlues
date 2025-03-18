@@ -20,6 +20,8 @@ static int shad_cap = 0;
 
 static int comments = 1;
 
+#define ShadAppend(S) shad = mg_append(shad, &shad_cap, S)
+
 //                           2D   Rectangle    3D   CubeMap  Stream
 const char* texvecsize[] = {"vec4", "vec2", "vec2", "vec3", "vec2"};
 const char* texxyzsize[] = {"stpq", "st",    "st",  "stp",   "st"};
@@ -150,19 +152,6 @@ char* fpe_binary(int x, int s) {
     return fpe_packed(x, s, 1);
 }
 
-char gl_VA[MAX_VATTRIB][32] = {0};
-char mg_VA[MAX_VATTRIB][32] = {0};
-
-
-void PreConvert() {
-    if(gl_VA[0][0]=='\0') {
-        for (int i=0; i<MAX_VATTRIB; ++i) {
-            sprintf(gl_VA[i], "%s%d", gl_VertexAttrib, i);
-            sprintf(mg_VA[i], "%s%d", mg_VertexAttrib, i);
-        }
-    }
-}
-
 char* ConvertShader(const char* pEntry, int isVertex, shaderconv_need_t *need)
 {
 #define ShadAppend(S) Tmp = mg_append(Tmp, &tmpsize, S)
@@ -171,34 +160,34 @@ char* ConvertShader(const char* pEntry, int isVertex, shaderconv_need_t *need)
     int fpeShader = (strstr(pEntry, fpeshader_signature)!=NULL)?1:0;
     int maskbefore = 4|(isVertex?1:2);
     int maskafter = 8|(isVertex?1:2);
-#if DEBUG || GLOBAL_DEBUG
+    if((globals4es.dbgshaderconv&maskbefore)==maskbefore) {
         printf("Shader source%s:\n%s\n", fpeShader?" (FPEShader generated)":"", pEntry);
-#endif
-    int comments = DEBUG || GLOBAL_DEBUG;
+    }
+    int comments = globals4es.comments;
 
     char* pBuffer = (char*)pEntry;
 
     int version120 = 0;
     char* versionString = NULL;
-//    if(!fpeShader) {
-//        extensions_t exts;  // dummy...
-//        exts.cap = exts.size = 0;
-//        exts.ext = NULL;
-//        // hacks
-//        char* pHacked = ShaderHacks(pBuffer);
-//        // preproc first
-//        pBuffer = preproc(pHacked, comments, globals4es.shadernogles, &exts, &versionString);
-//        if(pHacked!=pEntry && pHacked!=pBuffer)
-//            free(pHacked);
-//        // now comment all line starting with precision...
-//        if(strstr(pBuffer, "\nprecision")) {
-//            int sz = strlen(pBuffer);
-//            pBuffer = mg_inplace_replace(pBuffer, &sz, "\nprecision", "\n//precision");
-//        }
-//        // should do something with the extension list...
-//        if(exts.ext)
-//            free(exts.ext);
-//    }
+    if(!fpeShader) {
+        extensions_t exts;  // dummy...
+        exts.cap = exts.size = 0;
+        exts.ext = NULL;
+        // hacks
+        char* pHacked = ShaderHacks(pBuffer);
+        // preproc first
+        pBuffer = preproc(pHacked, comments, globals4es.shadernogles, &exts, &versionString);
+        if(pHacked!=pEntry && pHacked!=pBuffer)
+            free(pHacked);
+        // now comment all line starting with precision...
+        if(strstr(pBuffer, "\nprecision")) {
+            int sz = strlen(pBuffer);
+            pBuffer = mg_inplace_replace(pBuffer, &sz, "\nprecision", "\n//precision");
+        }
+        // should do something with the extension list...
+        if(exts.ext)
+            free(exts.ext);
+    }
 
     static shaderconv_need_t dummy_need = {0};
     if(!need) {
@@ -206,12 +195,12 @@ char* ConvertShader(const char* pEntry, int isVertex, shaderconv_need_t *need)
         need->need_texcoord = -1;
         need->need_clean = 1; // no hack, this is a dummy need structure
     }
-    int notexarray = g_gles_caps.notexarray || need->need_notexarray || fpeShader;
+    int notexarray = globals4es.notexarray || need->need_notexarray || fpeShader;
 
     //const char* GLESUseFragHighp = "#extension GL_OES_fragment_precision_high : enable\n"; // does this one is needed?
     char GLESFullHeader[512];
     int wanthighp = !fpeShader;
-    if(wanthighp && !g_gles_caps.highp) wanthighp = 0;
+    if(wanthighp && !hardext.highp) wanthighp = 0;
     int versionHeader = 0;
 #if 0
     // support for higher glsl require much more work
@@ -227,7 +216,7 @@ char* ConvertShader(const char* pEntry, int isVertex, shaderconv_need_t *need)
     /* else no location or in / out are supported */
   }
 #endif
-    //sprintf(GLESFullHeader, GLESHeader, (wanthighp && g_gles_caps.highp==1 && !isVertex)?GLESUseFragHighp:"", (wanthighp)?"highp":"mediump", (wanthighp)?"highp":"mediump");
+    //sprintf(GLESFullHeader, GLESHeader, (wanthighp && hardext.highp==1 && !isVertex)?GLESUseFragHighp:"", (wanthighp)?"highp":"mediump", (wanthighp)?"highp":"mediump");
     sprintf(GLESFullHeader, GLESHeader[versionHeader], "", (wanthighp)?"highp":"mediump", (wanthighp)?"highp":"mediump");
 
     int tmpsize = strlen(pBuffer)*2+strlen(GLESFullHeader)+100;
@@ -262,117 +251,117 @@ char* ConvertShader(const char* pEntry, int isVertex, shaderconv_need_t *need)
         ++headline;
     }
     // check if gl_FragDepth is used
-//    int fragdepth = (strstr(pBuffer, "gl_FragDepth"))?1:0;
-//    const char* GLESUseFragDepth = "#extension GL_EXT_frag_depth : enable\n";
-//    const char* GLESFakeFragDepth = "mediump float fakeFragDepth = 0.0;\n";
-//    if (fragdepth) {
-//        /* If #extension is used, it should be placed before the second line of the header. */
-//        if(hardext.fragdepth)
-//            Tmp = mg_inplace_insert(mg_getline(Tmp, 1), GLESUseFragDepth, Tmp, &tmpsize);
-//        else
-//            Tmp = mg_inplace_insert(mg_getline(Tmp, headline-1), GLESFakeFragDepth, Tmp, &tmpsize);
-//        headline++;
-//    }
+    int fragdepth = (strstr(pBuffer, "gl_FragDepth"))?1:0;
+    const char* GLESUseFragDepth = "#extension GL_EXT_frag_depth : enable\n";
+    const char* GLESFakeFragDepth = "mediump float fakeFragDepth = 0.0;\n";
+    if (fragdepth) {
+        /* If #extension is used, it should be placed before the second line of the header. */
+        if(hardext.fragdepth)
+            Tmp = mg_inplace_insert(mg_getline(Tmp, 1), GLESUseFragDepth, Tmp, &tmpsize);
+        else
+            Tmp = mg_inplace_insert(mg_getline(Tmp, headline-1), GLESFakeFragDepth, Tmp, &tmpsize);
+        headline++;
+    }
     int threed_texture = (strstr(pBuffer, "sampler3D"))?1:0;
     const char* GLESUse3DTexture = "#extension GL_OES_texture_3D : enable\n";
     if (threed_texture) {
         Tmp = mg_inplace_insert(mg_getline(Tmp, 1), GLESUse3DTexture, Tmp, &tmpsize);
     }
-//    int derivatives = (strstr(pBuffer, "dFdx(") || strstr(pBuffer, "dFdy(") || strstr(pBuffer, "fwidth("))?1:0;
-//    const char* GLESUseDerivative = "#extension GL_OES_standard_derivatives : enable\n";
-//    // complete fake value... A better thing should be use....
-//    const char* GLESFakeDerivative = "float dFdx(float p) {return 0.0001;}\nvec2 dFdx(vec2 p) {return vec2(0.0001);}\nvec3 dFdx(vec3 p) {return vec3(0.0001);}\n"
-//                                     "float dFdy(float p) {return 0.0001;}\nvec2 dFdy(vec2 p) {return vec2(0.0001);}\nvec3 dFdy(vec3 p) {return vec3(0.0001);}\n"
-//                                     "float fwidth(float p) {return abs(dFdx(p))+abs(dFdy(p));}\nvec2 fwidth(vec2 p) {return abs(dFdx(p))+abs(dFdy(p));}\n"
-//                                     "vec3 fwidth(vec3 p) {return abs(dFdx(p))+abs(dFdy(p));}\n";
-//    if (derivatives) {
-//        /* If #extension is used, it should be placed before the second line of the header. */
-//        if(hardext.derivatives)
-//            Tmp = mg_inplace_insert(mg_getline(Tmp, 1), GLESUseDerivative, Tmp, &tmpsize);
-//        else
-//            Tmp = mg_inplace_insert(mg_getline(Tmp, headline-1), GLESFakeDerivative, Tmp, &tmpsize);
-//        headline++;
-//    }
+    int derivatives = (strstr(pBuffer, "dFdx(") || strstr(pBuffer, "dFdy(") || strstr(pBuffer, "fwidth("))?1:0;
+    const char* GLESUseDerivative = "#extension GL_OES_standard_derivatives : enable\n";
+    // complete fake value... A better thing should be use....
+    const char* GLESFakeDerivative = "float dFdx(float p) {return 0.0001;}\nvec2 dFdx(vec2 p) {return vec2(0.0001);}\nvec3 dFdx(vec3 p) {return vec3(0.0001);}\n"
+                                     "float dFdy(float p) {return 0.0001;}\nvec2 dFdy(vec2 p) {return vec2(0.0001);}\nvec3 dFdy(vec3 p) {return vec3(0.0001);}\n"
+                                     "float fwidth(float p) {return abs(dFdx(p))+abs(dFdy(p));}\nvec2 fwidth(vec2 p) {return abs(dFdx(p))+abs(dFdy(p));}\n"
+                                     "vec3 fwidth(vec3 p) {return abs(dFdx(p))+abs(dFdy(p));}\n";
+    if (derivatives) {
+        /* If #extension is used, it should be placed before the second line of the header. */
+        if(hardext.derivatives)
+            Tmp = mg_inplace_insert(mg_getline(Tmp, 1), GLESUseDerivative, Tmp, &tmpsize);
+        else
+            Tmp = mg_inplace_insert(mg_getline(Tmp, headline-1), GLESFakeDerivative, Tmp, &tmpsize);
+        headline++;
+    }
     // check if draw_buffers may be used (no fallback here :( )
-    if(/*hardext.maxdrawbuffers>1 &&*/ strstr(pBuffer, "gl_FragData[")) {
+    if(hardext.maxdrawbuffers>1 && strstr(pBuffer, "gl_FragData[")) {
         Tmp = mg_inplace_insert(mg_getline(Tmp, 1), useEXTDrawBuffers, Tmp, &tmpsize);
     }
     // if some functions are used, add some int/float alternative
-//    if(!fpeShader && !globals4es.nointovlhack) {
-//        if(strstr(Tmp, "pow(") || strstr(Tmp, "pow (")) {
-//            Tmp = mg_inplace_insert(mg_getline(Tmp, headline), HackAltPow, Tmp, &tmpsize);
-//        }
-//        if(strstr(Tmp, "max(") || strstr(Tmp, "max (")) {
-//            Tmp = mg_inplace_insert(mg_getline(Tmp, headline), HackAltMax, Tmp, &tmpsize);
-//        }
-//        if(strstr(Tmp, "min(") || strstr(Tmp, "min (")) {
-//            Tmp = mg_inplace_insert(mg_getline(Tmp, headline), HackAltMin, Tmp, &tmpsize);
-//        }
-//        if(strstr(Tmp, "clamp(") || strstr(Tmp, "clamp (")) {
-//            Tmp = mg_inplace_insert(mg_getline(Tmp, headline), HackAltClamp, Tmp, &tmpsize);
-//        }
-//        if(strstr(Tmp, "mod(") || strstr(Tmp, "mod (")) {
-//            Tmp = mg_inplace_insert(mg_getline(Tmp, headline), HackAltMod, Tmp, &tmpsize);
-//        }
-//    }
-//    if(!isVertex && hardext.shaderlod &&
-//       (mg_find_string(Tmp, "texture2DLod") || mg_find_string(Tmp, "texture2DProjLod")
-//        || mg_find_string(Tmp, "textureCubeLod")
-//        || mg_find_string(Tmp, "texture2DGradARB") || mg_find_string(Tmp, "texture2DProjGradARB")|| mg_find_string(Tmp, "textureCubeGradARB")
-//       )) {
-//        const char* GLESUseShaderLod = "#extension GL_EXT_shader_texture_lod : enable\n";
-//        Tmp = mg_inplace_insert(mg_getline(Tmp, 1), GLESUseShaderLod, Tmp, &tmpsize);
-//    }
-//    if(!isVertex && (mg_find_string(Tmp, "texture2DLod"))) {
-//        if(hardext.shaderlod) {
-//            Tmp = mg_inplace_replace(Tmp, &tmpsize, "texture2DLod", "texture2DLodEXT");
-//        } else {
-//            Tmp = mg_inplace_replace(Tmp, &tmpsize, "texture2DLod", "_mg_texture2DLod");
-//            Tmp = mg_inplace_insert(mg_getline(Tmp, headline), texture2DLodAlt, Tmp, &tmpsize);
-//        }
-//    }
-//    if(!isVertex && (mg_find_string(Tmp, "texture2DProjLod"))) {
-//        if(hardext.shaderlod) {
-//            Tmp = mg_inplace_replace(Tmp, &tmpsize, "texture2DProjLod", "texture2DProjLodEXT");
-//        } else {
-//            Tmp = mg_inplace_replace(Tmp, &tmpsize, "texture2DProjLod", "_mg_texture2DProjLod");
-//            Tmp = mg_inplace_insert(mg_getline(Tmp, headline), texture2DProjLodAlt, Tmp, &tmpsize);
-//        }
-//    }
-//    if(!isVertex && (mg_find_string(Tmp, "textureCubeLod"))) {
-//        if(hardext.shaderlod) {
-//            if(!hardext.cubelod)
-//                Tmp = mg_inplace_replace(Tmp, &tmpsize, "textureCubeLod", "textureCubeLodEXT");
-//        } else {
-//            Tmp = mg_inplace_replace(Tmp, &tmpsize, "textureCubeLod", "_mg_textureCubeLod");
-//            Tmp = mg_inplace_insert(mg_getline(Tmp, headline), textureCubeLodAlt, Tmp, &tmpsize);
-//        }
-//    }
-//    if(!isVertex && (mg_find_string(Tmp, "texture2DGradARB"))) {
-//        if(hardext.shaderlod) {
-//            Tmp = mg_inplace_replace(Tmp, &tmpsize, "texture2DGradARB", "texture2DGradEXT");
-//        } else {
-//            Tmp = mg_inplace_replace(Tmp, &tmpsize, "texture2DGradARB", "_mg_texture2DGrad");
-//            Tmp = mg_inplace_insert(mg_getline(Tmp, headline), texture2DGradAlt, Tmp, &tmpsize);
-//        }
-//    }
-//    if(!isVertex && (mg_find_string(Tmp, "texture2DProjGradARB"))) {
-//        if(hardext.shaderlod) {
-//            Tmp = mg_inplace_replace(Tmp, &tmpsize, "texture2DProjGradARB", "texture2DProjGradEXT");
-//        } else {
-//            Tmp = mg_inplace_replace(Tmp, &tmpsize, "texture2DProjGradARB", "_mg_texture2DProjGrad");
-//            Tmp = mg_inplace_insert(mg_getline(Tmp, headline), texture2DProjGradAlt, Tmp, &tmpsize);
-//        }
-//    }
-//    if(!isVertex && (mg_find_string(Tmp, "textureCubeGradARB"))) {
-//        if(hardext.shaderlod) {
-//            if(!hardext.cubelod)
-//                Tmp = mg_inplace_replace(Tmp, &tmpsize, "textureCubeGradARB", "textureCubeGradEXT");
-//        } else {
-//            Tmp = mg_inplace_replace(Tmp, &tmpsize, "textureCubeGradARB", "_mg_textureCubeGrad");
-//            Tmp = mg_inplace_insert(mg_getline(Tmp, headline), textureCubeGradAlt, Tmp, &tmpsize);
-//        }
-//    }
+    if(!fpeShader && !globals4es.nointovlhack) {
+        if(strstr(Tmp, "pow(") || strstr(Tmp, "pow (")) {
+            Tmp = mg_inplace_insert(mg_getline(Tmp, headline), HackAltPow, Tmp, &tmpsize);
+        }
+        if(strstr(Tmp, "max(") || strstr(Tmp, "max (")) {
+            Tmp = mg_inplace_insert(mg_getline(Tmp, headline), HackAltMax, Tmp, &tmpsize);
+        }
+        if(strstr(Tmp, "min(") || strstr(Tmp, "min (")) {
+            Tmp = mg_inplace_insert(mg_getline(Tmp, headline), HackAltMin, Tmp, &tmpsize);
+        }
+        if(strstr(Tmp, "clamp(") || strstr(Tmp, "clamp (")) {
+            Tmp = mg_inplace_insert(mg_getline(Tmp, headline), HackAltClamp, Tmp, &tmpsize);
+        }
+        if(strstr(Tmp, "mod(") || strstr(Tmp, "mod (")) {
+            Tmp = mg_inplace_insert(mg_getline(Tmp, headline), HackAltMod, Tmp, &tmpsize);
+        }
+    }
+    if(!isVertex && hardext.shaderlod &&
+       (mg_find_string(Tmp, "texture2DLod") || mg_find_string(Tmp, "texture2DProjLod")
+        || mg_find_string(Tmp, "textureCubeLod")
+        || mg_find_string(Tmp, "texture2DGradARB") || mg_find_string(Tmp, "texture2DProjGradARB")|| mg_find_string(Tmp, "textureCubeGradARB")
+       )) {
+        const char* GLESUseShaderLod = "#extension GL_EXT_shader_texture_lod : enable\n";
+        Tmp = mg_inplace_insert(mg_getline(Tmp, 1), GLESUseShaderLod, Tmp, &tmpsize);
+    }
+    if(!isVertex && (mg_find_string(Tmp, "texture2DLod"))) {
+        if(hardext.shaderlod) {
+            Tmp = mg_inplace_replace(Tmp, &tmpsize, "texture2DLod", "texture2DLodEXT");
+        } else {
+            Tmp = mg_inplace_replace(Tmp, &tmpsize, "texture2DLod", "_mg_texture2DLod");
+            Tmp = mg_inplace_insert(mg_getline(Tmp, headline), texture2DLodAlt, Tmp, &tmpsize);
+        }
+    }
+    if(!isVertex && (mg_find_string(Tmp, "texture2DProjLod"))) {
+        if(hardext.shaderlod) {
+            Tmp = mg_inplace_replace(Tmp, &tmpsize, "texture2DProjLod", "texture2DProjLodEXT");
+        } else {
+            Tmp = mg_inplace_replace(Tmp, &tmpsize, "texture2DProjLod", "_mg_texture2DProjLod");
+            Tmp = mg_inplace_insert(mg_getline(Tmp, headline), texture2DProjLodAlt, Tmp, &tmpsize);
+        }
+    }
+    if(!isVertex && (mg_find_string(Tmp, "textureCubeLod"))) {
+        if(hardext.shaderlod) {
+            if(!hardext.cubelod)
+                Tmp = mg_inplace_replace(Tmp, &tmpsize, "textureCubeLod", "textureCubeLodEXT");
+        } else {
+            Tmp = mg_inplace_replace(Tmp, &tmpsize, "textureCubeLod", "_mg_textureCubeLod");
+            Tmp = mg_inplace_insert(mg_getline(Tmp, headline), textureCubeLodAlt, Tmp, &tmpsize);
+        }
+    }
+    if(!isVertex && (mg_find_string(Tmp, "texture2DGradARB"))) {
+        if(hardext.shaderlod) {
+            Tmp = mg_inplace_replace(Tmp, &tmpsize, "texture2DGradARB", "texture2DGradEXT");
+        } else {
+            Tmp = mg_inplace_replace(Tmp, &tmpsize, "texture2DGradARB", "_mg_texture2DGrad");
+            Tmp = mg_inplace_insert(mg_getline(Tmp, headline), texture2DGradAlt, Tmp, &tmpsize);
+        }
+    }
+    if(!isVertex && (mg_find_string(Tmp, "texture2DProjGradARB"))) {
+        if(hardext.shaderlod) {
+            Tmp = mg_inplace_replace(Tmp, &tmpsize, "texture2DProjGradARB", "texture2DProjGradEXT");
+        } else {
+            Tmp = mg_inplace_replace(Tmp, &tmpsize, "texture2DProjGradARB", "_mg_texture2DProjGrad");
+            Tmp = mg_inplace_insert(mg_getline(Tmp, headline), texture2DProjGradAlt, Tmp, &tmpsize);
+        }
+    }
+    if(!isVertex && (mg_find_string(Tmp, "textureCubeGradARB"))) {
+        if(hardext.shaderlod) {
+            if(!hardext.cubelod)
+                Tmp = mg_inplace_replace(Tmp, &tmpsize, "textureCubeGradARB", "textureCubeGradEXT");
+        } else {
+            Tmp = mg_inplace_replace(Tmp, &tmpsize, "textureCubeGradARB", "_mg_textureCubeGrad");
+            Tmp = mg_inplace_insert(mg_getline(Tmp, headline), textureCubeGradAlt, Tmp, &tmpsize);
+        }
+    }
 
     // Some drivers have troubles with "\\\r\n" or "\\\n" sequences on preprocessor macros
     newptr = Tmp;
@@ -438,8 +427,7 @@ char* ConvertShader(const char* pEntry, int isVertex, shaderconv_need_t *need)
         }
         newptr++;
     }
-    // Frag depth already in core es 3
-//    Tmp = mg_inplace_replace(Tmp, &tmpsize, "gl_FragDepth", (hardext.fragdepth)?"gl_FragDepthEXT":"fakeFragDepth");
+    Tmp = mg_inplace_replace(Tmp, &tmpsize, "gl_FragDepth", (hardext.fragdepth)?"gl_FragDepthEXT":"fakeFragDepth");
     // builtin attribs
     if(isVertex) {
         // check for ftransform function
@@ -534,9 +522,9 @@ char* ConvertShader(const char* pEntry, int isVertex, shaderconv_need_t *need)
                 notexarray_ok=0;
         }
         // if failed to determine, take max...
-        if (ntex==-1) ntex = g_gles_caps.maxtex;
+        if (ntex==-1) ntex = hardext.maxtex;
         // check constraint, and switch to notexarray if needed
-        if (!notexarray && ntex+nvarying>g_gles_caps.maxvarying && !need->need_clean && notexarray_ok) {
+        if (!notexarray && ntex+nvarying>hardext.maxvarying && !need->need_clean && notexarray_ok) {
             notexarray = 1;
             need->need_notexarray = 1;
         }
@@ -546,7 +534,7 @@ char* ConvertShader(const char* pEntry, int isVertex, shaderconv_need_t *need)
             need->need_notexarray = 1;
         }
         // check constaints
-        if (!notexarray && ntex+nvarying>g_gles_caps.maxvarying) ntex = g_gles_caps.maxvarying - nvarying;
+        if (!notexarray && ntex+nvarying>hardext.maxvarying) ntex = hardext.maxvarying - nvarying;
         need->need_texcoord = ntex;
         char d[100];
         if(notexarray) {
@@ -636,23 +624,23 @@ char* ConvertShader(const char* pEntry, int isVertex, shaderconv_need_t *need)
                     Tmp = mg_inplace_replace(Tmp, &tmpsize, builtin_matrix[i].glname, builtin_matrix[i].name);
                     // insert a declaration of it
                     char def[100];
-                    int ishighp = (isVertex || g_gles_caps.highp)?1:0;
+                    int ishighp = (isVertex || hardext.highp)?1:0;
                     if(builtin_matrix[i].matrix == MAT_N) {
-                        if(need->need_normalmatrix && !g_gles_caps.highp)
+                        if(need->need_normalmatrix && !hardext.highp)
                             ishighp = 0;
-                        if(!g_gles_caps.highp && !isVertex)
+                        if(!hardext.highp && !isVertex)
                             need->need_normalmatrix = 1;
                     }
                     if(builtin_matrix[i].matrix == MAT_MV) {
-                        if(need->need_mvmatrix && !g_gles_caps.highp)
+                        if(need->need_mvmatrix && !hardext.highp)
                             ishighp = 0;
-                        if(!g_gles_caps.highp && !isVertex)
+                        if(!hardext.highp && !isVertex)
                             need->need_mvmatrix = 1;
                     }
                     if(builtin_matrix[i].matrix == MAT_MVP) {
-                        if(need->need_mvpmatrix && !g_gles_caps.highp)
+                        if(need->need_mvpmatrix && !hardext.highp)
                             ishighp = 0;
-                        if(!g_gles_caps.highp && !isVertex)
+                        if(!hardext.highp && !isVertex)
                             need->need_mvpmatrix = 1;
                     }
                     if(builtin_matrix[i].texarray)
@@ -785,7 +773,7 @@ char* ConvertShader(const char* pEntry, int isVertex, shaderconv_need_t *need)
         Tmp = mg_inplace_replace(Tmp, &tmpsize, "gl_Point", "_mg_Point");
     if(strstr(Tmp, "gl_FogParameters") || strstr(Tmp, "gl_Fog"))
     {
-        Tmp = mg_inplace_insert(mg_getline(Tmp, headline), g_gles_caps.highp?mg_FogParametersSourceHighp:mg_FogParametersSource, Tmp, &tmpsize);
+        Tmp = mg_inplace_insert(mg_getline(Tmp, headline), hardext.highp?mg_FogParametersSourceHighp:mg_FogParametersSource, Tmp, &tmpsize);
         headline+=mg_countline(mg_FogParametersSource);
         Tmp = mg_inplace_replace(Tmp, &tmpsize, "gl_FogParameters", "_mg_FogParameters");
     }
@@ -980,21 +968,19 @@ char* ConvertShader(const char* pEntry, int isVertex, shaderconv_need_t *need)
     }
 
     // finish
-#if DEBUG || GLOBAL_DEBUG
-    printf("New Shader source:\n%s\n", Tmp);
-#endif
+    if((globals4es.dbgshaderconv&maskafter)==maskafter) {
+        printf("New Shader source:\n%s\n", Tmp);
+    }
     // clean preproc'd source
     if(versionString != NULL)
         free(versionString);
     if(pEntry!=pBuffer)
         free(pBuffer);
     return Tmp;
-#undef ShadAppend()
 }
 
 
 const char* const* fpe_VertexShader(shaderconv_need_t* need, fpe_state_t *state) {
-#define ShadAppend(S) shad = mg_append(shad, &shad_cap, S)
     // vertex is first called, so 1st time init is only here
     if(!shad_cap) shad_cap = 1024;
     if(!shad) shad = (char*)malloc(shad_cap);
