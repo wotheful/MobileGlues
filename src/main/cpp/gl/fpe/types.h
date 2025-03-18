@@ -8,6 +8,7 @@
 #include "../gl.h"
 #include "../gles/loader.h"
 #include "../gl/log.h"
+#include "defines.h"
 #include <glm/glm.hpp>
 
 struct transformation_t {
@@ -25,7 +26,7 @@ struct vertexpointer_t {
     const void *pointer;
 };
 
-#define VERTEX_POINTER_COUNT (8 + 16)
+#define VERTEX_POINTER_COUNT (8 + MAX_TEX)
 struct vertex_pointer_array_t {
     // Fixed-function VAO
     // Reserve a vao purely for fpe, so that
@@ -49,6 +50,21 @@ struct vertex_pointer_array_t {
 
 struct fixed_function_bool_t { // glEnable/glDisable
     bool fog_enable = false; // GL_FOG
+    bool lighting_enable = false; // GL_LIGHTING
+    bool light_enable[MAX_LIGHTS] = {false};
+};
+
+struct light_t {
+    glm::vec4 ambient = {0, 0, 0, 1};
+    glm::vec4 diffuse = {1, 1, 1, 1};
+    glm::vec4 specular = {0, 0, 0, 1};
+    glm::vec4 position = {0, 0, 1, 0};
+    GLfloat constant_attenuation = 1.;
+    GLfloat linear_attenuation = 0.;
+    GLfloat quadratic_attenuation = 0.;
+    glm::vec3 spot_direction = {0, 0, -1};
+    GLfloat spot_exp = 0.;
+    GLfloat spot_cutoff = 180.; // 0-90, 180
 };
 
 struct fixed_function_state_t {
@@ -69,8 +85,11 @@ struct fixed_function_uniform_t {
     GLfloat fog_intensity = 1.f;
     GLfloat fog_start = 0.f;
     GLfloat fog_end = 1.f;
-    // glFogfv/glFogiv
-    GLfloat fog_color[4] = { 0., 0., 0., 0. };
+    // glFogfv/iv
+    glm::vec4 fog_color = { 0., 0., 0., 0. };
+
+    // glLightf/i/fv/iv
+    light_t lights[MAX_LIGHTS];
 };
 
 struct glstate_t {

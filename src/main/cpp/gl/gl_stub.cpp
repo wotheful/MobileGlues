@@ -241,10 +241,10 @@ STUB_FUNCTION_HEAD(void, glInterleavedArrays, GLenum format, GLsizei stride,cons
 * Lighting
 */
 STUB_FUNCTION_HEAD(void, glShadeModel, GLenum mode ) STUB_FUNCTION_END_NO_RETURN(void, glShadeModel,mode)
-STUB_FUNCTION_HEAD(void, glLightf, GLenum light, GLenum pname, GLfloat param ) STUB_FUNCTION_END_NO_RETURN(void, glLightf,light,pname,param)
-STUB_FUNCTION_HEAD(void, glLighti, GLenum light, GLenum pname, GLint param ) STUB_FUNCTION_END_NO_RETURN(void, glLighti,light,pname,param)
-STUB_FUNCTION_HEAD(void, glLightfv, GLenum light, GLenum pname,const GLfloat *params ) STUB_FUNCTION_END_NO_RETURN(void, glLightfv,light,pname,params)
-STUB_FUNCTION_HEAD(void, glLightiv, GLenum light, GLenum pname,const GLint *params ) STUB_FUNCTION_END_NO_RETURN(void, glLightiv,light,pname,params)
+//STUB_FUNCTION_HEAD(void, glLightf, GLenum light, GLenum pname, GLfloat param ) STUB_FUNCTION_END_NO_RETURN(void, glLightf,light,pname,param)
+//STUB_FUNCTION_HEAD(void, glLighti, GLenum light, GLenum pname, GLint param ) STUB_FUNCTION_END_NO_RETURN(void, glLighti,light,pname,param)
+//STUB_FUNCTION_HEAD(void, glLightfv, GLenum light, GLenum pname,const GLfloat *params ) STUB_FUNCTION_END_NO_RETURN(void, glLightfv,light,pname,params)
+//STUB_FUNCTION_HEAD(void, glLightiv, GLenum light, GLenum pname,const GLint *params ) STUB_FUNCTION_END_NO_RETURN(void, glLightiv,light,pname,params)
 STUB_FUNCTION_HEAD(void, glGetLightfv, GLenum light, GLenum pname, GLfloat *params ) STUB_FUNCTION_END_NO_RETURN(void, glGetLightfv,light,pname,params)
 STUB_FUNCTION_HEAD(void, glGetLightiv, GLenum light, GLenum pname, GLint *params ) STUB_FUNCTION_END_NO_RETURN(void, glGetLightiv,light,pname,params)
 STUB_FUNCTION_HEAD(void, glLightModelf, GLenum pname, GLfloat param ) STUB_FUNCTION_END_NO_RETURN(void, glLightModelf,pname,param)

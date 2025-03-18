@@ -3,6 +3,7 @@
 //
 
 #include "state.h"
+#include "glm/gtc/type_ptr.hpp"
 
 #define DEBUG 0
 
@@ -11,6 +12,18 @@ bool hijack_fpe_states(GLenum cap, bool enable, fixed_function_bool_t* bools) {
         case GL_FOG:
             bools->fog_enable = enable;
             return true;
+        case GL_LIGHTING:
+            bools->lighting_enable = enable;
+            return true;
+        case GL_LIGHT0:
+        case GL_LIGHT1:
+        case GL_LIGHT2:
+        case GL_LIGHT3:
+        case GL_LIGHT4:
+        case GL_LIGHT5:
+        case GL_LIGHT6:
+        case GL_LIGHT7:
+
         default:
             break;
     }
@@ -79,7 +92,7 @@ void glFogf( GLenum pname, GLfloat param ) {
             return;
 
         default:
-            LOG_D("Invalid glFogf pname: %s", pname);
+            LOG_D("Invalid %s pname: %s", __func__, pname);
     }
 }
 
@@ -104,7 +117,7 @@ void glFogi( GLenum pname, GLint param ) {
             glFogf(pname, (GLfloat)param);
             return;
         default:
-            LOG_D("Invalid glFogi pname: %s", pname);
+            LOG_D("Invalid %s pname: %s", __func__, pname);
     }
 }
 
@@ -113,14 +126,23 @@ void glFogfv( GLenum pname, const GLfloat *params ) {
     LOG_D("glFogfv(%s, [...])", glEnumToString(pname))
 
     switch (pname) {
+        case GL_FOG_MODE:
+        case GL_FOG_INDEX:
+        case GL_FOG_COORD_SRC:
+            glFogi(pname, (GLint)params[0]);
+            break;
+        case GL_FOG_DENSITY:
+        case GL_FOG_START:
+        case GL_FOG_END:
+            glFogf(pname, params[0]);
+            break;
         case GL_FOG_COLOR: {
             auto& fcolor = g_glstate.fpe_uniform.fog_color;
-            fcolor[0] = params[0];
-            fcolor[1] = params[1];
-            fcolor[2] = params[2];
-            fcolor[3] = params[3];
+            fcolor = glm::make_vec4(params);
             break;
         }
+        default:
+            LOG_D("Invalid %s pname: %s", __func__, pname);
     }
 }
 
@@ -137,5 +159,119 @@ void glFogiv( GLenum pname, const GLint *params ) {
             fcolor[3] = (GLfloat)params[3] / (GLfloat)INT32_MAX;
             break;
         }
+        case GL_FOG_MODE:
+        case GL_FOG_INDEX:
+        case GL_FOG_COORD_SRC:
+            glFogi(pname, params[0]);
+            break;
+        case GL_FOG_DENSITY:
+        case GL_FOG_START:
+        case GL_FOG_END:
+            glFogf(pname, (GLfloat)params[0]);
+            break;
+        default:
+            LOG_D("Invalid %s pname: %s", __func__, pname);
+    }
+}
+
+void glLightf( GLenum light, GLenum pname, GLfloat param ) {
+    LOG()
+    LOG_D("glLightf(%s, %s, %f)", glEnumToString(light), glEnumToString(pname), param)
+
+    auto& lightref = g_glstate.fpe_uniform.lights[light - GL_LIGHT0];
+
+    switch (pname) {
+        case GL_SPOT_EXPONENT:
+            lightref.spot_exp = param;
+            break;
+        case GL_SPOT_CUTOFF:
+            lightref.spot_cutoff = param;
+            break;
+        case GL_CONSTANT_ATTENUATION:
+            lightref.constant_attenuation = param;
+            break;
+        case GL_LINEAR_ATTENUATION:
+            lightref.linear_attenuation = param;
+            break;
+        case GL_QUADRATIC_ATTENUATION:
+            lightref.quadratic_attenuation = param;
+            break;
+        default:
+            LOG_D("Invalid %s pname: %s", __func__, pname);
+    }
+}
+
+void glLighti( GLenum light, GLenum pname, GLint param ) {
+    LOG()
+    LOG_D("glLighti(%s, %s, %d)", glEnumToString(light), glEnumToString(pname), param)
+
+    glLightf(light, pname, (GLfloat)param);
+}
+
+void glLightfv( GLenum light, GLenum pname,
+                                 const GLfloat *params ) {
+    LOG()
+    LOG_D("glLightfv(%s, %s, [...])", glEnumToString(light), glEnumToString(pname))
+
+    switch (pname) {
+        case GL_SPOT_CUTOFF:
+        case GL_SPOT_EXPONENT:
+        case GL_CONSTANT_ATTENUATION:
+        case GL_LINEAR_ATTENUATION:
+        case GL_QUADRATIC_ATTENUATION:
+            glLightf(light, pname, params[0]);
+            break;
+
+        case GL_AMBIENT: {
+            auto& lightref = g_glstate.fpe_uniform.lights[light - GL_LIGHT0];
+            lightref.ambient = glm::make_vec4(params);
+            break;
+        }
+        case GL_DIFFUSE: {
+            auto& lightref = g_glstate.fpe_uniform.lights[light - GL_LIGHT0];
+            lightref.diffuse = glm::make_vec4(params);
+            break;
+        }
+        case GL_SPECULAR: {
+            auto& lightref = g_glstate.fpe_uniform.lights[light - GL_LIGHT0];
+            lightref.specular = glm::make_vec4(params);
+            break;
+        }
+        case GL_POSITION: {
+            auto& lightref = g_glstate.fpe_uniform.lights[light - GL_LIGHT0];
+            lightref.position = glm::make_vec4(params);
+            break;
+        }
+        case GL_SPOT_DIRECTION: {
+            auto& lightref = g_glstate.fpe_uniform.lights[light - GL_LIGHT0];
+            lightref.spot_direction = glm::make_vec3(params);
+            break;
+        }
+        default:
+            LOG_D("Invalid %s pname: %s", __func__, pname);
+    }
+}
+
+void glLightiv( GLenum light, GLenum pname,
+                                 const GLint *params ) {
+    switch (pname) {
+        case GL_SPOT_CUTOFF:
+        case GL_SPOT_EXPONENT:
+        case GL_CONSTANT_ATTENUATION:
+        case GL_LINEAR_ATTENUATION:
+        case GL_QUADRATIC_ATTENUATION:
+            glLighti(light, pname, params[0]);
+            break;
+
+        case GL_AMBIENT:
+        case GL_DIFFUSE:
+        case GL_SPECULAR:
+        case GL_POSITION:
+        case GL_SPOT_DIRECTION: {
+            glm::vec4 vec = glm::make_vec4(params);
+            glLightfv(light, pname, glm::value_ptr(vec));
+        }
+        default:
+            LOG_D("Invalid %s pname: %s", __func__, pname);
     }
 }
