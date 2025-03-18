@@ -32,7 +32,7 @@ bool hijack_fpe_states(GLenum cap, bool enable, fixed_function_bool_t* bools) {
 
 void glEnable(GLenum cap) {
     LOG()
-    LOG_D("glEnable, cap = 0x%x", cap);
+    LOG_D("glEnable, cap = %s", glEnumToString(cap));
 
     if (hijack_fpe_states(cap, true, &g_glstate.fpe_state.fpe_bools))
         return;
@@ -44,7 +44,7 @@ void glEnable(GLenum cap) {
 
 void glDisable(GLenum cap) {
     LOG()
-    LOG_D("glDisable, cap = 0x%x", cap);
+    LOG_D("glDisable, cap = %s", glEnumToString(cap));
 
     if (hijack_fpe_states(cap, false, &g_glstate.fpe_state.fpe_bools))
         return;
