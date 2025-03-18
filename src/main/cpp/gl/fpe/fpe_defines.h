@@ -254,7 +254,7 @@ typedef struct shaderconv_need_s {
     int         need_mvpmatrix;
     int         need_clean;         // this shader needs to stay "clean", no hack in here
     int         need_clipvertex;
-    uint64_t    need_texs;          // flags of what tex is needed, let's support 64 of them
+    uint32_t    need_texs;          // flags of what tex is needed
 } shaderconv_need_t;
 
 //typedef struct fpe_fpe_s {
