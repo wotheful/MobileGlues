@@ -120,15 +120,15 @@ int init_fpe() {
     fpe_state_t fpe_state = {0};
     memset(&fpe_state, 0, sizeof(fpe_state_t));
     fpe_state.plane = 0;
-    fpe_state.fogmode = 1;
+    fpe_state.fogmode = 0;
     fpe_state.fogdist = 0;
     fpe_state.fogsource = 0;
-    fpe_state.fog = 1;
+    fpe_state.fog = 0;
     fpe_state.colorsum = 0;
     fpe_state.lighting = 0;
-    fpe_state.normalize = 1;
+    fpe_state.normalize = 0;
     fpe_state.rescaling = 0;
-    fpe_state.alphafunc = FPE_GREATER;
+    fpe_state.alphafunc = FPE_LEQUAL;
     fpe_state.alphatest = 1;
 
     auto* vs = fpe_VertexShader(&vs_need, &fpe_state);
