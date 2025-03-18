@@ -8,10 +8,6 @@
 
 #define DEBUG 0
 
-#if GLOBAL_DEBUG || DEBUG
-#pragma clang optimize off
-#endif
-
 glstate_t& glstate_t::get_instance() {
     static glstate_t s_glstate;
     return s_glstate;
@@ -129,10 +125,8 @@ int init_fpe() {
     fpe_state.alphafunc = FPE_LEQUAL;
     fpe_state.alphatest = 1;
 
-    auto* vs = fpe_VertexShader(&vs_need, &fpe_state);
-    auto* ps = fpe_FragmentShader(&vs_need, &fpe_state);
-    LOG_D("fpe_VS: %s\n", vs);
-    LOG_D("fpe_FS: %s\n", ps);
+    LOG_D("fpe_VS: %s\n", fpe_VertexShader(&vs_need, &fpe_state));
+    LOG_D("fpe_FS: %s\n", fpe_FragmentShader(&vs_need, &fpe_state));
 
     g_glstate.fpe_vtx_shader_src =
             "#version 320 es\n"
