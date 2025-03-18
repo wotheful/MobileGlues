@@ -7,8 +7,10 @@
 
 #include <string>
 #include "types.h"
+#include "../log.h"
 
 class fpe_shadergen {
+public:
     static std::string vertex_shader(const fixed_function_state_t& state);
     static std::string fragment_shader(const fixed_function_state_t& state);
 };

@@ -4,6 +4,7 @@
 
 #include "fpe.hpp"
 #include "glm/gtc/type_ptr.hpp"
+#include "fpe_shadergen.h"
 
 #define DEBUG 0
 
@@ -236,6 +237,9 @@ int commit_fpe_state_on_draw(GLenum* mode, GLint* first, GLsizei* count) {
         else
             fpe_inited = true;
     }
+
+    std::string genvs = fpe_shadergen::vertex_shader(g_glstate.fpe_state);
+    LOG_D("Generated VS: %s", genvs.c_str())
 
     bool is_first = true;
 
