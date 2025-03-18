@@ -4,7 +4,6 @@
 
 #include "fpe.hpp"
 #include "glm/gtc/type_ptr.hpp"
-#include "fpe_shadergen.h"
 
 #define DEBUG 0
 
@@ -97,90 +96,90 @@ int init_fpe() {
     LOAD_GLES_FUNC(glVertexAttribPointer)
     LOAD_GLES_FUNC(glEnableVertexAttribArray)
 
-    g_glstate.fpe_vtx_shader_src =
-            "#version 320 es\n"
-            "precision highp float;\n"
-            "precision highp int;\n"
-            "uniform mat4 ModelViewMat;\n"
-            "uniform mat4 ProjMat;\n"
-            "layout (location = 0) in vec3 Pos;\n"
-            "layout (location = 1) in vec3 Normal;\n"
-            "layout (location = 2) in vec4 Color;\n"
-            "layout (location = 7) in vec2 UV0;\n"
-            "out vec4 vertexColor;\n"
-            "out vec2 texCoord0;\n"
-            "void main() {\n"
-            "   gl_Position = ProjMat * ModelViewMat * vec4(Pos, 1.0);\n"
-            "   vertexColor = Color;\n"
-            "   texCoord0 = UV0;\n"
-            "}\n";
-
-    g_glstate.fpe_frag_shader_src =
-            "#version 320 es\n"
-            "precision highp float;\n"
-            "precision highp int;\n"
-            "uniform sampler2D Sampler0;\n"
-            "in vec4 vertexColor;\n"
-            "in vec2 texCoord0;\n"
-            "out vec4 FragColor;\n"
-            "\n"
-            "void main() {\n"
-            "   vec4 color = texture(Sampler0, texCoord0) * vertexColor;"
-            "   if (color.a < 0.1) {\n"
-            "       discard;\n"
-            "   }\n"
-            "   FragColor = color;\n"
-            "}";
-
-    g_glstate.fpe_vtx_shader = gles_glCreateShader(GL_VERTEX_SHADER);
-    CHECK_GL_ERROR_NO_INIT
-    gles_glShaderSource(g_glstate.fpe_vtx_shader, 1, &g_glstate.fpe_vtx_shader_src, NULL);
-    CHECK_GL_ERROR_NO_INIT
-    gles_glCompileShader(g_glstate.fpe_vtx_shader);
-    CHECK_GL_ERROR_NO_INIT
-    int success = 0;
-    gles_glGetShaderiv(g_glstate.fpe_vtx_shader, GL_COMPILE_STATUS, &success);
-    CHECK_GL_ERROR_NO_INIT
-    if (!success) {
-        gles_glGetShaderInfoLog(g_glstate.fpe_vtx_shader, 1024, NULL, compile_info);
-        CHECK_GL_ERROR_NO_INIT
-        LOG_E("fpe vertex shader compile error: %s", compile_info);
-        return -1;
-    }
-
-    g_glstate.fpe_frag_shader = gles_glCreateShader(GL_FRAGMENT_SHADER);
-    CHECK_GL_ERROR_NO_INIT
-    gles_glShaderSource(g_glstate.fpe_frag_shader, 1, &g_glstate.fpe_frag_shader_src, NULL);
-    CHECK_GL_ERROR_NO_INIT
-
-    gles_glCompileShader(g_glstate.fpe_frag_shader);
-    CHECK_GL_ERROR_NO_INIT
-    gles_glGetShaderiv(g_glstate.fpe_frag_shader, GL_COMPILE_STATUS, &success);
-    CHECK_GL_ERROR_NO_INIT
-    if (!success) {
-        gles_glGetShaderInfoLog(g_glstate.fpe_frag_shader, 1024, NULL, compile_info);
-        CHECK_GL_ERROR_NO_INIT
-        LOG_E("fpe fragment shader compile error: %s", compile_info);
-        return -1;
-    }
-
-
-    g_glstate.fpe_program = gles_glCreateProgram();
-    CHECK_GL_ERROR_NO_INIT
-    gles_glAttachShader(g_glstate.fpe_program, g_glstate.fpe_vtx_shader);
-    CHECK_GL_ERROR_NO_INIT
-    gles_glAttachShader(g_glstate.fpe_program, g_glstate.fpe_frag_shader);
-    CHECK_GL_ERROR_NO_INIT
-    gles_glLinkProgram(g_glstate.fpe_program);
-    CHECK_GL_ERROR_NO_INIT
-    gles_glGetProgramiv(g_glstate.fpe_program, GL_LINK_STATUS, &success);
-    CHECK_GL_ERROR_NO_INIT
-    if(!success) {
-        glGetProgramInfoLog(g_glstate.fpe_program, 1024, NULL, compile_info);
-        CHECK_GL_ERROR_NO_INIT
-        LOG_E("fpe program link error: %s", compile_info);
-        return -1;
-    }
+//    g_glstate.fpe_vtx_shader_src =
+//            "#version 320 es\n"
+//            "precision highp float;\n"
+//            "precision highp int;\n"
+//            "uniform mat4 ModelViewMat;\n"
+//            "uniform mat4 ProjMat;\n"
+//            "layout (location = 0) in vec3 Pos;\n"
+//            "layout (location = 1) in vec3 Normal;\n"
+//            "layout (location = 2) in vec4 Color;\n"
+//            "layout (location = 7) in vec2 UV0;\n"
+//            "out vec4 vertexColor;\n"
+//            "out vec2 texCoord0;\n"
+//            "void main() {\n"
+//            "   gl_Position = ProjMat * ModelViewMat * vec4(Pos, 1.0);\n"
+//            "   vertexColor = Color;\n"
+//            "   texCoord0 = UV0;\n"
+//            "}\n";
+//
+//    g_glstate.fpe_frag_shader_src =
+//            "#version 320 es\n"
+//            "precision highp float;\n"
+//            "precision highp int;\n"
+//            "uniform sampler2D Sampler0;\n"
+//            "in vec4 vertexColor;\n"
+//            "in vec2 texCoord0;\n"
+//            "out vec4 FragColor;\n"
+//            "\n"
+//            "void main() {\n"
+//            "   vec4 color = texture(Sampler0, texCoord0) * vertexColor;"
+//            "   if (color.a < 0.1) {\n"
+//            "       discard;\n"
+//            "   }\n"
+//            "   FragColor = color;\n"
+//            "}";
+//
+//    g_glstate.fpe_vtx_shader = gles_glCreateShader(GL_VERTEX_SHADER);
+//    CHECK_GL_ERROR_NO_INIT
+//    gles_glShaderSource(g_glstate.fpe_vtx_shader, 1, &g_glstate.fpe_vtx_shader_src, NULL);
+//    CHECK_GL_ERROR_NO_INIT
+//    gles_glCompileShader(g_glstate.fpe_vtx_shader);
+//    CHECK_GL_ERROR_NO_INIT
+//    int success = 0;
+//    gles_glGetShaderiv(g_glstate.fpe_vtx_shader, GL_COMPILE_STATUS, &success);
+//    CHECK_GL_ERROR_NO_INIT
+//    if (!success) {
+//        gles_glGetShaderInfoLog(g_glstate.fpe_vtx_shader, 1024, NULL, compile_info);
+//        CHECK_GL_ERROR_NO_INIT
+//        LOG_E("fpe vertex shader compile error: %s", compile_info);
+//        return -1;
+//    }
+//
+//    g_glstate.fpe_frag_shader = gles_glCreateShader(GL_FRAGMENT_SHADER);
+//    CHECK_GL_ERROR_NO_INIT
+//    gles_glShaderSource(g_glstate.fpe_frag_shader, 1, &g_glstate.fpe_frag_shader_src, NULL);
+//    CHECK_GL_ERROR_NO_INIT
+//
+//    gles_glCompileShader(g_glstate.fpe_frag_shader);
+//    CHECK_GL_ERROR_NO_INIT
+//    gles_glGetShaderiv(g_glstate.fpe_frag_shader, GL_COMPILE_STATUS, &success);
+//    CHECK_GL_ERROR_NO_INIT
+//    if (!success) {
+//        gles_glGetShaderInfoLog(g_glstate.fpe_frag_shader, 1024, NULL, compile_info);
+//        CHECK_GL_ERROR_NO_INIT
+//        LOG_E("fpe fragment shader compile error: %s", compile_info);
+//        return -1;
+//    }
+//
+//
+//    g_glstate.fpe_program = gles_glCreateProgram();
+//    CHECK_GL_ERROR_NO_INIT
+//    gles_glAttachShader(g_glstate.fpe_program, g_glstate.fpe_vtx_shader);
+//    CHECK_GL_ERROR_NO_INIT
+//    gles_glAttachShader(g_glstate.fpe_program, g_glstate.fpe_frag_shader);
+//    CHECK_GL_ERROR_NO_INIT
+//    gles_glLinkProgram(g_glstate.fpe_program);
+//    CHECK_GL_ERROR_NO_INIT
+//    gles_glGetProgramiv(g_glstate.fpe_program, GL_LINK_STATUS, &success);
+//    CHECK_GL_ERROR_NO_INIT
+//    if(!success) {
+//        glGetProgramInfoLog(g_glstate.fpe_program, 1024, NULL, compile_info);
+//        CHECK_GL_ERROR_NO_INIT
+//        LOG_E("fpe program link error: %s", compile_info);
+//        return -1;
+//    }
 
     gles_glGenVertexArrays(1, &g_glstate.fpe_state.vertexpointer_array.fpe_vao);
     CHECK_GL_ERROR_NO_INIT
@@ -238,8 +237,10 @@ int commit_fpe_state_on_draw(GLenum* mode, GLint* first, GLsizei* count) {
             fpe_inited = true;
     }
 
-    std::string genvs = fpe_shadergen::vertex_shader(g_glstate.fpe_state);
-    LOG_D("Generated VS: %s", genvs.c_str())
+//    fpe_shader_generator gen(g_glstate.fpe_state);
+//    program_t program = gen.generate_program();
+//    LOG_D("Generated VS: \n%s", program.vs.c_str())
+//    LOG_D("Generated FS: \n%s", program.fs.c_str())
 
     bool is_first = true;
 
@@ -363,19 +364,30 @@ int commit_fpe_state_on_draw(GLenum* mode, GLint* first, GLsizei* count) {
     LOG_D("GL_PROJECTION: ")
     print_matrix(proj);
 
-    gles_glUseProgram(g_glstate.fpe_program);
+    uint32_t key = g_glstate.fpe_state.vertexpointer_array.enabled_pointers;
+    if (g_glstate.fpe_programs.find(key)
+                                    == g_glstate.fpe_programs.end()) {
+        LOG_D("Generating new shader: 0x%x", key)
+        fpe_shader_generator gen(g_glstate.fpe_state);
+        g_glstate.fpe_programs[key] = gen.generate_program();
+    }
+    auto& prog = g_glstate.fpe_programs[key];
+    int prog_id = prog.get_program();
+    if (prog_id < 0)
+        LOG_D("Error: FPE shader link failed!")
+    gles_glUseProgram(prog_id);
     CHECK_GL_ERROR_NO_INIT
     gles_glBindVertexArray(g_glstate.fpe_state.vertexpointer_array.fpe_vao);
     CHECK_GL_ERROR_NO_INIT
-    GLint mvmat = gles_glGetUniformLocation(g_glstate.fpe_program, "ModelViewMat");
+    GLint mvmat = gles_glGetUniformLocation(prog_id, "ModelViewMat");
     CHECK_GL_ERROR_NO_INIT
-    GLint projmat = gles_glGetUniformLocation(g_glstate.fpe_program, "ProjMat");
+    GLint projmat = gles_glGetUniformLocation(prog_id, "ProjMat");
     CHECK_GL_ERROR_NO_INIT
     gles_glUniformMatrix4fv(mvmat, 1, GL_FALSE, glm::value_ptr(g_glstate.fpe_uniform.transformation.matrices[matrix_idx(GL_MODELVIEW)]));
     CHECK_GL_ERROR_NO_INIT
     gles_glUniformMatrix4fv(projmat, 1, GL_FALSE, glm::value_ptr(g_glstate.fpe_uniform.transformation.matrices[matrix_idx(GL_PROJECTION)]));
     CHECK_GL_ERROR_NO_INIT
-    gles_glUniform1i(gles_glGetUniformLocation(g_glstate.fpe_program, "Sampler0"), 0);
+    gles_glUniform1i(gles_glGetUniformLocation(prog_id, "Sampler0"), 0);
 
     return ret;
 }

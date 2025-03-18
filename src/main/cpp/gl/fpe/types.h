@@ -10,6 +10,8 @@
 #include "../gl/log.h"
 #include "defines.h"
 #include <glm/glm.hpp>
+#include <unordered_map>
+#include "fpe_shadergen.h"
 
 struct transformation_t {
     glm::mat4 matrices[4];
@@ -103,6 +105,17 @@ struct fixed_function_uniform_t {
     light_t lights[MAX_LIGHTS];
 };
 
+struct program_t {
+    std::string vs;
+    std::string fs;
+
+    int get_program();
+private:
+    static int compile_shader(GLenum shader_type, const char* src);
+    static int link_program(GLuint vs, GLuint fs);
+    int program = -1;
+};
+
 struct glstate_t {
 
     struct fixed_function_state_t fpe_state;
@@ -110,7 +123,12 @@ struct glstate_t {
 
     GLuint fpe_vtx_shader = 0;
     GLuint fpe_frag_shader = 0;
-    GLuint fpe_program = 0;
+//    GLuint fpe_program = 0;
+
+    // enabled_vertexpointers - program
+    // TODO: using vp as key is bad! Try to hash the whole fpe_state
+    std::unordered_map<uint32_t, program_t> fpe_programs;
+
     const char* fpe_vtx_shader_src;
     const char* fpe_frag_shader_src;
 

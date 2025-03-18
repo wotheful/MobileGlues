@@ -3,18 +3,21 @@
 //
 
 #include "fpe_shadergen.h"
+#include <format>
 
 #define DEBUG 0
 
 const static std::string mg_shader_header =
         "#version 300 es\n"
-        "// MobileGlues FPE Shader\n";
+        "// MobileGlues FPE Shader\n"
+        "precision mediump float;\n"
+        "precision mediump int;\n";
 const static std::string mg_vs_header =
         "// ** Vertex Shader **\n";
 const static std::string mg_fs_header =
         "// ** Fragment Shader **\n";
 
-std::string vp2name(GLenum vp, int index) {
+std::string vp2in_name(GLenum vp, int index) {
     switch (vp) {
         case GL_VERTEX_ARRAY:
             return "Position";
@@ -30,24 +33,54 @@ std::string vp2name(GLenum vp, int index) {
             return "FogCoord";
         case GL_SECONDARY_COLOR_ARRAY:
             return "SecColor";
-        case GL_TEXTURE_COORD_ARRAY: {
+        default: {
             int texidx = index - 7;
-            return "UV" + std::to_string(texidx);
+            if (texidx >= 0 && texidx < GL_MAX_TEXTURE_IMAGE_UNITS)
+                return "UV" + std::to_string(texidx);
+            else break;
         }
     }
     LOG_E("ERROR: 1280")
     return "ERROR";
 }
 
+std::string vp2out_name(GLenum vp, int index) {
+    switch (vp) {
+        case GL_VERTEX_ARRAY:
+            return "Position";
+        case GL_NORMAL_ARRAY:
+            return "Normal";
+        case GL_COLOR_ARRAY:
+            return "vertexColor";
+        case GL_INDEX_ARRAY:
+            return "Index";
+        case GL_EDGE_FLAG_ARRAY:
+            return "EdgeFlag";
+        case GL_FOG_COORD_ARRAY:
+            return "FogCoord";
+        case GL_SECONDARY_COLOR_ARRAY:
+            return "SecColor";
+        default: {
+            int texidx = index - 7;
+            if (texidx >= 0 && texidx < GL_MAX_TEXTURE_IMAGE_UNITS)
+                return "texCoord" + std::to_string(texidx);
+            else break;
+        }
+    }
+    LOG_E("ERROR: 1280")
+    return "ERROR";
+}
+
+// TODO: deal with integer flat qualifier
 std::string type2str(GLenum type, int size) {
     if (size == 1) {
         switch (type) {
             case GL_UNSIGNED_BYTE:
             case GL_UNSIGNED_INT:
-                return "uint";
+//                return "uint";
             case GL_SHORT:
             case GL_INT:
-                return "int";
+//                return "int";
             case GL_FLOAT:
                 return "float";
             case GL_DOUBLE:
@@ -59,10 +92,10 @@ std::string type2str(GLenum type, int size) {
         switch (type) {
             case GL_UNSIGNED_BYTE:
             case GL_UNSIGNED_INT:
-                return "uvec" + std::to_string(size);
+//                return "uvec" + std::to_string(size);
             case GL_SHORT:
             case GL_INT:
-                return "ivec" + std::to_string(size);
+//                return "ivec" + std::to_string(size);
             case GL_FLOAT:
                 return "vec" + std::to_string(size);
             case GL_DOUBLE:
@@ -73,7 +106,7 @@ std::string type2str(GLenum type, int size) {
     }
 }
 
-void add_vs_in(const fixed_function_state_t& state, std::string& vs) {
+void add_vs_inout(const fixed_function_state_t& state, scratch_t& scratch, std::string& vs) {
     auto& vpa = state.vertexpointer_array;
     for (int i = 0; i < VERTEX_POINTER_COUNT; ++i) {
         bool enabled = ((vpa.enabled_pointers >> i) & 1);
@@ -84,47 +117,217 @@ void add_vs_in(const fixed_function_state_t& state, std::string& vs) {
             LOG_D("attrib #%d: type = 0x%x, size = %d, stride = %d, usage = 0x%x, ptr = 0x%x",
                   i, vp.type, vp.size, vp.stride, vp.usage)
 
-            std::string name = vp2name(vp.usage, i);
+            std::string in_name = vp2in_name(vp.usage, i);
             std::string type = type2str(vp.type, vp.size);
 
-            vs += "in " + type + " " + name + ";\n";
+            vs += "layout (location = ";
+            vs += std::to_string(i);
+            vs += ") in ";
+            vs += type;
+            vs += ' ';
+            vs += in_name;
+            vs += ";\n";
+
+            if (vp.usage != GL_VERTEX_ARRAY) { // GL_VERTEX_ARRAY will be written into gl_Position
+                std::string out_name = vp2out_name(vp.usage, i);
+                std::string linkage;
+
+                linkage += type;
+                linkage += ' ';
+                linkage += out_name;
+                linkage += ";\n";
+
+                vs += "out ";
+                vs += linkage;
+
+                scratch.last_stage_linkage += "in " + linkage;
+
+                // TODO: if not this simple? Fog / Vertex light?
+                scratch.vs_body += out_name;
+                scratch.vs_body += " = ";
+                scratch.vs_body += in_name;
+                scratch.vs_body += ";\n";
+            }
+
+            if (vp.usage == GL_COLOR_ARRAY)
+                scratch.has_vertex_color = true;
+
+            if (vp.usage == GL_TEXTURE_COORD_ARRAY)
+                scratch.has_texcoord = true;
         }
     }
 }
 
-void add_vs_out(const fixed_function_state_t& state, std::string& vs) {
+void add_vs_uniforms(const fixed_function_state_t& state, scratch_t& scratch, std::string& vs) {
+    // Transformation matrix
+    // TODO: 1. need mv matrix?
+    // TODO: 2. should do mvp matmul on CPU
+//    vs += "uniform mat4 ModelViewProjMat;\n";
 
+    vs += "uniform mat4 ModelViewMat;\n"
+          "uniform mat4 ProjMat;\n";
 }
 
-void add_vs_uniforms(const fixed_function_state_t& state, std::string& fs) {
-
+void add_vs_body(const fixed_function_state_t& state, scratch_t& scratch, std::string& vs) {
+    vs +=
+            "void main() {\n"
+            "   gl_Position = ProjMat * ModelViewMat * vec4(Position, 1.0);\n";
+    vs += scratch.vs_body;
+    vs += "}\n";
 }
 
-void add_fs_uniforms(const fixed_function_state_t& state, std::string& fs) {
-
+void add_fs_uniforms(const fixed_function_state_t& state, scratch_t& scratch, std::string& fs) {
+    // Hardcode a sampler here...
+    // TODO: Fix this on multitexture
+    if (scratch.has_texcoord)
+        fs += "uniform sampler2D Sampler0;\n";
 }
 
-std::string fpe_shadergen::vertex_shader(const fixed_function_state_t& state) {
+void add_fs_inout(const fixed_function_state_t& state, scratch_t& scratch, std::string& fs) {
+    // Linking from VS
+    fs += scratch.last_stage_linkage;
+    fs += "\n";
+    fs += "out vec4 FragColor;\n";
+}
+
+void add_fs_body(const fixed_function_state_t& state, scratch_t& scratch, std::string& fs) {
+    // TODO: Replace this hardcode with something better...
+    fs += "void main() {\n";
+
+    if (scratch.has_texcoord)
+        fs += "   vec4 color = texture(Sampler0, texCoord0);\n";
+    else
+        fs += "   vec4 color = vec4(1., 1., 1., 1.);\n";
+
+    if (scratch.has_vertex_color)
+        fs += "    color *= vertexColor;\n";
+
+    fs += "   if (color.a < 0.1) {\n"
+          "       discard;\n"
+          "   }\n"
+          "   FragColor = color;\n"
+          "}";
+}
+
+program_t fpe_shader_generator::generate_program() {
+    program_t program;
+
+    program.vs = vertex_shader(state_, scratch_);
+    program.fs = fragment_shader(state_, scratch_);
+
+    return program;
+}
+
+std::string fpe_shader_generator::vertex_shader(const fixed_function_state_t& state, scratch_t& scratch) {
     std::string shader;
     shader += mg_shader_header;
     shader += mg_vs_header;
 
     shader += "\n";
-    add_vs_in(state, shader);
+    add_vs_inout(state, scratch, shader);
     shader += "\n";
-    add_vs_uniforms(state, shader);
+    add_vs_uniforms(state, scratch, shader);
     shader += "\n";
-    add_vs_out(state, shader);
-
+    add_vs_body(state, scratch, shader);
 
     return shader;
 }
 
-std::string fpe_shadergen::fragment_shader(const fixed_function_state_t& state) {
+std::string fpe_shader_generator::fragment_shader(const fixed_function_state_t& state, scratch_t& scratch) {
     std::string shader;
 
     shader += mg_shader_header;
     shader += mg_fs_header;
 
+    shader += "\n";
+    add_fs_inout(state, scratch, shader);
+    shader += "\n";
+    add_fs_uniforms(state, scratch, shader);
+    shader += "\n";
+    add_fs_body(state, scratch, shader);
+
     return shader;
+}
+
+int program_t::get_program() {
+    if (program > 0)
+        return program;
+
+    int vss = compile_shader(GL_VERTEX_SHADER, vs.c_str());
+    if (vss < 0)
+        return vss;
+    int fss = compile_shader(GL_FRAGMENT_SHADER, fs.c_str());
+    if (fss < 0)
+        return fss;
+    program = link_program(vss, fss);
+    return program;
+}
+
+int program_t::compile_shader(GLenum shader_type, const char* src) {
+    static char compile_info[1024];
+    LOAD_GLES_FUNC(glCreateShader)
+    LOAD_GLES_FUNC(glShaderSource)
+    LOAD_GLES_FUNC(glCompileShader)
+    LOAD_GLES_FUNC(glGetShaderiv)
+    LOAD_GLES_FUNC(glGetShaderInfoLog)
+
+    INIT_CHECK_GL_ERROR
+
+    int shader = gles_glCreateShader(shader_type);
+    CHECK_GL_ERROR_NO_INIT
+    gles_glShaderSource(shader, 1, &src, NULL);
+    CHECK_GL_ERROR_NO_INIT
+    gles_glCompileShader(shader);
+    CHECK_GL_ERROR_NO_INIT
+    int success = 0;
+    gles_glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
+    CHECK_GL_ERROR_NO_INIT
+    if (!success) {
+        gles_glGetShaderInfoLog(shader, 1024, NULL, compile_info);
+        CHECK_GL_ERROR_NO_INIT
+        LOG_E("%s shader compile error: %s\nsrc:\n%s", compile_info,
+              (shader_type == GL_VERTEX_SHADER) ? "vertex" : "fragment",
+              src);
+#if DEBUG || GLOBAL_DEBUG
+        abort();
+#endif
+        return -1;
+    }
+
+    return shader;
+}
+
+int program_t::link_program(GLuint vs, GLuint fs) {
+    static char compile_info[1024];
+
+    LOAD_GLES_FUNC(glCreateProgram)
+    LOAD_GLES_FUNC(glAttachShader)
+    LOAD_GLES_FUNC(glLinkProgram)
+    LOAD_GLES_FUNC(glGetProgramiv)
+    LOAD_GLES_FUNC(glGetProgramInfoLog)
+
+    INIT_CHECK_GL_ERROR
+
+    int program = gles_glCreateProgram();
+    CHECK_GL_ERROR_NO_INIT
+    gles_glAttachShader(program, vs);
+    CHECK_GL_ERROR_NO_INIT
+    gles_glAttachShader(program, fs);
+    CHECK_GL_ERROR_NO_INIT
+    gles_glLinkProgram(program);
+    CHECK_GL_ERROR_NO_INIT
+    int success = 0;
+    gles_glGetProgramiv(program, GL_LINK_STATUS, &success);
+    CHECK_GL_ERROR_NO_INIT
+    if(!success) {
+        gles_glGetProgramInfoLog(program, 1024, NULL, compile_info);
+        CHECK_GL_ERROR_NO_INIT
+        LOG_E("program link error: %s", compile_info);
+#if DEBUG || GLOBAL_DEBUG
+        abort();
+#endif
+        return -1;
+    }
+    LOG_E("program link success");
+    return program;
 }
