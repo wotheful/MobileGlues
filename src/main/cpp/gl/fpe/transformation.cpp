@@ -49,7 +49,7 @@ void glMatrixMode( GLenum mode ) {
     LOG()
     LOG_D("glMatrixMode(0x%x)", mode)
 
-    auto& transformation = g_glstate.transformation;
+    auto& transformation = g_glstate.fpe_uniform.transformation;
 
     switch (mode) {
         case GL_MODELVIEW:
@@ -64,7 +64,7 @@ void glMatrixMode( GLenum mode ) {
 
 void glLoadIdentity() {
     LOG()
-    auto& transformation = g_glstate.transformation;
+    auto& transformation = g_glstate.fpe_uniform.transformation;
 
     transformation.matrices[matrix_idx(transformation.matrix_mode)] = glm::mat4(1.0);
 
@@ -81,7 +81,7 @@ void glOrtho(GLdouble left, GLdouble right, GLdouble bottom, GLdouble top, GLdou
 
 void glOrthof(GLfloat left, GLfloat right, GLfloat bottom, GLfloat top, GLfloat zNear, GLfloat zFar) {
     LOG()
-    auto& transformation = g_glstate.transformation;
+    auto& transformation = g_glstate.fpe_uniform.transformation;
 
     transformation.matrices[matrix_idx(transformation.matrix_mode)] *= glm::ortho(left, right, bottom, top, zNear, zFar);
     LOG_D("Matrix 0x%x:", transformation.matrix_mode)
@@ -90,7 +90,7 @@ void glOrthof(GLfloat left, GLfloat right, GLfloat bottom, GLfloat top, GLfloat 
 
 void glScalef( GLfloat x, GLfloat y, GLfloat z ) {
     LOG()
-    auto& transformation = g_glstate.transformation;
+    auto& transformation = g_glstate.fpe_uniform.transformation;
 
     transformation.matrices[matrix_idx(transformation.matrix_mode)] =
             glm::scale(transformation.matrices[matrix_idx(transformation.matrix_mode)], glm::vec3(x, y, z));
@@ -100,7 +100,7 @@ void glScalef( GLfloat x, GLfloat y, GLfloat z ) {
 
 void glTranslatef( GLfloat x, GLfloat y, GLfloat z ) {
     LOG()
-    auto& transformation = g_glstate.transformation;
+    auto& transformation = g_glstate.fpe_uniform.transformation;
 
     transformation.matrices[matrix_idx(transformation.matrix_mode)] =
             glm::translate(transformation.matrices[matrix_idx(transformation.matrix_mode)], glm::vec3(x, y, z));
@@ -111,7 +111,7 @@ void glTranslatef( GLfloat x, GLfloat y, GLfloat z ) {
 void glRotatef( GLfloat angle, GLfloat x, GLfloat y, GLfloat z ) {
     LOG()
     LOG_D("glRotatef, angle = %.2f, x = %.2f, y = %.2f, z = %.2f", angle, x, y, z)
-    auto& transformation = g_glstate.transformation;
+    auto& transformation = g_glstate.fpe_uniform.transformation;
 
     transformation.matrices[matrix_idx(transformation.matrix_mode)] =
             glm::rotate(transformation.matrices[matrix_idx(transformation.matrix_mode)], (GLfloat)(angle * M_PI / 180.f), glm::vec3(x, y, z));
@@ -143,7 +143,7 @@ void glTranslated(GLdouble x, GLdouble y, GLdouble z ) {
 void glMultMatrixf(const GLfloat *m) {
     LOG()
 
-    auto& transformation = g_glstate.transformation;
+    auto& transformation = g_glstate.fpe_uniform.transformation;
     transformation.matrices[matrix_idx(transformation.matrix_mode)] *= glm::make_mat4(m);
 
     LOG_D("Matrix 0x%x:", transformation.matrix_mode)
@@ -152,7 +152,7 @@ void glMultMatrixf(const GLfloat *m) {
 
 void glPushMatrix( void ) {
     LOG()
-    auto& transformation = g_glstate.transformation;
+    auto& transformation = g_glstate.fpe_uniform.transformation;
 
     auto idx = matrix_idx(transformation.matrix_mode);
     auto& mat = transformation.matrices[idx];
@@ -164,7 +164,7 @@ void glPushMatrix( void ) {
 
 void glPopMatrix( void ) {
     LOG()
-    auto& transformation = g_glstate.transformation;
+    auto& transformation = g_glstate.fpe_uniform.transformation;
 
     auto idx = matrix_idx(transformation.matrix_mode);
     auto& mat = transformation.matrices[idx];

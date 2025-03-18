@@ -181,18 +181,18 @@ int init_fpe() {
         return -1;
     }
 
-    gles_glGenVertexArrays(1, &g_glstate.vertexpointer_array.fpe_vao);
+    gles_glGenVertexArrays(1, &g_glstate.fpe_state.vertexpointer_array.fpe_vao);
     CHECK_GL_ERROR_NO_INIT
-    gles_glGenBuffers(1, &g_glstate.vertexpointer_array.fpe_vbo);
+    gles_glGenBuffers(1, &g_glstate.fpe_state.vertexpointer_array.fpe_vbo);
     CHECK_GL_ERROR_NO_INIT
-    gles_glGenBuffers(1, &g_glstate.vertexpointer_array.fpe_ibo);
+    gles_glGenBuffers(1, &g_glstate.fpe_state.vertexpointer_array.fpe_ibo);
     CHECK_GL_ERROR_NO_INIT
 
-    LOG_D("fpe_vao: %d", g_glstate.vertexpointer_array.fpe_vao)
-    LOG_D("fpe_vbo: %d", g_glstate.vertexpointer_array.fpe_vbo)
-    LOG_D("fpe_ibo: %d", g_glstate.vertexpointer_array.fpe_ibo)
+    LOG_D("fpe_vao: %d", g_glstate.fpe_state.vertexpointer_array.fpe_vao)
+    LOG_D("fpe_vbo: %d", g_glstate.fpe_state.vertexpointer_array.fpe_vbo)
+    LOG_D("fpe_ibo: %d", g_glstate.fpe_state.vertexpointer_array.fpe_ibo)
 
-    gles_glBindVertexArray(g_glstate.vertexpointer_array.fpe_vao);
+    gles_glBindVertexArray(g_glstate.fpe_state.vertexpointer_array.fpe_vao);
     CHECK_GL_ERROR_NO_INIT
     gles_glBindVertexArray(0);
     CHECK_GL_ERROR_NO_INIT
@@ -240,9 +240,9 @@ int commit_fpe_state_on_draw(GLenum* mode, GLint* first, GLsizei* count) {
     bool is_first = true;
 
     // All assuming tightly packed here...
-    auto& vpa = g_glstate.vertexpointer_array;
+    auto& vpa = g_glstate.fpe_state.vertexpointer_array;
 //    gles_glGenVertexArrays(1, &vpa.fpe_vao);
-    LOG_D("fpe_vao: %d", g_glstate.vertexpointer_array.fpe_vao)
+    LOG_D("fpe_vao: %d", g_glstate.fpe_state.vertexpointer_array.fpe_vao)
     gles_glBindVertexArray(vpa.fpe_vao);
     CHECK_GL_ERROR_NO_INIT
 
@@ -253,7 +253,7 @@ int commit_fpe_state_on_draw(GLenum* mode, GLint* first, GLsizei* count) {
 
     // Ugh...Why binding vbo is required BEFORE calling VertexAttrib* functions?
     if (prev_vbo == 0) {
-        gles_glBindBuffer(GL_ARRAY_BUFFER, g_glstate.vertexpointer_array.fpe_vbo);
+        gles_glBindBuffer(GL_ARRAY_BUFFER, g_glstate.fpe_state.vertexpointer_array.fpe_vbo);
         CHECK_GL_ERROR_NO_INIT
     }
 
@@ -325,7 +325,7 @@ int commit_fpe_state_on_draw(GLenum* mode, GLint* first, GLsizei* count) {
 #endif
 
         LOG_D("glBufferData: size = %d, data = 0x%x -> GL_ARRAY_BUFFER (%d)", *count * vpa.stride,
-              vpa.starting_pointer, g_glstate.vertexpointer_array.fpe_vbo)
+              vpa.starting_pointer, g_glstate.fpe_state.vertexpointer_array.fpe_vbo)
 
         gles_glBufferData(GL_ARRAY_BUFFER, *count * vpa.stride, vpa.starting_pointer,
                           GL_DYNAMIC_DRAW);
@@ -338,9 +338,9 @@ int commit_fpe_state_on_draw(GLenum* mode, GLint* first, GLsizei* count) {
         vpa.fpe_ibo_buffer = quad_to_triangle(*count);
 
         LOG_D("glBufferData: size = %d, data = 0x%x -> GL_ELEMENT_ARRAY_BUFFER (%d)",
-              vpa.fpe_ibo_buffer.size() * sizeof(uint32_t), vpa.fpe_ibo_buffer.data(), g_glstate.vertexpointer_array.fpe_ibo)
+              vpa.fpe_ibo_buffer.size() * sizeof(uint32_t), vpa.fpe_ibo_buffer.data(), g_glstate.fpe_state.vertexpointer_array.fpe_ibo)
 
-        gles_glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, g_glstate.vertexpointer_array.fpe_ibo);
+        gles_glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, g_glstate.fpe_state.vertexpointer_array.fpe_ibo);
         CHECK_GL_ERROR_NO_INIT
         gles_glBufferData(GL_ELEMENT_ARRAY_BUFFER, vpa.fpe_ibo_buffer.size() * sizeof(uint32_t),
                           vpa.fpe_ibo_buffer.data(), GL_DYNAMIC_DRAW);
@@ -351,8 +351,8 @@ int commit_fpe_state_on_draw(GLenum* mode, GLint* first, GLsizei* count) {
         ret = 1;
     }
 
-    const auto& mv = g_glstate.transformation.matrices[matrix_idx(GL_MODELVIEW)];
-    const auto& proj = g_glstate.transformation.matrices[matrix_idx(GL_PROJECTION)];
+    const auto& mv = g_glstate.fpe_uniform.transformation.matrices[matrix_idx(GL_MODELVIEW)];
+    const auto& proj = g_glstate.fpe_uniform.transformation.matrices[matrix_idx(GL_PROJECTION)];
 
     LOG_D("GL_MODELVIEW: ")
     print_matrix(mv);
@@ -361,15 +361,15 @@ int commit_fpe_state_on_draw(GLenum* mode, GLint* first, GLsizei* count) {
 
     gles_glUseProgram(g_glstate.fpe_program);
     CHECK_GL_ERROR_NO_INIT
-    gles_glBindVertexArray(g_glstate.vertexpointer_array.fpe_vao);
+    gles_glBindVertexArray(g_glstate.fpe_state.vertexpointer_array.fpe_vao);
     CHECK_GL_ERROR_NO_INIT
     GLint mvmat = gles_glGetUniformLocation(g_glstate.fpe_program, "ModelViewMat");
     CHECK_GL_ERROR_NO_INIT
     GLint projmat = gles_glGetUniformLocation(g_glstate.fpe_program, "ProjMat");
     CHECK_GL_ERROR_NO_INIT
-    gles_glUniformMatrix4fv(mvmat, 1, GL_FALSE, glm::value_ptr(g_glstate.transformation.matrices[matrix_idx(GL_MODELVIEW)]));
+    gles_glUniformMatrix4fv(mvmat, 1, GL_FALSE, glm::value_ptr(g_glstate.fpe_uniform.transformation.matrices[matrix_idx(GL_MODELVIEW)]));
     CHECK_GL_ERROR_NO_INIT
-    gles_glUniformMatrix4fv(projmat, 1, GL_FALSE, glm::value_ptr(g_glstate.transformation.matrices[matrix_idx(GL_PROJECTION)]));
+    gles_glUniformMatrix4fv(projmat, 1, GL_FALSE, glm::value_ptr(g_glstate.fpe_uniform.transformation.matrices[matrix_idx(GL_PROJECTION)]));
     CHECK_GL_ERROR_NO_INIT
     gles_glUniform1i(gles_glGetUniformLocation(g_glstate.fpe_program, "Sampler0"), 0);
 

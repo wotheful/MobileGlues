@@ -78,6 +78,7 @@ struct fixed_function_state_t {
     int light_model_local_viewer = 0; // glLightModel(GL_LIGHT_MODEL_LOCAL_VIEWER)
     int light_model_two_side = 0; // glLightModel(GL_LIGHT_MODEL_TWO_SIDE)
 
+    struct vertex_pointer_array_t vertexpointer_array;
     struct fixed_function_bool_t fpe_bools;
 };
 
@@ -95,17 +96,18 @@ struct fixed_function_uniform_t {
     // glLightModel
     glm::vec4 light_model_ambient = {0.2, 0.2, 0.2, 1.0};
 
+    // glMatrix*
+    struct transformation_t transformation;
+
     // glLightf/i/fv/iv
     light_t lights[MAX_LIGHTS];
 };
 
 struct glstate_t {
-    struct transformation_t transformation;
 
     struct fixed_function_state_t fpe_state;
     struct fixed_function_uniform_t fpe_uniform;
 
-    struct vertex_pointer_array_t vertexpointer_array;
     GLuint fpe_vtx_shader = 0;
     GLuint fpe_frag_shader = 0;
     GLuint fpe_program = 0;

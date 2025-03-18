@@ -355,3 +355,10 @@ void glLightModeliv( GLenum pname, const GLint *params ) {
             LOG_D("ERROR: Invalid %s pname: %s", __func__, pname);
     }
 }
+
+void glColor4f( GLfloat red, GLfloat green,
+                                 GLfloat blue, GLfloat alpha ) {
+    LOG()
+    LOG_D("glColor4f(%f, %f, %f, %f), NOT implemented!", red, green, blue, alpha);
+
+}

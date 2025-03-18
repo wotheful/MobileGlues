@@ -140,7 +140,7 @@ STUB_FUNCTION_HEAD(void, glColor3ui, GLuint red, GLuint green, GLuint blue ) STU
 STUB_FUNCTION_HEAD(void, glColor3us, GLushort red, GLushort green, GLushort blue ) STUB_FUNCTION_END_NO_RETURN(void, glColor3us,red,green,blue)
 STUB_FUNCTION_HEAD(void, glColor4b, GLbyte red, GLbyte green, GLbyte blue, GLbyte alpha ) STUB_FUNCTION_END_NO_RETURN(void, glColor4b,red,green,blue,alpha)
 STUB_FUNCTION_HEAD(void, glColor4d, GLdouble red, GLdouble green, GLdouble blue, GLdouble alpha ) STUB_FUNCTION_END_NO_RETURN(void, glColor4d,red,green,blue,alpha)
-STUB_FUNCTION_HEAD(void, glColor4f, GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha ) STUB_FUNCTION_END_NO_RETURN(void, glColor4f,red,green,blue,alpha)
+//STUB_FUNCTION_HEAD(void, glColor4f, GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha ) STUB_FUNCTION_END_NO_RETURN(void, glColor4f,red,green,blue,alpha)
 STUB_FUNCTION_HEAD(void, glColor4i, GLint red, GLint green, GLint blue, GLint alpha ) STUB_FUNCTION_END_NO_RETURN(void, glColor4i,red,green,blue,alpha)
 STUB_FUNCTION_HEAD(void, glColor4s, GLshort red, GLshort green, GLshort blue, GLshort alpha ) STUB_FUNCTION_END_NO_RETURN(void, glColor4s,red,green,blue,alpha)
 STUB_FUNCTION_HEAD(void, glColor4ub, GLubyte red, GLubyte green, GLubyte blue, GLubyte alpha ) STUB_FUNCTION_END_NO_RETURN(void, glColor4ub,red,green,blue,alpha)

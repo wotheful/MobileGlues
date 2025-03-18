@@ -36,6 +36,8 @@ GLAPI void GLAPIENTRY glLightModelf( GLenum pname, GLfloat param );
 GLAPI void GLAPIENTRY glLightModeli( GLenum pname, GLint param );
 GLAPI void GLAPIENTRY glLightModelfv( GLenum pname, const GLfloat *params );
 GLAPI void GLAPIENTRY glLightModeliv( GLenum pname, const GLint *params );
+GLAPI void GLAPIENTRY glColor4f( GLfloat red, GLfloat green,
+                                 GLfloat blue, GLfloat alpha );
 
 #ifdef __cplusplus
 }
