@@ -4,7 +4,6 @@
 
 #include "fpe.hpp"
 #include "glm/gtc/type_ptr.hpp"
-#include "fpe_shader.h"
 
 #define DEBUG 0
 
@@ -74,7 +73,7 @@ void log_vtx_attrib_data(const void* ptr, GLenum type, int size, int stride, int
 
 bool fpe_inited = false;
 int init_fpe() {
-    LOG_D("Initializing fixed-function pipeline...")
+    LOG_I("Initializing fixed-function pipeline...")
 
     char compile_info[1024];
 
@@ -96,37 +95,6 @@ int init_fpe() {
     LOAD_GLES_FUNC(glGetProgramiv)
     LOAD_GLES_FUNC(glVertexAttribPointer)
     LOAD_GLES_FUNC(glEnableVertexAttribArray)
-
-    shaderconv_need_s vs_need = {
-            .need_color = 1,
-            .need_secondary = 0,
-            .need_fogcoord = 0,
-            .need_texcoord = 1,
-            .need_notexarray = 0,
-            .need_normalmatrix = 0,
-            .need_mvmatrix = 1,
-            .need_mvpmatrix = 0,
-            .need_clean = 0,
-            .need_clipvertex = 0,
-            .need_texs = 0
-    };
-
-    fpe_state_t fpe_state = {0};
-    memset(&fpe_state, 0, sizeof(fpe_state_t));
-    fpe_state.plane = 0;
-    fpe_state.fogmode = 0;
-    fpe_state.fogdist = 0;
-    fpe_state.fogsource = 0;
-    fpe_state.fog = 0;
-    fpe_state.colorsum = 0;
-    fpe_state.lighting = 0;
-    fpe_state.normalize = 0;
-    fpe_state.rescaling = 0;
-    fpe_state.alphafunc = FPE_LEQUAL;
-    fpe_state.alphatest = 1;
-
-    LOG_D("fpe_VS: %s\n", fpe_VertexShader(&vs_need, &fpe_state));
-    LOG_D("fpe_FS: %s\n", fpe_FragmentShader(&vs_need, &fpe_state));
 
     g_glstate.fpe_vtx_shader_src =
             "#version 320 es\n"

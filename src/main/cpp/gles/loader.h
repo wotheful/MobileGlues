@@ -149,9 +149,6 @@ extern "C" GLAPI GLAPIENTRY type name(__VA_ARGS__) {
 
 struct gles_caps_t {
     int maxtex;
-    int maxplanes;
-    int maxlights;
-
     int GL_EXT_buffer_storage;
     int GL_EXT_disjoint_timer_query;
     int GL_QCOM_texture_lod_bias;
