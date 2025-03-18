@@ -18,7 +18,7 @@ extern "C" {
 */
 STUB_FUNCTION_HEAD(void, glClearIndex, GLfloat c ) STUB_FUNCTION_END_NO_RETURN(void, glClearIndex,c)
 STUB_FUNCTION_HEAD(void, glIndexMask, GLuint mask ) STUB_FUNCTION_END_NO_RETURN(void, glIndexMask,mask)
-STUB_FUNCTION_HEAD(void, glAlphaFunc, GLenum func, GLclampf ref ) STUB_FUNCTION_END_NO_RETURN(void, glAlphaFunc,func,ref)
+//STUB_FUNCTION_HEAD(void, glAlphaFunc, GLenum func, GLclampf ref ) STUB_FUNCTION_END_NO_RETURN(void, glAlphaFunc,func,ref)
 STUB_FUNCTION_HEAD(void, glLogicOp, GLenum opcode ) STUB_FUNCTION_END_NO_RETURN(void, glLogicOp,opcode)
 STUB_FUNCTION_HEAD(void, glPointSize, GLfloat size ) STUB_FUNCTION_END_NO_RETURN(void, glPointSize,size)
 STUB_FUNCTION_HEAD(void, glLineStipple, GLint factor, GLushort pattern ) STUB_FUNCTION_END_NO_RETURN(void, glLineStipple,factor,pattern)
@@ -339,10 +339,10 @@ STUB_FUNCTION_HEAD(void, glEvalMesh2, GLenum mode, GLint i1, GLint i2, GLint j1,
 /*
 * Fog
 */
-STUB_FUNCTION_HEAD(void, glFogf, GLenum pname, GLfloat param ) STUB_FUNCTION_END_NO_RETURN(void, glFogf,pname,param)
-STUB_FUNCTION_HEAD(void, glFogi, GLenum pname, GLint param ) STUB_FUNCTION_END_NO_RETURN(void, glFogi,pname,param)
-STUB_FUNCTION_HEAD(void, glFogfv, GLenum pname, const GLfloat *params ) STUB_FUNCTION_END_NO_RETURN(void, glFogfv,pname,params)
-STUB_FUNCTION_HEAD(void, glFogiv, GLenum pname, const GLint *params ) STUB_FUNCTION_END_NO_RETURN(void, glFogiv,pname,params)
+//STUB_FUNCTION_HEAD(void, glFogf, GLenum pname, GLfloat param ) STUB_FUNCTION_END_NO_RETURN(void, glFogf,pname,param)
+//STUB_FUNCTION_HEAD(void, glFogi, GLenum pname, GLint param ) STUB_FUNCTION_END_NO_RETURN(void, glFogi,pname,param)
+//STUB_FUNCTION_HEAD(void, glFogfv, GLenum pname, const GLfloat *params ) STUB_FUNCTION_END_NO_RETURN(void, glFogfv,pname,params)
+//STUB_FUNCTION_HEAD(void, glFogiv, GLenum pname, const GLint *params ) STUB_FUNCTION_END_NO_RETURN(void, glFogiv,pname,params)
 /*
 * Selection and Feedback
 */

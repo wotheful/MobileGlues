@@ -23,7 +23,7 @@ int vp2idx(GLenum vp) {
         case GL_SECONDARY_COLOR_ARRAY:
             return 6;
         case GL_TEXTURE_COORD_ARRAY:
-            return 7 + (g_glstate.state.client_active_texture - GL_TEXTURE0);
+            return 7 + (g_glstate.fpe_state.client_active_texture - GL_TEXTURE0);
     }
     LOG_E("ERROR: 1280")
     return -1;
@@ -115,7 +115,7 @@ void glTexCoordPointer(GLint size, GLenum type, GLsizei stride, const GLvoid *po
     LOG_D("glTexCoordPointer, size = %d, type = 0x%x, stride = %d, pointer = 0x%x", size, type, stride, pointer)
     g_glstate.vertexpointer_array.pointers[vp2idx(GL_TEXTURE_COORD_ARRAY)] = {
             .size = size,
-            .usage = GL_TEXTURE_COORD_ARRAY + (g_glstate.state.client_active_texture - GL_TEXTURE0),
+            .usage = GL_TEXTURE_COORD_ARRAY + (g_glstate.fpe_state.client_active_texture - GL_TEXTURE0),
             .type = type,
             .normalized = GL_FALSE,
             .stride = stride,
