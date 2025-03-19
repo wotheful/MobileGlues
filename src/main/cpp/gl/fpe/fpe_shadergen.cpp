@@ -7,6 +7,10 @@
 
 #define DEBUG 0
 
+#if GLOBAL_DEBUG || DEBUG
+#pragma clang optimize off
+#endif
+
 const static std::string mg_shader_header =
         "#version 300 es\n"
         "// MobileGlues FPE Shader\n"
@@ -49,17 +53,17 @@ std::string vp2out_name(GLenum vp, int index) {
         case GL_VERTEX_ARRAY:
             return "Position";
         case GL_NORMAL_ARRAY:
-            return "Normal";
+            return "vertexNormal";
         case GL_COLOR_ARRAY:
             return "vertexColor";
         case GL_INDEX_ARRAY:
-            return "Index";
+            return "vertexIndex";
         case GL_EDGE_FLAG_ARRAY:
-            return "EdgeFlag";
+            return "vertexEdgeFlag";
         case GL_FOG_COORD_ARRAY:
-            return "FogCoord";
+            return "vertexFogCoord";
         case GL_SECONDARY_COLOR_ARRAY:
-            return "SecColor";
+            return "vertexSecColor";
         default: {
             int texidx = index - 7;
             if (texidx >= 0 && texidx < GL_MAX_TEXTURE_IMAGE_UNITS)
@@ -75,6 +79,7 @@ std::string vp2out_name(GLenum vp, int index) {
 std::string type2str(GLenum type, int size) {
     if (size == 1) {
         switch (type) {
+            case GL_BYTE:
             case GL_UNSIGNED_BYTE:
             case GL_UNSIGNED_INT:
 //                return "uint";
@@ -90,6 +95,7 @@ std::string type2str(GLenum type, int size) {
         }
     } else {
         switch (type) {
+            case GL_BYTE:
             case GL_UNSIGNED_BYTE:
             case GL_UNSIGNED_INT:
 //                return "uvec" + std::to_string(size);
