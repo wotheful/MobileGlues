@@ -79,10 +79,10 @@ std::string vp2out_name(GLenum vp, int index) {
 std::string type2str(GLenum type, int size) {
     if (size == 1) {
         switch (type) {
-            case GL_BYTE:
             case GL_UNSIGNED_BYTE:
             case GL_UNSIGNED_INT:
 //                return "uint";
+            case GL_BYTE:
             case GL_SHORT:
             case GL_INT:
 //                return "int";
@@ -95,10 +95,10 @@ std::string type2str(GLenum type, int size) {
         }
     } else {
         switch (type) {
-            case GL_BYTE:
             case GL_UNSIGNED_BYTE:
             case GL_UNSIGNED_INT:
 //                return "uvec" + std::to_string(size);
+            case GL_BYTE:
             case GL_SHORT:
             case GL_INT:
 //                return "ivec" + std::to_string(size);
@@ -120,8 +120,8 @@ void add_vs_inout(const fixed_function_state_t& state, scratch_t& scratch, std::
         if (enabled) {
             auto &vp = vpa.pointers[i];
 
-            LOG_D("attrib #%d: type = 0x%x, size = %d, stride = %d, usage = 0x%x, ptr = 0x%x",
-                  i, vp.type, vp.size, vp.stride, vp.usage)
+            LOG_D("attrib #%d: type = %s, size = %d, stride = %d, usage = %s, ptr = 0x%x",
+                  i, glEnumToString(vp.type), vp.size, vp.stride, glEnumToString(vp.usage))
 
             std::string in_name = vp2in_name(vp.usage, i);
             std::string type = type2str(vp.type, vp.size);

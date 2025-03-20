@@ -8,12 +8,14 @@
 #define VERSION_ALPHA 1
 #define VERSION_RELEASE 2
 
-#define MAJOR 1
-#define MINOR 1
+#define MAJOR 2
+#define MINOR 0
 #define REVISION 0
-#define PATCH 2
+#define PATCH 0
 
-#define VERSION_TYPE VERSION_RELEASE
+#define VERSION_TYPE VERSION_DEVELOPMENT
+
+#define VERSION_SUFFIX "-fpe"
 
 #define MOBILEGLUES_VERSION_H
 
