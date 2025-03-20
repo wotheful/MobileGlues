@@ -379,13 +379,18 @@ int commit_fpe_state_on_draw(GLenum* mode, GLint* first, GLsizei* count) {
     CHECK_GL_ERROR_NO_INIT
     gles_glBindVertexArray(g_glstate.fpe_state.vertexpointer_array.fpe_vao);
     CHECK_GL_ERROR_NO_INIT
-    GLint mvmat = gles_glGetUniformLocation(prog_id, "ModelViewMat");
+//    GLint mvmat = gles_glGetUniformLocation(prog_id, "ModelViewMat");
+//    CHECK_GL_ERROR_NO_INIT
+//    GLint projmat = gles_glGetUniformLocation(prog_id, "ProjMat");
+//    CHECK_GL_ERROR_NO_INIT
+    GLint mat_id = gles_glGetUniformLocation(prog_id, "ModelViewProjMat");
     CHECK_GL_ERROR_NO_INIT
-    GLint projmat = gles_glGetUniformLocation(prog_id, "ProjMat");
-    CHECK_GL_ERROR_NO_INIT
-    gles_glUniformMatrix4fv(mvmat, 1, GL_FALSE, glm::value_ptr(g_glstate.fpe_uniform.transformation.matrices[matrix_idx(GL_MODELVIEW)]));
-    CHECK_GL_ERROR_NO_INIT
-    gles_glUniformMatrix4fv(projmat, 1, GL_FALSE, glm::value_ptr(g_glstate.fpe_uniform.transformation.matrices[matrix_idx(GL_PROJECTION)]));
+    const auto mat = proj * mv;
+//    gles_glUniformMatrix4fv(mvmat, 1, GL_FALSE, glm::value_ptr(g_glstate.fpe_uniform.transformation.matrices[matrix_idx(GL_MODELVIEW)]));
+//    CHECK_GL_ERROR_NO_INIT
+//    gles_glUniformMatrix4fv(projmat, 1, GL_FALSE, glm::value_ptr(g_glstate.fpe_uniform.transformation.matrices[matrix_idx(GL_PROJECTION)]));
+//    CHECK_GL_ERROR_NO_INIT
+    gles_glUniformMatrix4fv(mat_id, 1, GL_FALSE, glm::value_ptr(mat));
     CHECK_GL_ERROR_NO_INIT
     gles_glUniform1i(gles_glGetUniformLocation(prog_id, "Sampler0"), 0);
 

@@ -14,8 +14,8 @@
 const static std::string mg_shader_header =
         "#version 300 es\n"
         "// MobileGlues FPE Shader\n"
-        "precision mediump float;\n"
-        "precision mediump int;\n";
+        "precision highp float;\n"
+        "precision highp int;\n";
 const static std::string mg_vs_header =
         "// ** Vertex Shader **\n";
 const static std::string mg_fs_header =
@@ -166,18 +166,21 @@ void add_vs_inout(const fixed_function_state_t& state, scratch_t& scratch, std::
 
 void add_vs_uniforms(const fixed_function_state_t& state, scratch_t& scratch, std::string& vs) {
     // Transformation matrix
+
     // TODO: 1. need mv matrix?
     // TODO: 2. should do mvp matmul on CPU
-//    vs += "uniform mat4 ModelViewProjMat;\n";
+//    vs += "uniform mat4 ModelViewMat;\n"
+//          "uniform mat4 ProjMat;\n";
 
-    vs += "uniform mat4 ModelViewMat;\n"
-          "uniform mat4 ProjMat;\n";
+    vs += "uniform mat4 ModelViewProjMat;\n";
+
 }
 
 void add_vs_body(const fixed_function_state_t& state, scratch_t& scratch, std::string& vs) {
     vs +=
             "void main() {\n"
-            "   gl_Position = ProjMat * ModelViewMat * vec4(Position, 1.0);\n";
+//            "   gl_Position = ProjMat * ModelViewMat * vec4(Position, 1.0);\n";
+            "   gl_Position = ModelViewProjMat * vec4(Position, 1.0);\n";
     vs += scratch.vs_body;
     vs += "}\n";
 }
