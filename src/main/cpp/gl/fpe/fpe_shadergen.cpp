@@ -20,6 +20,23 @@ const static std::string mg_vs_header =
         "// ** Vertex Shader **\n";
 const static std::string mg_fs_header =
         "// ** Fragment Shader **\n";
+const static std::string mg_fog_linear_func =
+        "float fog_linear(float distance, float start, float end) {\n"
+        "    return (end != start) ? clamp((end - distance) / (end - start), 0.0, 1.0) : 1.0;\n"
+        "}";
+const static std::string mg_fog_exp_func =
+        "float fog_exp(float distance, float density) {\n"
+        "    return saturate(exp(-density * distance));\n"
+        "}";
+const static std::string mg_fog_exp2_func =
+        "float fog_exp2(float distance, float density) {\n"
+        "    float scaled = density * distance;\n"
+        "    return saturate(exp(-scaled * scaled));\n"
+        "}";
+const static std::string mg_fog_apply_fog_func =
+        "vec3 apply_fog(vec3 objColor, vec3 fogColor, float fogFactor) {\n"
+        "    return mix(fogColor, objColor, fogFactor);\n"
+        "}";
 
 std::string vp2in_name(GLenum vp, int index) {
     switch (vp) {
