@@ -38,7 +38,7 @@ void glMultiDrawElements(GLenum mode, const GLsizei* count, GLenum type, const v
 
 void glDrawArrays(GLenum mode, GLint first, GLsizei count) {
     LOG()
-    LOG_D("glDrawArrays(), mode = 0x%x, first = %d, count = %u", mode, first, count)
+    LOG_D("glDrawArrays(), mode = %s, first = %d, count = %u", glEnumToString(mode), first, count)
 
     INIT_CHECK_GL_ERROR
 
@@ -50,7 +50,7 @@ void glDrawArrays(GLenum mode, GLint first, GLsizei count) {
 
 
     if (do_draw_element) {
-        LOG_D("Switch to glDrawElements(), mode = 0x%x, count = %u", mode, count)
+        LOG_D("Switch to glDrawElements(), mode = %s, count = %u", glEnumToString(mode), count)
 
         gles_glDrawElements(mode, count, GL_UNSIGNED_INT, (void *) 0);
     } else

@@ -297,14 +297,17 @@ int commit_fpe_state_on_draw(GLenum* mode, GLint* first, GLsizei* count) {
                 gles_glEnableVertexAttribArray(i);
                 CHECK_GL_ERROR_NO_INIT
 
-                LOG_D("attrib #%d: type = 0x%x, size = %d, stride = %d, usage = 0x%x, ptr = 0x%x, offset = %d", i, vp.type, vp.size, vp.stride, vp.usage, vp.pointer, (long)offset)
+                LOG_D("attrib #%d: type = %s, size = %d, stride = %d, usage = %s, ptr = 0x%x",
+                      i, glEnumToString(vp.type), vp.size, vp.stride, glEnumToString(vp.usage))
 
                 is_first = false;
             }
             else if (vpa.attributes[i].usage == GL_COLOR_ARRAY) {
                 auto &vp = vpa.attributes[i];
 
-                LOG_D("attrib #%d: type = 0x%x, usage = 0x%x, value = (1., 1., 1., 1.)", i, vp.type, vp.usage)
+                LOG_D("attrib #%d: type = %s, usage = %s, value = (%.2f, %.2f, %.2f, %.2f)",
+                      i, glEnumToString(vp.type), glEnumToString(vp.usage),
+                      vp.value[0], vp.value[1], vp.value[2], vp.value[3])
 
                 gles_glVertexAttrib4fv(i, glm::value_ptr(vp.value));
                 CHECK_GL_ERROR_NO_INIT

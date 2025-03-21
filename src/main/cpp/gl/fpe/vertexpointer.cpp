@@ -73,7 +73,7 @@ void glVertexPointer(GLint size,
                      GLenum type,
                      GLsizei stride,
                      const void * pointer) {
-    LOG_D("glVertexPointer, size = %d, type = 0x%x, stride = %d, pointer = 0x%x", size, type, stride, pointer)
+    LOG_D("glVertexPointer, size = %d, type = %s, stride = %d, pointer = 0x%x", size, glEnumToString(type), stride, pointer)
     auto& attr = g_glstate.fpe_state.vertexpointer_array.attributes[vp2idx(GL_VERTEX_ARRAY)];
     attr.size = size;
     attr.usage = GL_VERTEX_ARRAY;
@@ -87,7 +87,7 @@ void glVertexPointer(GLint size,
 }
 
 void glNormalPointer(GLenum type, GLsizei stride, const GLvoid *pointer) {
-    LOG_D("glNormalPointer, type = 0x%x, stride = %d, pointer = 0x%x", type, stride, pointer)
+    LOG_D("glNormalPointer, type = %s, stride = %d, pointer = 0x%x", glEnumToString(type), stride, pointer)
     g_glstate.fpe_state.vertexpointer_array.attributes[vp2idx(GL_NORMAL_ARRAY)] = {
             .size = 3,
             .usage = GL_NORMAL_ARRAY,
@@ -101,7 +101,7 @@ void glNormalPointer(GLenum type, GLsizei stride, const GLvoid *pointer) {
 }
 
 void glColorPointer(GLint size, GLenum type, GLsizei stride, const GLvoid *pointer) {
-    LOG_D("glColorPointer, size = %d, type = 0x%x, stride = %d, pointer = 0x%x", size, type, stride, pointer)
+    LOG_D("glColorPointer, size = %d, type = %s, stride = %d, pointer = 0x%x", size, glEnumToString(type), stride, pointer)
     g_glstate.fpe_state.vertexpointer_array.attributes[vp2idx(GL_COLOR_ARRAY)] = {
             .size = size,
             .usage = GL_COLOR_ARRAY,
@@ -115,7 +115,7 @@ void glColorPointer(GLint size, GLenum type, GLsizei stride, const GLvoid *point
 }
 
 void glTexCoordPointer(GLint size, GLenum type, GLsizei stride, const GLvoid *pointer) {
-    LOG_D("glTexCoordPointer, size = %d, type = 0x%x, stride = %d, pointer = 0x%x", size, type, stride, pointer)
+    LOG_D("glTexCoordPointer, size = %d, type = %s, stride = %d, pointer = 0x%x", size, glEnumToString(type), stride, pointer)
     g_glstate.fpe_state.vertexpointer_array.attributes[vp2idx(GL_TEXTURE_COORD_ARRAY)] = {
             .size = size,
             .usage = GL_TEXTURE_COORD_ARRAY + (g_glstate.fpe_state.client_active_texture - GL_TEXTURE0),
@@ -129,7 +129,7 @@ void glTexCoordPointer(GLint size, GLenum type, GLsizei stride, const GLvoid *po
 }
 
 void glIndexPointer(GLenum type, GLsizei stride, const GLvoid *pointer ) {
-    LOG_D("glIndexPointer, size = %d, type = 0x%x, stride = %d, pointer = 0x%x", type, stride, pointer)
+    LOG_D("glIndexPointer, size = %d, type = %s, stride = %d, pointer = 0x%x", glEnumToString(type), stride, pointer)
     g_glstate.fpe_state.vertexpointer_array.attributes[vp2idx(GL_INDEX_ARRAY)] = {
             .size = 1,
             .usage = GL_INDEX_ARRAY,
@@ -143,7 +143,7 @@ void glIndexPointer(GLenum type, GLsizei stride, const GLvoid *pointer ) {
 }
 
 void glEnableClientState(GLenum cap) {
-    LOG_D("glEnableClientState, cap = 0x%x", cap)
+    LOG_D("glEnableClientState, cap = %s", glEnumToString(cap))
     auto mask = vp_mask(cap);
     g_glstate.fpe_state.vertexpointer_array.enabled_pointers |= mask;
     LOG_D("Enabled Ptr: 0x%x", g_glstate.fpe_state.vertexpointer_array.enabled_pointers)
@@ -151,7 +151,7 @@ void glEnableClientState(GLenum cap) {
 }
 
 void glDisableClientState(GLenum cap) {
-    LOG_D("glDisableClientState, cap = 0x%x", cap)
+    LOG_D("glDisableClientState, cap = %s", glEnumToString(cap))
     auto mask = vp_mask(cap);
     g_glstate.fpe_state.vertexpointer_array.enabled_pointers &= (~mask);
     LOG_D("Enabled Ptr: 0x%x", g_glstate.fpe_state.vertexpointer_array.enabled_pointers)

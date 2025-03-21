@@ -47,7 +47,7 @@ void print_matrix(const glm::mat4& mat)
 
 void glMatrixMode( GLenum mode ) {
     LOG()
-    LOG_D("glMatrixMode(0x%x)", mode)
+    LOG_D("glMatrixMode(%s)", glEnumToString(mode))
 
     auto& transformation = g_glstate.fpe_uniform.transformation;
 
@@ -68,7 +68,7 @@ void glLoadIdentity() {
 
     transformation.matrices[matrix_idx(transformation.matrix_mode)] = glm::mat4(1.0);
 
-    LOG_D("Matrix 0x%x:", transformation.matrix_mode)
+    LOG_D("Matrix %s:", glEnumToString(transformation.matrix_mode))
     print_matrix(transformation.matrices[matrix_idx(transformation.matrix_mode)]);
 }
 
@@ -84,7 +84,7 @@ void glOrthof(GLfloat left, GLfloat right, GLfloat bottom, GLfloat top, GLfloat 
     auto& transformation = g_glstate.fpe_uniform.transformation;
 
     transformation.matrices[matrix_idx(transformation.matrix_mode)] *= glm::ortho(left, right, bottom, top, zNear, zFar);
-    LOG_D("Matrix 0x%x:", transformation.matrix_mode)
+    LOG_D("Matrix %s:", glEnumToString(transformation.matrix_mode))
     print_matrix(transformation.matrices[matrix_idx(transformation.matrix_mode)]);
 }
 
@@ -94,7 +94,7 @@ void glScalef( GLfloat x, GLfloat y, GLfloat z ) {
 
     transformation.matrices[matrix_idx(transformation.matrix_mode)] =
             glm::scale(transformation.matrices[matrix_idx(transformation.matrix_mode)], glm::vec3(x, y, z));
-    LOG_D("Matrix 0x%x:", transformation.matrix_mode)
+    LOG_D("Matrix %s:", glEnumToString(transformation.matrix_mode))
     print_matrix(transformation.matrices[matrix_idx(transformation.matrix_mode)]);
 }
 
@@ -104,7 +104,7 @@ void glTranslatef( GLfloat x, GLfloat y, GLfloat z ) {
 
     transformation.matrices[matrix_idx(transformation.matrix_mode)] =
             glm::translate(transformation.matrices[matrix_idx(transformation.matrix_mode)], glm::vec3(x, y, z));
-    LOG_D("Matrix 0x%x:", transformation.matrix_mode)
+    LOG_D("Matrix %s:", glEnumToString(transformation.matrix_mode))
     print_matrix(transformation.matrices[matrix_idx(transformation.matrix_mode)]);
 }
 
@@ -115,7 +115,7 @@ void glRotatef( GLfloat angle, GLfloat x, GLfloat y, GLfloat z ) {
 
     transformation.matrices[matrix_idx(transformation.matrix_mode)] =
             glm::rotate(transformation.matrices[matrix_idx(transformation.matrix_mode)], (GLfloat)(angle * M_PI / 180.f), glm::vec3(x, y, z));
-    LOG_D("Matrix 0x%x:", transformation.matrix_mode)
+    LOG_D("Matrix %s:", glEnumToString(transformation.matrix_mode))
     print_matrix(transformation.matrices[matrix_idx(transformation.matrix_mode)]);
 }
 
@@ -146,7 +146,7 @@ void glMultMatrixf(const GLfloat *m) {
     auto& transformation = g_glstate.fpe_uniform.transformation;
     transformation.matrices[matrix_idx(transformation.matrix_mode)] *= glm::make_mat4(m);
 
-    LOG_D("Matrix 0x%x:", transformation.matrix_mode)
+    LOG_D("Matrix %s:", glEnumToString(transformation.matrix_mode))
     print_matrix(transformation.matrices[matrix_idx(transformation.matrix_mode)]);
 }
 
@@ -158,7 +158,7 @@ void glPushMatrix( void ) {
     auto& mat = transformation.matrices[idx];
     transformation.matrices_stack[idx].push_back(mat);
 
-    LOG_D("Matrix 0x%x:", transformation.matrix_mode)
+    LOG_D("Matrix %s:", glEnumToString(transformation.matrix_mode))
     print_matrix(transformation.matrices[matrix_idx(transformation.matrix_mode)]);
 }
 
@@ -171,6 +171,6 @@ void glPopMatrix( void ) {
     mat = transformation.matrices_stack[idx].back();
     transformation.matrices_stack[idx].pop_back();
 
-    LOG_D("Matrix 0x%x:", transformation.matrix_mode)
+    LOG_D("Matrix %s:", glEnumToString(transformation.matrix_mode))
     print_matrix(transformation.matrices[matrix_idx(transformation.matrix_mode)]);
 }
