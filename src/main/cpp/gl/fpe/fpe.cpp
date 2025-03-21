@@ -242,6 +242,20 @@ int commit_fpe_state_on_draw(GLenum* mode, GLint* first, GLsizei* count) {
 //    LOG_D("Generated VS: \n%s", program.vs.c_str())
 //    LOG_D("Generated FS: \n%s", program.fs.c_str())
 
+    uint32_t key = g_glstate.fpe_state.vertexpointer_array.enabled_pointers;
+    if (g_glstate.fpe_programs.find(key)
+        == g_glstate.fpe_programs.end()) {
+        LOG_D("Generating new shader: 0x%x", key)
+        fpe_shader_generator gen(g_glstate.fpe_state);
+        g_glstate.fpe_programs[key] = gen.generate_program();
+    }
+    auto& prog = g_glstate.fpe_programs[key];
+    int prog_id = prog.get_program();
+    if (prog_id < 0)
+        LOG_D("Error: FPE shader link failed!")
+    gles_glUseProgram(prog_id);
+    CHECK_GL_ERROR_NO_INIT
+
     bool is_first = true;
 
     // All assuming tightly packed here...
@@ -269,7 +283,7 @@ int commit_fpe_state_on_draw(GLenum* mode, GLint* first, GLsizei* count) {
             bool enabled = ((vpa.enabled_pointers >> i) & 1);
 
             if (enabled) {
-                auto &vp = vpa.pointers[i];
+                auto &vp = vpa.attributes[i];
 
                 if (is_first) {
                     vpa.starting_pointer = vp.pointer;
@@ -286,18 +300,19 @@ int commit_fpe_state_on_draw(GLenum* mode, GLint* first, GLsizei* count) {
                 LOG_D("attrib #%d: type = 0x%x, size = %d, stride = %d, usage = 0x%x, ptr = 0x%x, offset = %d", i, vp.type, vp.size, vp.stride, vp.usage, vp.pointer, (long)offset)
 
                 is_first = false;
-            } else if (vpa.pointers[i].usage == GL_COLOR_ARRAY) {
-                auto &vp = vpa.pointers[i];
+            }
+            else if (vpa.attributes[i].usage == GL_COLOR_ARRAY) {
+                auto &vp = vpa.attributes[i];
 
                 LOG_D("attrib #%d: type = 0x%x, usage = 0x%x, value = (1., 1., 1., 1.)", i, vp.type, vp.usage)
 
-                static GLfloat att[] = { 1., 1., 1., 1. };
-                gles_glVertexAttrib4fv(i, att);
+                gles_glVertexAttrib4fv(i, glm::value_ptr(vp.value));
                 CHECK_GL_ERROR_NO_INIT
 
                 gles_glDisableVertexAttribArray(i);
                 CHECK_GL_ERROR_NO_INIT
-            } else {
+            }
+            else {
                 gles_glDisableVertexAttribArray(i);
                 CHECK_GL_ERROR_NO_INIT
             }
@@ -364,19 +379,7 @@ int commit_fpe_state_on_draw(GLenum* mode, GLint* first, GLsizei* count) {
     LOG_D("GL_PROJECTION: ")
     print_matrix(proj);
 
-    uint32_t key = g_glstate.fpe_state.vertexpointer_array.enabled_pointers;
-    if (g_glstate.fpe_programs.find(key)
-                                    == g_glstate.fpe_programs.end()) {
-        LOG_D("Generating new shader: 0x%x", key)
-        fpe_shader_generator gen(g_glstate.fpe_state);
-        g_glstate.fpe_programs[key] = gen.generate_program();
-    }
-    auto& prog = g_glstate.fpe_programs[key];
-    int prog_id = prog.get_program();
-    if (prog_id < 0)
-        LOG_D("Error: FPE shader link failed!")
-    gles_glUseProgram(prog_id);
-    CHECK_GL_ERROR_NO_INIT
+
     gles_glBindVertexArray(g_glstate.fpe_state.vertexpointer_array.fpe_vao);
     CHECK_GL_ERROR_NO_INIT
 //    GLint mvmat = gles_glGetUniformLocation(prog_id, "ModelViewMat");

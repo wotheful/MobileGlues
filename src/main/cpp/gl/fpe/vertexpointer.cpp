@@ -74,65 +74,70 @@ void glVertexPointer(GLint size,
                      GLsizei stride,
                      const void * pointer) {
     LOG_D("glVertexPointer, size = %d, type = 0x%x, stride = %d, pointer = 0x%x", size, type, stride, pointer)
-    g_glstate.fpe_state.vertexpointer_array.pointers[vp2idx(GL_VERTEX_ARRAY)] = {
-            .size = size,
-            .usage = GL_VERTEX_ARRAY,
-            .type = type,
-            .normalized = GL_FALSE,
-            .stride = stride,
-            .pointer = pointer
-    };
+    auto& attr = g_glstate.fpe_state.vertexpointer_array.attributes[vp2idx(GL_VERTEX_ARRAY)];
+    attr.size = size;
+    attr.usage = GL_VERTEX_ARRAY;
+    attr.type = type;
+    attr.normalized = GL_FALSE;
+    attr.stride = stride;
+    attr.pointer = pointer;
+    attr.varies = true;
     g_glstate.fpe_state.vertexpointer_array.dirty = true;
+    g_glstate.fpe_state.vertexpointer_array.buffer_based = true;
 }
 
 void glNormalPointer(GLenum type, GLsizei stride, const GLvoid *pointer) {
     LOG_D("glNormalPointer, type = 0x%x, stride = %d, pointer = 0x%x", type, stride, pointer)
-    g_glstate.fpe_state.vertexpointer_array.pointers[vp2idx(GL_NORMAL_ARRAY)] = {
+    g_glstate.fpe_state.vertexpointer_array.attributes[vp2idx(GL_NORMAL_ARRAY)] = {
             .size = 3,
             .usage = GL_NORMAL_ARRAY,
             .type = type,
             .normalized = GL_FALSE,
             .stride = stride,
-            .pointer = pointer
+            .pointer = pointer,
+            .varies = true
     };
     g_glstate.fpe_state.vertexpointer_array.dirty = true;
 }
 
 void glColorPointer(GLint size, GLenum type, GLsizei stride, const GLvoid *pointer) {
     LOG_D("glColorPointer, size = %d, type = 0x%x, stride = %d, pointer = 0x%x", size, type, stride, pointer)
-    g_glstate.fpe_state.vertexpointer_array.pointers[vp2idx(GL_COLOR_ARRAY)] = {
+    g_glstate.fpe_state.vertexpointer_array.attributes[vp2idx(GL_COLOR_ARRAY)] = {
             .size = size,
             .usage = GL_COLOR_ARRAY,
             .type = type,
             .normalized = GL_TRUE,
             .stride = stride,
-            .pointer = pointer
+            .pointer = pointer,
+            .varies = true
     };
     g_glstate.fpe_state.vertexpointer_array.dirty = true;
 }
 
 void glTexCoordPointer(GLint size, GLenum type, GLsizei stride, const GLvoid *pointer) {
     LOG_D("glTexCoordPointer, size = %d, type = 0x%x, stride = %d, pointer = 0x%x", size, type, stride, pointer)
-    g_glstate.fpe_state.vertexpointer_array.pointers[vp2idx(GL_TEXTURE_COORD_ARRAY)] = {
+    g_glstate.fpe_state.vertexpointer_array.attributes[vp2idx(GL_TEXTURE_COORD_ARRAY)] = {
             .size = size,
             .usage = GL_TEXTURE_COORD_ARRAY + (g_glstate.fpe_state.client_active_texture - GL_TEXTURE0),
             .type = type,
             .normalized = GL_FALSE,
             .stride = stride,
-            .pointer = pointer
+            .pointer = pointer,
+            .varies = true
     };
     g_glstate.fpe_state.vertexpointer_array.dirty = true;
 }
 
 void glIndexPointer(GLenum type, GLsizei stride, const GLvoid *pointer ) {
     LOG_D("glIndexPointer, size = %d, type = 0x%x, stride = %d, pointer = 0x%x", type, stride, pointer)
-    g_glstate.fpe_state.vertexpointer_array.pointers[vp2idx(GL_INDEX_ARRAY)] = {
+    g_glstate.fpe_state.vertexpointer_array.attributes[vp2idx(GL_INDEX_ARRAY)] = {
             .size = 1,
             .usage = GL_INDEX_ARRAY,
             .type = type,
             .normalized = GL_FALSE,
             .stride = stride,
-            .pointer = pointer
+            .pointer = pointer,
+            .varies = true
     };
     g_glstate.fpe_state.vertexpointer_array.dirty = true;
 }

@@ -117,8 +117,10 @@ void add_vs_inout(const fixed_function_state_t& state, scratch_t& scratch, std::
     for (int i = 0; i < VERTEX_POINTER_COUNT; ++i) {
         bool enabled = ((vpa.enabled_pointers >> i) & 1);
 
-        if (enabled) {
-            auto &vp = vpa.pointers[i];
+        // hack in color here...
+        // TODO: fix this using uniform
+        if (enabled || vpa.attributes[i].usage == GL_COLOR_ARRAY) {
+            auto &vp = vpa.attributes[i];
 
             LOG_D("attrib #%d: type = %s, size = %d, stride = %d, usage = %s, ptr = 0x%x",
                   i, glEnumToString(vp.type), vp.size, vp.stride, glEnumToString(vp.usage))

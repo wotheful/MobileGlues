@@ -19,13 +19,15 @@ struct transformation_t {
     GLenum matrix_mode = GL_MODELVIEW;
 };
 
-struct vertexpointer_t {
+struct vertexattribute_t {
     GLint size;
     GLenum usage;
     GLenum type;
     GLenum normalized;
     GLsizei stride;
     const void *pointer;
+    glm::vec4 value;
+    bool varies = true;
 };
 
 #define VERTEX_POINTER_COUNT (8 + MAX_TEX)
@@ -45,9 +47,10 @@ struct vertex_pointer_array_t {
     const void* starting_pointer = NULL;
     GLsizei stride = 0;
 
-    struct vertexpointer_t pointers[VERTEX_POINTER_COUNT];
+    struct vertexattribute_t attributes[VERTEX_POINTER_COUNT];
     uint32_t enabled_pointers = 0;
     bool dirty = false;
+    bool buffer_based = false;
 };
 
 struct fixed_function_bool_t { // glEnable/glDisable
