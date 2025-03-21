@@ -92,7 +92,7 @@ struct fixed_function_uniform_t {
     GLclampf alpha_ref = 0.0f;
 
     // glFogf
-    GLfloat fog_intensity = 1.f;
+    GLfloat fog_density = 1.f;
     GLfloat fog_start = 0.f;
     GLfloat fog_end = 1.f;
     // glFogfv/iv

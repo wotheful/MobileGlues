@@ -22,7 +22,7 @@ const static std::string mg_fs_header =
         "// ** Fragment Shader **\n";
 const static std::string mg_fog_linear_func =
         "float fog_linear(float distance, float start, float end) {\n"
-        "    return (end != start) ? clamp((end - distance) / (end - start), 0., 1.) : 1.0;\n"
+        "    return clamp((end - distance) / (end - start), 0., 1.);\n"
         "}\n";
 const static std::string mg_fog_exp_func =
         "float fog_exp(float distance, float density) {\n"
@@ -34,12 +34,12 @@ const static std::string mg_fog_exp2_func =
         "    return clamp(exp(-scaled * scaled), 0., 1.);\n"
         "}\n";
 const static std::string mg_fog_apply_fog_func =
-        "vec3 apply_fog(vec3 objColor, vec3 fogColor, float fogFactor) {\n"
+        "vec4 apply_fog(vec4 objColor, vec4 fogColor, float fogFactor) {\n"
         "    return mix(fogColor, objColor, fogFactor);\n"
         "}\n";
 const static std::string mg_fog_struct =
         "struct fog_param_t {\n"
-        "    vec3  color;\n"
+        "    vec4  color;\n"
         "    float density;\n"
         "    float start;\n"
         "    float end;\n"
@@ -190,25 +190,29 @@ void add_vs_inout(const fixed_function_state_t& state, scratch_t& scratch, std::
                 scratch.has_texcoord = true;
         }
     }
+
+    if (state.fpe_bools.fog_enable) {
+        vs += "out vec3 vViewPosition;\n";
+    }
 }
 
 void add_vs_uniforms(const fixed_function_state_t& state, scratch_t& scratch, std::string& vs) {
     // Transformation matrix
-
-    // TODO: 1. need mv matrix?
-    // TODO: 2. should do mvp matmul on CPU
-//    vs += "uniform mat4 ModelViewMat;\n"
-//          "uniform mat4 ProjMat;\n";
-
     vs += "uniform mat4 ModelViewProjMat;\n";
-
+    if (state.fpe_bools.fog_enable) {
+        vs += "uniform mat4 ModelViewMat;\n";
+    }
 }
 
 void add_vs_body(const fixed_function_state_t& state, scratch_t& scratch, std::string& vs) {
     vs +=
             "void main() {\n"
 //            "   gl_Position = ProjMat * ModelViewMat * vec4(Position, 1.0);\n";
-            "   gl_Position = ModelViewProjMat * vec4(Position, 1.0);\n";
+            "    gl_Position = ModelViewProjMat * vec4(Position, 1.0);\n";
+    if (state.fpe_bools.fog_enable) {
+        vs += "    vec4 viewPosition = ModelViewMat * vec4(Position, 1.0);\n"
+              "    vViewPosition = viewPosition.xyz;\n";
+    }
     vs += scratch.vs_body;
     vs += "}\n";
 }
@@ -229,6 +233,9 @@ void add_fs_inout(const fixed_function_state_t& state, scratch_t& scratch, std::
     // Linking from VS
     fs += scratch.last_stage_linkage;
     fs += "\n";
+    if (state.fpe_bools.fog_enable) {
+        fs += "in vec3 vViewPosition;\n";
+    }
     fs += "out vec4 FragColor;\n";
 }
 
@@ -262,14 +269,19 @@ void add_fs_body(const fixed_function_state_t& state, scratch_t& scratch, std::s
 
     // Fog calculation
     if (state.fpe_bools.fog_enable) {
+        fs += "    float distance = length(vViewPosition);\n";
         switch (state.fog_mode) {
             case GL_LINEAR:
+                fs += "    float fogFactor = fog_linear(distance, fogParam.start, fogParam.end);\n";
                 break;
             case GL_EXP:
+                fs += "    float fogFactor = fog_exp(distance, fogParam.density);\n";
                 break;
             case GL_EXP2:
+                fs += "    float fogFactor = fog_exp2(distance, fogParam.density);\n";
                 break;
         }
+        fs += "    color = apply_fog(color, fogParam.color, fogFactor);\n";
     }
 
     fs += "   if (color.a < 0.1) {\n"

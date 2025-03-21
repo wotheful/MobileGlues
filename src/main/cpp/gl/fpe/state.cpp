@@ -75,7 +75,7 @@ void glFogf( GLenum pname, GLfloat param ) {
 
     switch (pname) {
         case GL_FOG_DENSITY:
-            g_glstate.fpe_uniform.fog_intensity = param;
+            g_glstate.fpe_uniform.fog_density = param;
             return;
         case GL_FOG_START:
             g_glstate.fpe_uniform.fog_start = param;

@@ -226,6 +226,8 @@ int commit_fpe_state_on_draw(GLenum* mode, GLint* first, GLsizei* count) {
     LOAD_GLES_FUNC(glGetUniformLocation)
     LOAD_GLES_FUNC(glUniformMatrix4fv)
     LOAD_GLES_FUNC(glUniform1i)
+    LOAD_GLES_FUNC(glUniform1f)
+    LOAD_GLES_FUNC(glUniform4fv)
     LOAD_GLES_FUNC(glGetIntegerv)
 
     INIT_CHECK_GL_ERROR
@@ -242,7 +244,9 @@ int commit_fpe_state_on_draw(GLenum* mode, GLint* first, GLsizei* count) {
 //    LOG_D("Generated VS: \n%s", program.vs.c_str())
 //    LOG_D("Generated FS: \n%s", program.fs.c_str())
 
+    // TODO: Make a proper hash
     uint32_t key = g_glstate.fpe_state.vertexpointer_array.enabled_pointers;
+    key |= ((g_glstate.fpe_state.fpe_bools.fog_enable & 1) << 31);
     if (g_glstate.fpe_programs.find(key)
         == g_glstate.fpe_programs.end()) {
         LOG_D("Generating new shader: 0x%x", key)
@@ -382,23 +386,38 @@ int commit_fpe_state_on_draw(GLenum* mode, GLint* first, GLsizei* count) {
     LOG_D("GL_PROJECTION: ")
     print_matrix(proj);
 
-
+    // TODO: detect change and only set dirty bits here
     gles_glBindVertexArray(g_glstate.fpe_state.vertexpointer_array.fpe_vao);
     CHECK_GL_ERROR_NO_INIT
-//    GLint mvmat = gles_glGetUniformLocation(prog_id, "ModelViewMat");
-//    CHECK_GL_ERROR_NO_INIT
+    GLint mvmat = gles_glGetUniformLocation(prog_id, "ModelViewMat");
+    CHECK_GL_ERROR_NO_INIT
 //    GLint projmat = gles_glGetUniformLocation(prog_id, "ProjMat");
 //    CHECK_GL_ERROR_NO_INIT
     GLint mat_id = gles_glGetUniformLocation(prog_id, "ModelViewProjMat");
     CHECK_GL_ERROR_NO_INIT
     const auto mat = proj * mv;
-//    gles_glUniformMatrix4fv(mvmat, 1, GL_FALSE, glm::value_ptr(g_glstate.fpe_uniform.transformation.matrices[matrix_idx(GL_MODELVIEW)]));
-//    CHECK_GL_ERROR_NO_INIT
+    gles_glUniformMatrix4fv(mvmat, 1, GL_FALSE, glm::value_ptr(g_glstate.fpe_uniform.transformation.matrices[matrix_idx(GL_MODELVIEW)]));
+    CHECK_GL_ERROR_NO_INIT
 //    gles_glUniformMatrix4fv(projmat, 1, GL_FALSE, glm::value_ptr(g_glstate.fpe_uniform.transformation.matrices[matrix_idx(GL_PROJECTION)]));
 //    CHECK_GL_ERROR_NO_INIT
     gles_glUniformMatrix4fv(mat_id, 1, GL_FALSE, glm::value_ptr(mat));
     CHECK_GL_ERROR_NO_INIT
     gles_glUniform1i(gles_glGetUniformLocation(prog_id, "Sampler0"), 0);
+
+    if (g_glstate.fpe_state.fpe_bools.fog_enable) {
+        GLint fogcolor_id = glGetUniformLocation(prog_id, "fogParam.color");
+        CHECK_GL_ERROR_NO_INIT
+        gles_glUniform4fv(fogcolor_id, 4, glm::value_ptr(g_glstate.fpe_uniform.fog_color));
+        GLint fogdensity_id = glGetUniformLocation(prog_id, "fogParam.density");
+        gles_glUniform1f(fogdensity_id, g_glstate.fpe_uniform.fog_density);
+        CHECK_GL_ERROR_NO_INIT
+        GLint fogstart_id = glGetUniformLocation(prog_id, "fogParam.start");
+        gles_glUniform1f(fogstart_id, g_glstate.fpe_uniform.fog_start);
+        CHECK_GL_ERROR_NO_INIT
+        GLint fogend_id = glGetUniformLocation(prog_id, "fogParam.end");
+        gles_glUniform1f(fogend_id, g_glstate.fpe_uniform.fog_end);
+        CHECK_GL_ERROR_NO_INIT
+    }
 
     return ret;
 }
