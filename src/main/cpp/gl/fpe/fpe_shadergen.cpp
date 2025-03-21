@@ -22,7 +22,7 @@ const static std::string mg_fs_header =
         "// ** Fragment Shader **\n";
 const static std::string mg_fog_linear_func =
         "float fog_linear(float distance, float start, float end) {\n"
-        "    return (end != start) ? clamp((end - distance) / (end - start), 0.0, 1.0) : 1.0;\n"
+        "    return (end != start) ? saturate((end - distance) / (end - start)) : 1.0;\n"
         "}";
 const static std::string mg_fog_exp_func =
         "float fog_exp(float distance, float density) {\n"
@@ -37,6 +37,15 @@ const static std::string mg_fog_apply_fog_func =
         "vec3 apply_fog(vec3 objColor, vec3 fogColor, float fogFactor) {\n"
         "    return mix(fogColor, objColor, fogFactor);\n"
         "}";
+const static std::string mg_fog_struct =
+        "struct fog_param_t {\n"
+        "    vec3  color;\n"
+        "    float density;\n"
+        "    float start;\n"
+        "    float end;\n"
+        "};\n";
+const static std::string mg_fog_uniform =
+        "uniform fog_param_t fogParam;\n";
 
 std::string vp2in_name(GLenum vp, int index) {
     switch (vp) {
@@ -209,6 +218,11 @@ void add_fs_uniforms(const fixed_function_state_t& state, scratch_t& scratch, st
     // TODO: Fix this on multitexture
     if (scratch.has_texcoord)
         fs += "uniform sampler2D Sampler0;\n";
+
+    if (state.fpe_bools.fog_enable) {
+        fs += mg_fog_struct;
+        fs += mg_fog_uniform;
+    }
 }
 
 void add_fs_inout(const fixed_function_state_t& state, scratch_t& scratch, std::string& fs) {
@@ -219,6 +233,21 @@ void add_fs_inout(const fixed_function_state_t& state, scratch_t& scratch, std::
 }
 
 void add_fs_body(const fixed_function_state_t& state, scratch_t& scratch, std::string& fs) {
+    // Fog function
+    if (state.fpe_bools.fog_enable) {
+        switch (state.fog_mode) {
+            case GL_LINEAR:
+                fs += mg_fog_linear_func;
+                break;
+            case GL_EXP:
+                fs += mg_fog_exp_func;
+                break;
+            case GL_EXP2:
+                fs += mg_fog_exp2_func;
+                break;
+        }
+    }
+
     // TODO: Replace this hardcode with something better...
     fs += "void main() {\n";
 
@@ -229,6 +258,18 @@ void add_fs_body(const fixed_function_state_t& state, scratch_t& scratch, std::s
 
     if (scratch.has_vertex_color)
         fs += "    color *= vertexColor;\n";
+
+    // Fog calculation
+    if (state.fpe_bools.fog_enable) {
+        switch (state.fog_mode) {
+            case GL_LINEAR:
+                break;
+            case GL_EXP:
+                break;
+            case GL_EXP2:
+                break;
+        }
+    }
 
     fs += "   if (color.a < 0.1) {\n"
           "       discard;\n"
