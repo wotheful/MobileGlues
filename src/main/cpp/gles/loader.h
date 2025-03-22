@@ -107,7 +107,7 @@ extern "C" GLAPI GLAPIENTRY type name(__VA_ARGS__)  {
     LOAD_GLES_FUNC(glGetError)                                              \
     GLenum ERR = gles_glGetError();                                         \
     if (ERR != GL_NO_ERROR)                                                 \
-        LOG_E("ERROR: %d", ERR)                                             \
+        LOG_E("ERROR: %d @ %s:%d", ERR, __FILE__, __LINE__)                 \
     return ret;                                                             \
 }
 #else

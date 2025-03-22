@@ -405,16 +405,21 @@ int commit_fpe_state_on_draw(GLenum* mode, GLint* first, GLsizei* count) {
     gles_glUniform1i(gles_glGetUniformLocation(prog_id, "Sampler0"), 0);
 
     if (g_glstate.fpe_state.fpe_bools.fog_enable) {
-        GLint fogcolor_id = glGetUniformLocation(prog_id, "fogParam.color");
+        GLint fogcolor_id = gles_glGetUniformLocation(prog_id, "fogParam.color");
         CHECK_GL_ERROR_NO_INIT
-        gles_glUniform4fv(fogcolor_id, 4, glm::value_ptr(g_glstate.fpe_uniform.fog_color));
-        GLint fogdensity_id = glGetUniformLocation(prog_id, "fogParam.density");
+        LOG_D("fogcolor_id = %d", fogcolor_id)
+        gles_glUniform4fv(fogcolor_id, 1, glm::value_ptr(g_glstate.fpe_uniform.fog_color));
+        CHECK_GL_ERROR_NO_INIT
+        GLint fogdensity_id = gles_glGetUniformLocation(prog_id, "fogParam.density");
+        CHECK_GL_ERROR_NO_INIT
         gles_glUniform1f(fogdensity_id, g_glstate.fpe_uniform.fog_density);
         CHECK_GL_ERROR_NO_INIT
-        GLint fogstart_id = glGetUniformLocation(prog_id, "fogParam.start");
+        GLint fogstart_id = gles_glGetUniformLocation(prog_id, "fogParam.start");
+        CHECK_GL_ERROR_NO_INIT
         gles_glUniform1f(fogstart_id, g_glstate.fpe_uniform.fog_start);
         CHECK_GL_ERROR_NO_INIT
-        GLint fogend_id = glGetUniformLocation(prog_id, "fogParam.end");
+        GLint fogend_id = gles_glGetUniformLocation(prog_id, "fogParam.end");
+        CHECK_GL_ERROR_NO_INIT
         gles_glUniform1f(fogend_id, g_glstate.fpe_uniform.fog_end);
         CHECK_GL_ERROR_NO_INIT
     }

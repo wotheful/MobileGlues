@@ -7,6 +7,10 @@
 
 #define DEBUG 0
 
+#if GLOBAL_DEBUG || DEBUG
+#pragma clang optimize off
+#endif
+
 bool hijack_fpe_states(GLenum cap, bool enable, fixed_function_bool_t* bools) {
     switch (cap) {
         case GL_FOG:
@@ -139,6 +143,8 @@ void glFogfv( GLenum pname, const GLfloat *params ) {
         case GL_FOG_COLOR: {
             auto& fcolor = g_glstate.fpe_uniform.fog_color;
             fcolor = glm::make_vec4(params);
+            LOG_D("[...] = [%.2f, %.2f, %.2f, %.2f]", params[0], params[1], params[2], params[3])
+            LOG_D("fcolor = [%.2f, %.2f, %.2f, %.2f]", fcolor[0], fcolor[1], fcolor[2], fcolor[3])
             break;
         }
         default:
@@ -157,6 +163,7 @@ void glFogiv( GLenum pname, const GLint *params ) {
             fcolor[1] = (GLfloat)params[1] / (GLfloat)INT32_MAX;
             fcolor[2] = (GLfloat)params[2] / (GLfloat)INT32_MAX;
             fcolor[3] = (GLfloat)params[3] / (GLfloat)INT32_MAX;
+            LOG_D("[...] = [%d, %d, %d, %d]", params[0], params[1], params[2], params[3])
             break;
         }
         case GL_FOG_MODE:
