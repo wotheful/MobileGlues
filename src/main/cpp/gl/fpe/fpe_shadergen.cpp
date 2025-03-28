@@ -347,25 +347,20 @@ int program_t::get_program() {
 
 int program_t::compile_shader(GLenum shader_type, const char* src) {
     static char compile_info[1024];
-    LOAD_GLES_FUNC(glCreateShader)
-    LOAD_GLES_FUNC(glShaderSource)
-    LOAD_GLES_FUNC(glCompileShader)
-    LOAD_GLES_FUNC(glGetShaderiv)
-    LOAD_GLES_FUNC(glGetShaderInfoLog)
 
     INIT_CHECK_GL_ERROR
 
-    int shader = gles_glCreateShader(shader_type);
+    int shader = GLES.glCreateShader(shader_type);
     CHECK_GL_ERROR_NO_INIT
-    gles_glShaderSource(shader, 1, &src, NULL);
+    GLES.glShaderSource(shader, 1, &src, NULL);
     CHECK_GL_ERROR_NO_INIT
-    gles_glCompileShader(shader);
+    GLES.glCompileShader(shader);
     CHECK_GL_ERROR_NO_INIT
     int success = 0;
-    gles_glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
+    GLES.glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
     CHECK_GL_ERROR_NO_INIT
     if (!success) {
-        gles_glGetShaderInfoLog(shader, 1024, NULL, compile_info);
+        GLES.glGetShaderInfoLog(shader, 1024, NULL, compile_info);
         CHECK_GL_ERROR_NO_INIT
         LOG_E("%s shader compile error: %s\nsrc:\n%s", compile_info,
               (shader_type == GL_VERTEX_SHADER) ? "vertex" : "fragment",
@@ -382,27 +377,21 @@ int program_t::compile_shader(GLenum shader_type, const char* src) {
 int program_t::link_program(GLuint vs, GLuint fs) {
     static char compile_info[1024];
 
-    LOAD_GLES_FUNC(glCreateProgram)
-    LOAD_GLES_FUNC(glAttachShader)
-    LOAD_GLES_FUNC(glLinkProgram)
-    LOAD_GLES_FUNC(glGetProgramiv)
-    LOAD_GLES_FUNC(glGetProgramInfoLog)
-
     INIT_CHECK_GL_ERROR
 
-    int program = gles_glCreateProgram();
+    int program = GLES.glCreateProgram();
     CHECK_GL_ERROR_NO_INIT
-    gles_glAttachShader(program, vs);
+    GLES.glAttachShader(program, vs);
     CHECK_GL_ERROR_NO_INIT
-    gles_glAttachShader(program, fs);
+    GLES.glAttachShader(program, fs);
     CHECK_GL_ERROR_NO_INIT
-    gles_glLinkProgram(program);
+    GLES.glLinkProgram(program);
     CHECK_GL_ERROR_NO_INIT
     int success = 0;
-    gles_glGetProgramiv(program, GL_LINK_STATUS, &success);
+    GLES.glGetProgramiv(program, GL_LINK_STATUS, &success);
     CHECK_GL_ERROR_NO_INIT
     if(!success) {
-        gles_glGetProgramInfoLog(program, 1024, NULL, compile_info);
+        GLES.glGetProgramInfoLog(program, 1024, NULL, compile_info);
         CHECK_GL_ERROR_NO_INIT
         LOG_E("program link error: %s", compile_info);
 #if DEBUG || GLOBAL_DEBUG

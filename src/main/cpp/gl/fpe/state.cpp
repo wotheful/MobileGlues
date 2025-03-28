@@ -41,9 +41,7 @@ void glEnable(GLenum cap) {
     if (hijack_fpe_states(cap, true, &g_glstate.fpe_state.fpe_bools))
         return;
 
-    LOAD_GLES_FUNC(glEnable)
-
-    gles_glEnable(cap);
+    GLES.glEnable(cap);
 }
 
 void glDisable(GLenum cap) {
@@ -53,9 +51,7 @@ void glDisable(GLenum cap) {
     if (hijack_fpe_states(cap, false, &g_glstate.fpe_state.fpe_bools))
         return;
 
-    LOAD_GLES_FUNC(glDisable)
-
-    gles_glDisable(cap);
+    GLES.glDisable(cap);
 }
 
 void glClientActiveTexture(GLenum texture) {

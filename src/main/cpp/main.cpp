@@ -17,7 +17,7 @@
 
 #define DEBUG 0
 
-__attribute__((used)) const char* copyright = "Copyright (C) 2025 Swung0x48, BZLZHH, Tungsten. All rights reserved. Logo artwork kindly provided by Aou156.";
+__attribute__((used)) const char* license = "GNU LGPL-2.1 License";
 
 extern char* (*MesaConvertShader)(const char *src, unsigned int type, unsigned int glsl, unsigned int essl);
 void init_libshaderconv() {
@@ -39,16 +39,13 @@ void init_libshaderconv() {
 }
 
 void init_config() {
-    if(mkdir(MG_DIRECTORY_PATH, 0755) != 0 && errno != EEXIST) {
-        LOG_E("Error creating MG directory.\n")
-        return;
-    }
-    config_refresh();
+    if (check_path())
+        config_refresh();
 }
 
-void show_copyright() {
-    LOG_V("MobileGlues Copyright: ");
-    LOG_V("  %s", copyright);
+void show_license() {
+    LOG_V("The Open Source License of MobileGlues: ");
+    LOG_V("  %s", license);
 }
 
 GLuint watermark_vao = 0;
@@ -90,50 +87,34 @@ int watermark_inited = 0;
 char compile_info[1024];
 
 int init_watermark_res() {
-    LOAD_GLES_FUNC(glGenVertexArrays)
-    LOAD_GLES_FUNC(glBindVertexArray)
-    LOAD_GLES_FUNC(glGenBuffers)
-    LOAD_GLES_FUNC(glBindBuffer)
-    LOAD_GLES_FUNC(glBufferData)
-    LOAD_GLES_FUNC(glCreateShader)
-    LOAD_GLES_FUNC(glShaderSource)
-    LOAD_GLES_FUNC(glCompileShader)
-    LOAD_GLES_FUNC(glCreateProgram)
-    LOAD_GLES_FUNC(glAttachShader)
-    LOAD_GLES_FUNC(glLinkProgram)
-    LOAD_GLES_FUNC(glGetShaderiv)
-    LOAD_GLES_FUNC(glGetShaderInfoLog)
-    LOAD_GLES_FUNC(glGetProgramiv)
-    LOAD_GLES_FUNC(glVertexAttribPointer)
-    LOAD_GLES_FUNC(glEnableVertexAttribArray)
 
-    watermark_vtx_shader = gles_glCreateShader(GL_VERTEX_SHADER);
-    gles_glShaderSource(watermark_vtx_shader, 1, &watermark_vtx_shader_src, NULL);
-    gles_glCompileShader(watermark_vtx_shader);
+    watermark_vtx_shader = GLES.glCreateShader(GL_VERTEX_SHADER);
+    GLES.glShaderSource(watermark_vtx_shader, 1, &watermark_vtx_shader_src, NULL);
+    GLES.glCompileShader(watermark_vtx_shader);
     int success = 0;
-    gles_glGetShaderiv(watermark_vtx_shader, GL_COMPILE_STATUS, &success);
+    GLES.glGetShaderiv(watermark_vtx_shader, GL_COMPILE_STATUS, &success);
     if (!success) {
-        gles_glGetShaderInfoLog(watermark_vtx_shader, 1024, NULL, compile_info);
+        GLES.glGetShaderInfoLog(watermark_vtx_shader, 1024, NULL, compile_info);
         LOG_E("Watermark vertex shader compile error: %s", compile_info);
         return -1;
     }
 
-    watermark_frag_shader = gles_glCreateShader(GL_FRAGMENT_SHADER);
-    gles_glShaderSource(watermark_frag_shader, 1, &watermark_frag_shader_src, NULL);
-    gles_glCompileShader(watermark_frag_shader);
+    watermark_frag_shader = GLES.glCreateShader(GL_FRAGMENT_SHADER);
+    GLES.glShaderSource(watermark_frag_shader, 1, &watermark_frag_shader_src, NULL);
+    GLES.glCompileShader(watermark_frag_shader);
 
-    gles_glGetShaderiv(watermark_frag_shader, GL_COMPILE_STATUS, &success);
+    GLES.glGetShaderiv(watermark_frag_shader, GL_COMPILE_STATUS, &success);
     if (!success) {
-        gles_glGetShaderInfoLog(watermark_frag_shader, 1024, NULL, compile_info);
+        GLES.glGetShaderInfoLog(watermark_frag_shader, 1024, NULL, compile_info);
         LOG_E("Watermark fragment shader compile error: %s", compile_info);
         return -1;
     }
 
-    watermark_program = gles_glCreateProgram();
-    gles_glAttachShader(watermark_program, watermark_vtx_shader);
-    gles_glAttachShader(watermark_program, watermark_frag_shader);
-    gles_glLinkProgram(watermark_program);
-    gles_glGetProgramiv(watermark_program, GL_LINK_STATUS, &success);
+    watermark_program = GLES.glCreateProgram();
+    GLES.glAttachShader(watermark_program, watermark_vtx_shader);
+    GLES.glAttachShader(watermark_program, watermark_frag_shader);
+    GLES.glLinkProgram(watermark_program);
+    GLES.glGetProgramiv(watermark_program, GL_LINK_STATUS, &success);
     if(!success) {
         glGetProgramInfoLog(watermark_program, 1024, NULL, compile_info);
         LOG_E("Watermark program link error: %s", compile_info);
@@ -141,21 +122,21 @@ int init_watermark_res() {
     }
 
 
-    gles_glGenVertexArrays(1, &watermark_vao);
+    GLES.glGenVertexArrays(1, &watermark_vao);
 
-    gles_glGenBuffers(1, &watermark_vbo);
-    gles_glGenBuffers(1, &watermark_ibo);
+    GLES.glGenBuffers(1, &watermark_vbo);
+    GLES.glGenBuffers(1, &watermark_ibo);
 
-    gles_glBindVertexArray(watermark_vao);
+    GLES.glBindVertexArray(watermark_vao);
 
-    gles_glBindBuffer(GL_ARRAY_BUFFER, watermark_vbo);
-    gles_glBufferData(GL_ARRAY_BUFFER, sizeof(watermark_vertices), watermark_vertices, GL_STATIC_DRAW);
+    GLES.glBindBuffer(GL_ARRAY_BUFFER, watermark_vbo);
+    GLES.glBufferData(GL_ARRAY_BUFFER, sizeof(watermark_vertices), watermark_vertices, GL_STATIC_DRAW);
 
-    gles_glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-    gles_glEnableVertexAttribArray(0);
+    GLES.glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    GLES.glEnableVertexAttribArray(0);
 
-    gles_glBindBuffer(GL_ARRAY_BUFFER, 0);
-    gles_glBindVertexArray(0);
+    GLES.glBindBuffer(GL_ARRAY_BUFFER, 0);
+    GLES.glBindVertexArray(0);
 
 
     INIT_CHECK_GL_ERROR
@@ -169,12 +150,6 @@ void draw_watermark() {
     LOG()
 
     LOG_D("Drawing watermark!")
-    LOAD_GLES_FUNC(glGetIntegerv)
-    LOAD_GLES_FUNC(glBindVertexArray)
-    LOAD_GLES_FUNC(glBindBuffer)
-    LOAD_GLES_FUNC(glUseProgram)
-    LOAD_GLES_FUNC(glDrawArrays)
-    LOAD_GLES_FUNC(glEnableVertexAttribArray)
 
     INIT_CHECK_GL_ERROR
 
@@ -182,11 +157,11 @@ void draw_watermark() {
     GLint prev_vao;
     GLint prev_vbo;
     GLint prev_prog;
-    gles_glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &prev_vao);
+    GLES.glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &prev_vao);
     CHECK_GL_ERROR_NO_INIT
-    gles_glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &prev_vbo);
+    GLES.glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &prev_vbo);
     CHECK_GL_ERROR_NO_INIT
-    gles_glGetIntegerv(GL_CURRENT_PROGRAM, &prev_prog);
+    GLES.glGetIntegerv(GL_CURRENT_PROGRAM, &prev_prog);
     CHECK_GL_ERROR_NO_INIT
 
     LOG_D("prev vao: %d", prev_vao);
@@ -196,25 +171,25 @@ void draw_watermark() {
     LOG_D("Save ok")
 
     // Set states
-    gles_glBindVertexArray(watermark_vao);
+    GLES.glBindVertexArray(watermark_vao);
     CHECK_GL_ERROR_NO_INIT
-    gles_glBindBuffer(GL_ARRAY_BUFFER, watermark_vbo);
+    GLES.glBindBuffer(GL_ARRAY_BUFFER, watermark_vbo);
     CHECK_GL_ERROR_NO_INIT
-    gles_glUseProgram(watermark_program);
+    GLES.glUseProgram(watermark_program);
     CHECK_GL_ERROR_NO_INIT
     LOG_D("set ok")
 
     // Draw!
-    gles_glDrawArrays(GL_TRIANGLES, 0, 3);
+    GLES.glDrawArrays(GL_TRIANGLES, 0, 3);
     CHECK_GL_ERROR_NO_INIT
     LOG_D("draw ok")
 
     // Restore states
-    gles_glBindVertexArray(prev_vao);
+    GLES.glBindVertexArray(prev_vao);
     CHECK_GL_ERROR_NO_INIT
-    gles_glBindBuffer(GL_ARRAY_BUFFER, prev_vbo);
+    GLES.glBindBuffer(GL_ARRAY_BUFFER, prev_vbo);
     CHECK_GL_ERROR_NO_INIT
-    gles_glUseProgram(prev_prog);
+    GLES.glUseProgram(prev_prog);
     CHECK_GL_ERROR_NO_INIT
     LOG_D("restore ok")
 }
@@ -239,10 +214,10 @@ void proc_init() {
     clear_log();
     start_log();
 
-    init_settings();
-
     LOG_V("Initializing %s ...", RENDERERNAME);
-    show_copyright();
+    show_license();
+
+    init_settings();
 
     load_libs();
     init_target_egl();

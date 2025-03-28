@@ -17,7 +17,7 @@ FUNC_GL_STATE_ENUM(proxy_intformat)
 FILE* file;
 
 void start_log() {
-    file = fopen(LOG_FILE_PATH, "a");
+    file = fopen(log_file_path, "a");
 }
 
 void write_log(const char* format, ...) {
@@ -49,7 +49,7 @@ void write_log_n(const char* format, ...) {
 }
 
 void clear_log() {
-    file = fopen(LOG_FILE_PATH, "w");
+    file = fopen(log_file_path, "w");
     if (file == nullptr) {
         return;
     }

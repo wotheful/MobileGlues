@@ -4,6 +4,7 @@
 
 #include "getter.h"
 #include "../config/settings.h"
+#include "buffer.h"
 #include <string>
 #include <vector>
 
@@ -43,18 +44,33 @@ void glGetIntegerv(GLenum pname, GLint *params) {
             break;
         case GL_MAX_TEXTURE_IMAGE_UNITS: {
             if (g_gles_caps.maxtex <= 0) {
-                LOAD_GLES_FUNC(glGetIntegerv)
                 int es_params = 16;
-                gles_glGetIntegerv(pname, &es_params);
+                GLES.glGetIntegerv(pname, &es_params);
                 CHECK_GL_ERROR
                 g_gles_caps.maxtex = (es_params < 32) ? 32 : es_params;
             }
             (*params) = g_gles_caps.maxtex;
             break;
         }
+        case GL_ARRAY_BUFFER_BINDING:
+        case GL_ATOMIC_COUNTER_BUFFER_BINDING:
+        case GL_COPY_READ_BUFFER_BINDING:
+        case GL_COPY_WRITE_BUFFER_BINDING:
+        case GL_DRAW_INDIRECT_BUFFER_BINDING:
+        case GL_DISPATCH_INDIRECT_BUFFER_BINDING:
+        case GL_ELEMENT_ARRAY_BUFFER_BINDING:
+        case GL_PIXEL_PACK_BUFFER_BINDING:
+        case GL_PIXEL_UNPACK_BUFFER_BINDING:
+        case GL_SHADER_STORAGE_BUFFER_BINDING:
+        case GL_TRANSFORM_FEEDBACK_BUFFER_BINDING:
+        case GL_UNIFORM_BUFFER_BINDING:
+            (*params) = (int) find_bound_buffer(pname);
+            break;
+        case GL_VERTEX_ARRAY_BINDING:
+            (*params) = (int) find_bound_array();
+            break;
         default:
-            LOAD_GLES_FUNC(glGetIntegerv)
-            gles_glGetIntegerv(pname, params);
+            GLES.glGetIntegerv(pname, params);
             LOG_D("  -> %d",*params)
             CHECK_GL_ERROR
     }
@@ -62,8 +78,7 @@ void glGetIntegerv(GLenum pname, GLint *params) {
 
 GLenum glGetError() {
     LOG()
-    LOAD_GLES_FUNC(glGetError)
-    GLenum err = gles_glGetError();
+    GLenum err = GLES.glGetError();
     // just clear gles error, no reporting
     if (err != GL_NO_ERROR) {
         // no logging without DEBUG
@@ -90,7 +105,7 @@ void InitGLESBaseExtensions() {
              "GL_EXT_depth_texture "
              "GL_ARB_depth_texture "
              "GL_ARB_shading_language_100 "
-             "ARB_imaging "
+             "GL_ARB_imaging "
              "GL_ARB_draw_buffers_blend "
              "OpenGL11 "
              "OpenGL12 "
@@ -111,7 +126,8 @@ void InitGLESBaseExtensions() {
              "GL_ARB_shader_storage_buffer_object "
              "GL_ARB_shader_image_load_store "
              "GL_ARB_clear_texture "
-             "GL_ARB_get_program_binary ";
+             "GL_ARB_get_program_binary "
+             "GL_ARB_separate_shader_objects ";
 }
 
 void AppendExtension(const char* ext) {
@@ -138,8 +154,7 @@ const char* getBeforeThirdSpace(const char* str) {
 }
 
 const char* getGpuName() {
-    LOAD_GLES_FUNC(glGetString)
-    const char *gpuName = (const char *) gles_glGetString(GL_RENDERER);
+    const char *gpuName = (const char *) GLES.glGetString(GL_RENDERER);
 
     if (!gpuName) {
         return "<unknown>";
@@ -169,8 +184,7 @@ const char* getGpuName() {
 }
 
 void set_es_version() {
-    LOAD_GLES_FUNC(glGetString)
-    const char* ESVersion = getBeforeThirdSpace((const char*)gles_glGetString(GL_VERSION));
+    const char* ESVersion = getBeforeThirdSpace((const char*)GLES.glGetString(GL_VERSION));
     int major, minor;
 
     if (sscanf(ESVersion, "OpenGL ES %d.%d", &major, &minor) == 2) {
@@ -185,8 +199,7 @@ void set_es_version() {
 }
 
 const char* getGLESName() {
-    LOAD_GLES_FUNC(glGetString)
-    char* ESVersion = (char*)gles_glGetString(GL_VERSION);
+    char* ESVersion = (char*)GLES.glGetString(GL_VERSION);
     return getBeforeThirdSpace(ESVersion);
 }
 
@@ -194,7 +207,6 @@ static std::string rendererString;
 static std::string versionString;
 const GLubyte * glGetString( GLenum name ) {
     LOG()
-    LOAD_GLES_FUNC(glGetString)
     /* Feature in the Future
      * Advanced OpenGL driver: NV renderer.
     switch (name) {
@@ -238,10 +250,7 @@ const GLubyte * glGetString( GLenum name ) {
                 versionCache += ".Dev";
 #endif
 #endif
-
-#ifdef VERSION_SUFFIX
                 versionCache += VERSION_SUFFIX;
-#endif
             }
             return (const GLubyte *)versionCache.c_str();
         }
@@ -260,13 +269,12 @@ const GLubyte * glGetString( GLenum name ) {
         case GL_EXTENSIONS:
             return (const GLubyte *) GetExtensionsList();
         default:
-            return gles_glGetString(name);
+            return GLES.glGetString(name);
     }
 }
 
 const GLubyte * glGetStringi(GLenum name, GLuint index) {
     LOG()
-    LOAD_GLES_FUNC(glGetStringi)
     typedef struct {
         GLenum name;
         const char** parts;
@@ -301,7 +309,7 @@ const GLubyte * glGetStringi(GLenum name, GLuint index) {
                     str = glGetString(GL_EXTENSIONS);
                     break;
                 default:
-                    return gles_glGetStringi(name, index);
+                    return GLES.glGetStringi(name, index);
             }
 
             if (!str) continue;
@@ -332,14 +340,12 @@ const GLubyte * glGetStringi(GLenum name, GLuint index) {
 
 void glGetQueryObjectiv(GLuint id, GLenum pname, GLint* params) {
     LOG()
-    LOAD_GLES_FUNC(glGetQueryObjectivEXT)
-    gles_glGetQueryObjectivEXT(id, pname, params);
+    GLES.glGetQueryObjectivEXT(id, pname, params);
     CHECK_GL_ERROR
 }
 
 void glGetQueryObjecti64v(GLuint id, GLenum pname, GLint64* params) {
     LOG()
-    LOAD_GLES_FUNC(glGetQueryObjecti64vEXT)
-    gles_glGetQueryObjecti64vEXT(id, pname, params);
+    GLES.glGetQueryObjecti64vEXT(id, pname, params);
     CHECK_GL_ERROR
 }

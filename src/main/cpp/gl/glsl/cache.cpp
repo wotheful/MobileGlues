@@ -103,7 +103,7 @@ Cache::Cache() {
 }
 
 const char* Cache::get(const char* glsl) {
-    if (global_settings.maxGlslCacheSize <= 0)
+    if (global_settings.max_glsl_cache_size <= 0)
         return nullptr;
     auto hash = computeSHA256(glsl);
     auto it = cacheMap.find(hash);
@@ -114,7 +114,7 @@ const char* Cache::get(const char* glsl) {
 }
 
 void Cache::put(const char* glsl, const char* essl) {
-    if (global_settings.maxGlslCacheSize <= 0)
+    if (global_settings.max_glsl_cache_size <= 0)
         return;
     auto hash = computeSHA256(glsl);
     size_t esslStrSize = strlen(essl) + 1;
@@ -137,9 +137,9 @@ void Cache::put(const char* glsl, const char* essl) {
 
 
 void Cache::maintainCacheSize() {
-    if (global_settings.maxGlslCacheSize <= 0)
+    if (global_settings.max_glsl_cache_size <= 0)
         return;
-    while (cacheSize > global_settings.maxGlslCacheSize && !cacheList.empty()) {
+    while (cacheSize > global_settings.max_glsl_cache_size && !cacheList.empty()) {
         const auto& oldEntry = cacheList.front();
         size_t removedMemory = sizeof(CacheEntry::sha256) + sizeof(size_t) + oldEntry.size;
         cacheSize -= removedMemory;
@@ -151,7 +151,7 @@ void Cache::maintainCacheSize() {
 
 bool Cache::load() {
     try {
-        ifstream file(GLSL_CACHE_FILE_PATH, ios::binary);
+        ifstream file(glsl_cache_file_path, ios::binary);
         if (!file) return false;
     
         size_t count;
@@ -190,9 +190,9 @@ bool Cache::load() {
 
 
 void Cache::save() {
-    if (global_settings.maxGlslCacheSize <= 0)
+    if (global_settings.max_glsl_cache_size <= 0)
         return;
-    ofstream file(GLSL_CACHE_FILE_PATH, ios::binary);
+    ofstream file(glsl_cache_file_path, ios::binary);
     if (!file) return;
 
     size_t count = cacheList.size();

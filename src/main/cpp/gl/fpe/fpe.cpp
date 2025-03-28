@@ -79,23 +79,6 @@ int init_fpe() {
 
     INIT_CHECK_GL_ERROR
 
-    LOAD_GLES_FUNC(glGenVertexArrays)
-    LOAD_GLES_FUNC(glBindVertexArray)
-    LOAD_GLES_FUNC(glGenBuffers)
-    LOAD_GLES_FUNC(glBindBuffer)
-    LOAD_GLES_FUNC(glBufferData)
-    LOAD_GLES_FUNC(glCreateShader)
-    LOAD_GLES_FUNC(glShaderSource)
-    LOAD_GLES_FUNC(glCompileShader)
-    LOAD_GLES_FUNC(glCreateProgram)
-    LOAD_GLES_FUNC(glAttachShader)
-    LOAD_GLES_FUNC(glLinkProgram)
-    LOAD_GLES_FUNC(glGetShaderiv)
-    LOAD_GLES_FUNC(glGetShaderInfoLog)
-    LOAD_GLES_FUNC(glGetProgramiv)
-    LOAD_GLES_FUNC(glVertexAttribPointer)
-    LOAD_GLES_FUNC(glEnableVertexAttribArray)
-
 //    g_glstate.fpe_vtx_shader_src =
 //            "#version 320 es\n"
 //            "precision highp float;\n"
@@ -131,48 +114,48 @@ int init_fpe() {
 //            "   FragColor = color;\n"
 //            "}";
 //
-//    g_glstate.fpe_vtx_shader = gles_glCreateShader(GL_VERTEX_SHADER);
+//    g_glstate.fpe_vtx_shader = GLES.glCreateShader(GL_VERTEX_SHADER);
 //    CHECK_GL_ERROR_NO_INIT
-//    gles_glShaderSource(g_glstate.fpe_vtx_shader, 1, &g_glstate.fpe_vtx_shader_src, NULL);
+//    GLES.glShaderSource(g_glstate.fpe_vtx_shader, 1, &g_glstate.fpe_vtx_shader_src, NULL);
 //    CHECK_GL_ERROR_NO_INIT
-//    gles_glCompileShader(g_glstate.fpe_vtx_shader);
+//    GLES.glCompileShader(g_glstate.fpe_vtx_shader);
 //    CHECK_GL_ERROR_NO_INIT
 //    int success = 0;
-//    gles_glGetShaderiv(g_glstate.fpe_vtx_shader, GL_COMPILE_STATUS, &success);
+//    GLES.glGetShaderiv(g_glstate.fpe_vtx_shader, GL_COMPILE_STATUS, &success);
 //    CHECK_GL_ERROR_NO_INIT
 //    if (!success) {
-//        gles_glGetShaderInfoLog(g_glstate.fpe_vtx_shader, 1024, NULL, compile_info);
+//        GLES.glGetShaderInfoLog(g_glstate.fpe_vtx_shader, 1024, NULL, compile_info);
 //        CHECK_GL_ERROR_NO_INIT
 //        LOG_E("fpe vertex shader compile error: %s", compile_info);
 //        return -1;
 //    }
 //
-//    g_glstate.fpe_frag_shader = gles_glCreateShader(GL_FRAGMENT_SHADER);
+//    g_glstate.fpe_frag_shader = GLES.glCreateShader(GL_FRAGMENT_SHADER);
 //    CHECK_GL_ERROR_NO_INIT
-//    gles_glShaderSource(g_glstate.fpe_frag_shader, 1, &g_glstate.fpe_frag_shader_src, NULL);
+//    GLES.glShaderSource(g_glstate.fpe_frag_shader, 1, &g_glstate.fpe_frag_shader_src, NULL);
 //    CHECK_GL_ERROR_NO_INIT
 //
-//    gles_glCompileShader(g_glstate.fpe_frag_shader);
+//    GLES.glCompileShader(g_glstate.fpe_frag_shader);
 //    CHECK_GL_ERROR_NO_INIT
-//    gles_glGetShaderiv(g_glstate.fpe_frag_shader, GL_COMPILE_STATUS, &success);
+//    GLES.glGetShaderiv(g_glstate.fpe_frag_shader, GL_COMPILE_STATUS, &success);
 //    CHECK_GL_ERROR_NO_INIT
 //    if (!success) {
-//        gles_glGetShaderInfoLog(g_glstate.fpe_frag_shader, 1024, NULL, compile_info);
+//        GLES.glGetShaderInfoLog(g_glstate.fpe_frag_shader, 1024, NULL, compile_info);
 //        CHECK_GL_ERROR_NO_INIT
 //        LOG_E("fpe fragment shader compile error: %s", compile_info);
 //        return -1;
 //    }
 //
 //
-//    g_glstate.fpe_program = gles_glCreateProgram();
+//    g_glstate.fpe_program = GLES.glCreateProgram();
 //    CHECK_GL_ERROR_NO_INIT
-//    gles_glAttachShader(g_glstate.fpe_program, g_glstate.fpe_vtx_shader);
+//    GLES.glAttachShader(g_glstate.fpe_program, g_glstate.fpe_vtx_shader);
 //    CHECK_GL_ERROR_NO_INIT
-//    gles_glAttachShader(g_glstate.fpe_program, g_glstate.fpe_frag_shader);
+//    GLES.glAttachShader(g_glstate.fpe_program, g_glstate.fpe_frag_shader);
 //    CHECK_GL_ERROR_NO_INIT
-//    gles_glLinkProgram(g_glstate.fpe_program);
+//    GLES.glLinkProgram(g_glstate.fpe_program);
 //    CHECK_GL_ERROR_NO_INIT
-//    gles_glGetProgramiv(g_glstate.fpe_program, GL_LINK_STATUS, &success);
+//    GLES.glGetProgramiv(g_glstate.fpe_program, GL_LINK_STATUS, &success);
 //    CHECK_GL_ERROR_NO_INIT
 //    if(!success) {
 //        glGetProgramInfoLog(g_glstate.fpe_program, 1024, NULL, compile_info);
@@ -181,20 +164,20 @@ int init_fpe() {
 //        return -1;
 //    }
 
-    gles_glGenVertexArrays(1, &g_glstate.fpe_state.vertexpointer_array.fpe_vao);
+    GLES.glGenVertexArrays(1, &g_glstate.fpe_state.vertexpointer_array.fpe_vao);
     CHECK_GL_ERROR_NO_INIT
-    gles_glGenBuffers(1, &g_glstate.fpe_state.vertexpointer_array.fpe_vbo);
+    GLES.glGenBuffers(1, &g_glstate.fpe_state.vertexpointer_array.fpe_vbo);
     CHECK_GL_ERROR_NO_INIT
-    gles_glGenBuffers(1, &g_glstate.fpe_state.vertexpointer_array.fpe_ibo);
+    GLES.glGenBuffers(1, &g_glstate.fpe_state.vertexpointer_array.fpe_ibo);
     CHECK_GL_ERROR_NO_INIT
 
     LOG_D("fpe_vao: %d", g_glstate.fpe_state.vertexpointer_array.fpe_vao)
     LOG_D("fpe_vbo: %d", g_glstate.fpe_state.vertexpointer_array.fpe_vbo)
     LOG_D("fpe_ibo: %d", g_glstate.fpe_state.vertexpointer_array.fpe_ibo)
 
-    gles_glBindVertexArray(g_glstate.fpe_state.vertexpointer_array.fpe_vao);
+    GLES.glBindVertexArray(g_glstate.fpe_state.vertexpointer_array.fpe_vao);
     CHECK_GL_ERROR_NO_INIT
-    gles_glBindVertexArray(0);
+    GLES.glBindVertexArray(0);
     CHECK_GL_ERROR_NO_INIT
 
     return 0;
@@ -203,32 +186,6 @@ int init_fpe() {
 
 int commit_fpe_state_on_draw(GLenum* mode, GLint* first, GLsizei* count) {
     LOG()
-
-    LOAD_GLES_FUNC(glGenVertexArrays)
-    LOAD_GLES_FUNC(glBindVertexArray)
-    LOAD_GLES_FUNC(glGenBuffers)
-    LOAD_GLES_FUNC(glBindBuffer)
-    LOAD_GLES_FUNC(glBufferData)
-    LOAD_GLES_FUNC(glCreateShader)
-    LOAD_GLES_FUNC(glShaderSource)
-    LOAD_GLES_FUNC(glCompileShader)
-    LOAD_GLES_FUNC(glCreateProgram)
-    LOAD_GLES_FUNC(glAttachShader)
-    LOAD_GLES_FUNC(glLinkProgram)
-    LOAD_GLES_FUNC(glGetShaderiv)
-    LOAD_GLES_FUNC(glGetShaderInfoLog)
-    LOAD_GLES_FUNC(glGetProgramiv)
-    LOAD_GLES_FUNC(glVertexAttribPointer)
-    LOAD_GLES_FUNC(glVertexAttrib4fv)
-    LOAD_GLES_FUNC(glEnableVertexAttribArray)
-    LOAD_GLES_FUNC(glDisableVertexAttribArray)
-    LOAD_GLES_FUNC(glUseProgram)
-    LOAD_GLES_FUNC(glGetUniformLocation)
-    LOAD_GLES_FUNC(glUniformMatrix4fv)
-    LOAD_GLES_FUNC(glUniform1i)
-    LOAD_GLES_FUNC(glUniform1f)
-    LOAD_GLES_FUNC(glUniform4fv)
-    LOAD_GLES_FUNC(glGetIntegerv)
 
     INIT_CHECK_GL_ERROR
 
@@ -257,26 +214,26 @@ int commit_fpe_state_on_draw(GLenum* mode, GLint* first, GLsizei* count) {
     int prog_id = prog.get_program();
     if (prog_id < 0)
         LOG_D("Error: FPE shader link failed!")
-    gles_glUseProgram(prog_id);
+    GLES.glUseProgram(prog_id);
     CHECK_GL_ERROR_NO_INIT
 
     bool is_first = true;
 
     // All assuming tightly packed here...
     auto& vpa = g_glstate.fpe_state.vertexpointer_array;
-//    gles_glGenVertexArrays(1, &vpa.fpe_vao);
+//    GLES.glGenVertexArrays(1, &vpa.fpe_vao);
     LOG_D("fpe_vao: %d", g_glstate.fpe_state.vertexpointer_array.fpe_vao)
-    gles_glBindVertexArray(vpa.fpe_vao);
+    GLES.glBindVertexArray(vpa.fpe_vao);
     CHECK_GL_ERROR_NO_INIT
 
 
     GLint prev_vbo = 0;
-    gles_glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &prev_vbo);
+    GLES.glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &prev_vbo);
     CHECK_GL_ERROR_NO_INIT
 
     // Ugh...Why binding vbo is required BEFORE calling VertexAttrib* functions?
     if (prev_vbo == 0) {
-        gles_glBindBuffer(GL_ARRAY_BUFFER, g_glstate.fpe_state.vertexpointer_array.fpe_vbo);
+        GLES.glBindBuffer(GL_ARRAY_BUFFER, g_glstate.fpe_state.vertexpointer_array.fpe_vbo);
         CHECK_GL_ERROR_NO_INIT
     }
 
@@ -295,10 +252,10 @@ int commit_fpe_state_on_draw(GLenum* mode, GLint* first, GLsizei* count) {
                 }
 
                 const void* offset = (const void*)((const char*)vp.pointer - (const char*)vpa.starting_pointer);
-                gles_glVertexAttribPointer(i, vp.size, vp.type, vp.normalized, vp.stride, offset);
+                GLES.glVertexAttribPointer(i, vp.size, vp.type, vp.normalized, vp.stride, offset);
                 CHECK_GL_ERROR_NO_INIT
 
-                gles_glEnableVertexAttribArray(i);
+                GLES.glEnableVertexAttribArray(i);
                 CHECK_GL_ERROR_NO_INIT
 
                 LOG_D("attrib #%d: type = %s, size = %d, stride = %d, usage = %s, ptr = 0x%x",
@@ -313,14 +270,14 @@ int commit_fpe_state_on_draw(GLenum* mode, GLint* first, GLsizei* count) {
                       i, glEnumToString(vp.type), glEnumToString(vp.usage),
                       vp.value[0], vp.value[1], vp.value[2], vp.value[3])
 
-                gles_glVertexAttrib4fv(i, glm::value_ptr(vp.value));
+                GLES.glVertexAttrib4fv(i, glm::value_ptr(vp.value));
                 CHECK_GL_ERROR_NO_INIT
 
-                gles_glDisableVertexAttribArray(i);
+                GLES.glDisableVertexAttribArray(i);
                 CHECK_GL_ERROR_NO_INIT
             }
             else {
-                gles_glDisableVertexAttribArray(i);
+                GLES.glDisableVertexAttribArray(i);
                 CHECK_GL_ERROR_NO_INIT
             }
         }
@@ -354,7 +311,7 @@ int commit_fpe_state_on_draw(GLenum* mode, GLint* first, GLsizei* count) {
         LOG_D("glBufferData: size = %d, data = 0x%x -> GL_ARRAY_BUFFER (%d)", *count * vpa.stride,
               vpa.starting_pointer, g_glstate.fpe_state.vertexpointer_array.fpe_vbo)
 
-        gles_glBufferData(GL_ARRAY_BUFFER, *count * vpa.stride, vpa.starting_pointer,
+        GLES.glBufferData(GL_ARRAY_BUFFER, *count * vpa.stride, vpa.starting_pointer,
                           GL_DYNAMIC_DRAW);
         CHECK_GL_ERROR_NO_INIT
     } else {
@@ -367,9 +324,9 @@ int commit_fpe_state_on_draw(GLenum* mode, GLint* first, GLsizei* count) {
         LOG_D("glBufferData: size = %d, data = 0x%x -> GL_ELEMENT_ARRAY_BUFFER (%d)",
               vpa.fpe_ibo_buffer.size() * sizeof(uint32_t), vpa.fpe_ibo_buffer.data(), g_glstate.fpe_state.vertexpointer_array.fpe_ibo)
 
-        gles_glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, g_glstate.fpe_state.vertexpointer_array.fpe_ibo);
+        GLES.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, g_glstate.fpe_state.vertexpointer_array.fpe_ibo);
         CHECK_GL_ERROR_NO_INIT
-        gles_glBufferData(GL_ELEMENT_ARRAY_BUFFER, vpa.fpe_ibo_buffer.size() * sizeof(uint32_t),
+        GLES.glBufferData(GL_ELEMENT_ARRAY_BUFFER, vpa.fpe_ibo_buffer.size() * sizeof(uint32_t),
                           vpa.fpe_ibo_buffer.data(), GL_DYNAMIC_DRAW);
         CHECK_GL_ERROR_NO_INIT
         *count = vpa.fpe_ibo_buffer.size();
@@ -387,40 +344,40 @@ int commit_fpe_state_on_draw(GLenum* mode, GLint* first, GLsizei* count) {
     print_matrix(proj);
 
     // TODO: detect change and only set dirty bits here
-    gles_glBindVertexArray(g_glstate.fpe_state.vertexpointer_array.fpe_vao);
+    GLES.glBindVertexArray(g_glstate.fpe_state.vertexpointer_array.fpe_vao);
     CHECK_GL_ERROR_NO_INIT
-    GLint mvmat = gles_glGetUniformLocation(prog_id, "ModelViewMat");
+    GLint mvmat = GLES.glGetUniformLocation(prog_id, "ModelViewMat");
     CHECK_GL_ERROR_NO_INIT
-//    GLint projmat = gles_glGetUniformLocation(prog_id, "ProjMat");
+//    GLint projmat = GLES.glGetUniformLocation(prog_id, "ProjMat");
 //    CHECK_GL_ERROR_NO_INIT
-    GLint mat_id = gles_glGetUniformLocation(prog_id, "ModelViewProjMat");
+    GLint mat_id = GLES.glGetUniformLocation(prog_id, "ModelViewProjMat");
     CHECK_GL_ERROR_NO_INIT
     const auto mat = proj * mv;
-    gles_glUniformMatrix4fv(mvmat, 1, GL_FALSE, glm::value_ptr(g_glstate.fpe_uniform.transformation.matrices[matrix_idx(GL_MODELVIEW)]));
+    GLES.glUniformMatrix4fv(mvmat, 1, GL_FALSE, glm::value_ptr(g_glstate.fpe_uniform.transformation.matrices[matrix_idx(GL_MODELVIEW)]));
     CHECK_GL_ERROR_NO_INIT
-//    gles_glUniformMatrix4fv(projmat, 1, GL_FALSE, glm::value_ptr(g_glstate.fpe_uniform.transformation.matrices[matrix_idx(GL_PROJECTION)]));
+//    GLES.glUniformMatrix4fv(projmat, 1, GL_FALSE, glm::value_ptr(g_glstate.fpe_uniform.transformation.matrices[matrix_idx(GL_PROJECTION)]));
 //    CHECK_GL_ERROR_NO_INIT
-    gles_glUniformMatrix4fv(mat_id, 1, GL_FALSE, glm::value_ptr(mat));
+    GLES.glUniformMatrix4fv(mat_id, 1, GL_FALSE, glm::value_ptr(mat));
     CHECK_GL_ERROR_NO_INIT
-    gles_glUniform1i(gles_glGetUniformLocation(prog_id, "Sampler0"), 0);
+    GLES.glUniform1i(GLES.glGetUniformLocation(prog_id, "Sampler0"), 0);
 
     if (g_glstate.fpe_state.fpe_bools.fog_enable) {
-        GLint fogcolor_id = gles_glGetUniformLocation(prog_id, "fogParam.color");
+        GLint fogcolor_id = GLES.glGetUniformLocation(prog_id, "fogParam.color");
         CHECK_GL_ERROR_NO_INIT
         LOG_D("fogcolor_id = %d", fogcolor_id)
-        gles_glUniform4fv(fogcolor_id, 1, glm::value_ptr(g_glstate.fpe_uniform.fog_color));
+        GLES.glUniform4fv(fogcolor_id, 1, glm::value_ptr(g_glstate.fpe_uniform.fog_color));
         CHECK_GL_ERROR_NO_INIT
-        GLint fogdensity_id = gles_glGetUniformLocation(prog_id, "fogParam.density");
+        GLint fogdensity_id = GLES.glGetUniformLocation(prog_id, "fogParam.density");
         CHECK_GL_ERROR_NO_INIT
-        gles_glUniform1f(fogdensity_id, g_glstate.fpe_uniform.fog_density);
+        GLES.glUniform1f(fogdensity_id, g_glstate.fpe_uniform.fog_density);
         CHECK_GL_ERROR_NO_INIT
-        GLint fogstart_id = gles_glGetUniformLocation(prog_id, "fogParam.start");
+        GLint fogstart_id = GLES.glGetUniformLocation(prog_id, "fogParam.start");
         CHECK_GL_ERROR_NO_INIT
-        gles_glUniform1f(fogstart_id, g_glstate.fpe_uniform.fog_start);
+        GLES.glUniform1f(fogstart_id, g_glstate.fpe_uniform.fog_start);
         CHECK_GL_ERROR_NO_INIT
-        GLint fogend_id = gles_glGetUniformLocation(prog_id, "fogParam.end");
+        GLint fogend_id = GLES.glGetUniformLocation(prog_id, "fogParam.end");
         CHECK_GL_ERROR_NO_INIT
-        gles_glUniform1f(fogend_id, g_glstate.fpe_uniform.fog_end);
+        GLES.glUniform1f(fogend_id, g_glstate.fpe_uniform.fog_end);
         CHECK_GL_ERROR_NO_INIT
     }
 
