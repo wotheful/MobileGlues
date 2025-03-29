@@ -66,9 +66,3 @@ int PointerUtils::pname_to_count(GLenum pname) {
             return 0;
     }
 }
-
-void* PointerUtils::copy_pointer(const void* src, size_t size, int count) {
-    void* dest = malloc(size * count);
-    std::memcpy(dest, src, size * count);
-    return dest;
-}

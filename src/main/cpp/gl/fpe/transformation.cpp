@@ -52,7 +52,7 @@ void glMatrixMode( GLenum mode ) {
     LOG_D("glMatrixMode(%s)", glEnumToString(mode))
 
     if (!disableRecording && DisplayListManager::shouldRecord()) {
-        displayListManager.record<::glMatrixMode>(std::forward<GLenum>(mode));
+        displayListManager.record<glMatrixMode>({}, mode);
         if (DisplayListManager::shouldFinish())
             return;
     }
@@ -75,7 +75,7 @@ void glLoadIdentity() {
     LOG_D("glLoadIdentity")
 
     if (!disableRecording && DisplayListManager::shouldRecord()) {
-        displayListManager.record<::glLoadIdentity>();
+        displayListManager.record<glLoadIdentity>({});
         if (DisplayListManager::shouldFinish())
             return;
     }
@@ -93,7 +93,7 @@ void glOrtho(GLdouble left, GLdouble right, GLdouble bottom, GLdouble top, GLdou
     LOG_D("glOrtho(%f, %f, %f, %f, %f, %f)", left, right, bottom, top, near_val, far_val)
 
     if (!disableRecording && DisplayListManager::shouldRecord()) {
-        displayListManager.record<::glOrtho>(std::forward<GLdouble>(left), std::forward<GLdouble>(right), std::forward<GLdouble>(bottom), std::forward<GLdouble>(top), std::forward<GLdouble>(near_val), std::forward<GLdouble>(far_val));
+        displayListManager.record<glOrtho>({}, left, right, bottom, top, near_val, far_val);
         if (DisplayListManager::shouldFinish())
             return;
     }
@@ -107,7 +107,7 @@ void glOrthof(GLfloat left, GLfloat right, GLfloat bottom, GLfloat top, GLfloat 
     LOG_D("glOrthof(%f, %f, %f, %f, %f, %f)", left, right, bottom, top, zNear, zFar)
 
     if (!disableRecording && DisplayListManager::shouldRecord()) {
-        displayListManager.record<::glOrthof>(std::forward<GLfloat>(left), std::forward<GLfloat>(right), std::forward<GLfloat>(bottom), std::forward<GLfloat>(top), std::forward<GLfloat>(zNear), std::forward<GLfloat>(zFar));
+        displayListManager.record<glOrthof>({}, left, right, bottom, top, zNear, zFar);
         if (DisplayListManager::shouldFinish())
             return;
     }
@@ -124,7 +124,7 @@ void glScalef( GLfloat x, GLfloat y, GLfloat z ) {
     LOG_D("glScalef(%f, %f, %f)", x, y, z)
 
     if (!disableRecording && DisplayListManager::shouldRecord()) {
-        displayListManager.record<::glScalef>(std::forward<GLfloat>(x), std::forward<GLfloat>(y), std::forward<GLfloat>(z));
+        displayListManager.record<glScalef>({}, x, y, z);
         if (DisplayListManager::shouldFinish())
             return;
     }
@@ -142,7 +142,7 @@ void glTranslatef( GLfloat x, GLfloat y, GLfloat z ) {
     LOG_D("glTranslatef(%f, %f, %f)", x, y, z)
 
     if (!disableRecording && DisplayListManager::shouldRecord()) {
-        displayListManager.record<::glTranslatef>(std::forward<GLfloat>(x), std::forward<GLfloat>(y), std::forward<GLfloat>(z));
+        displayListManager.record<glTranslatef>({}, x, y, z);
         if (DisplayListManager::shouldFinish())
             return;
     }
@@ -160,7 +160,7 @@ void glRotatef( GLfloat angle, GLfloat x, GLfloat y, GLfloat z ) {
     LOG_D("glRotatef, angle = %.2f, x = %.2f, y = %.2f, z = %.2f", angle, x, y, z)
 
     if (!disableRecording && DisplayListManager::shouldRecord()) {
-        displayListManager.record<::glRotatef>(std::forward<GLfloat>(angle), std::forward<GLfloat>(x), std::forward<GLfloat>(y), std::forward<GLfloat>(z));
+        displayListManager.record<glRotatef>({}, angle, x, y, z);
         if (DisplayListManager::shouldFinish())
             return;
     }
@@ -178,7 +178,7 @@ void glRotated(GLdouble angle, GLdouble x, GLdouble y, GLdouble z ) {
     LOG_D("glRotated(%f, %f, %f, %f)", angle, x, y, z)
 
     if (!disableRecording && DisplayListManager::shouldRecord()) {
-        displayListManager.record<::glRotated>(std::forward<GLdouble>(angle), std::forward<GLdouble>(x), std::forward<GLdouble>(y), std::forward<GLdouble>(z));
+        displayListManager.record<glRotated>({}, angle, x, y, z);
         if (DisplayListManager::shouldFinish())
             return;
     }
@@ -192,7 +192,7 @@ void glScaled(GLdouble x, GLdouble y, GLdouble z ) {
     LOG_D("glScaled(%f, %f, %f)", x, y, z)
 
     if (!disableRecording && DisplayListManager::shouldRecord()) {
-        displayListManager.record<::glScaled>(std::forward<GLdouble>(x), std::forward<GLdouble>(y), std::forward<GLdouble>(z));
+        displayListManager.record<glScaled>({}, x, y, z);
         if (DisplayListManager::shouldFinish())
             return;
     }
@@ -206,7 +206,7 @@ void glTranslated(GLdouble x, GLdouble y, GLdouble z ) {
     LOG_D("glTranslated(%f, %f, %f)", x, y, z)
 
     if (!disableRecording && DisplayListManager::shouldRecord()) {
-        displayListManager.record<::glTranslated>(std::forward<GLdouble>(x), std::forward<GLdouble>(y), std::forward<GLdouble>(z));
+        displayListManager.record<glTranslated>({}, x, y, z);
         if (DisplayListManager::shouldFinish())
             return;
     }
@@ -220,8 +220,7 @@ void glMultMatrixf(const GLfloat *m) {
     LOG_D("glMultMatrixf(%p)", m)
 
     if (!disableRecording && DisplayListManager::shouldRecord()) {
-        displayListManager.record<::glMultMatrixf>(std::forward<const GLfloat*>(
-                (GLfloat*) PointerUtils::copy_pointer(m, sizeof(GLfloat), 1)));
+        displayListManager.record<glMultMatrixf>({{0, sizeof(GLfloat)}}, m);
         if (DisplayListManager::shouldFinish())
             return;
     }
@@ -238,7 +237,7 @@ void glPushMatrix( void ) {
     LOG_D("glPushMatrix()")
 
     if (!disableRecording && DisplayListManager::shouldRecord()) {
-        displayListManager.record<::glPushMatrix>();
+        displayListManager.record<glPushMatrix>({});
         if (DisplayListManager::shouldFinish())
             return;
     }
@@ -258,7 +257,7 @@ void glPopMatrix( void ) {
     LOG_D("glPopMatrix(%p)")
 
     if (!disableRecording && DisplayListManager::shouldRecord()) {
-        displayListManager.record<::glPopMatrix>();
+        displayListManager.record<glPopMatrix>({});
         if (DisplayListManager::shouldFinish())
             return;
     }

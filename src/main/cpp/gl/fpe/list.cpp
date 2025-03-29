@@ -46,7 +46,7 @@ void glCallList(GLuint list) {
     LOG_D("glCallList(%d)", list)
 
     if (DisplayListManager::shouldRecord()) {
-        displayListManager.record<::glCallList>(std::forward<GLuint>(list));
+        displayListManager.record<glCallList>({}, list);
         if (DisplayListManager::isRecording())
             return;
     }
@@ -59,8 +59,7 @@ void glCallLists(GLsizei n, GLenum type, const GLvoid* lists) {
     LOG_D("glCallLists(%i, %s, %p)", n, glEnumToString(type), lists)
 
     if (DisplayListManager::shouldRecord()) {
-        displayListManager.record<::glCallLists>(std::forward<GLsizei>(n), std::forward<GLenum>(type), std::forward<const GLvoid*>(
-                (GLvoid*) PointerUtils::copy_pointer(lists, PointerUtils::type_to_bytes(type), n)));
+        displayListManager.record<glCallLists>({{2, n * PointerUtils::type_to_bytes(type)}}, n, type, lists);
         if (DisplayListManager::isRecording())
             return;
     }
@@ -133,7 +132,7 @@ void glListBase(GLuint base) {
     LOG_D("glGenLists(%d)", base)
 
     if (DisplayListManager::shouldRecord()) {
-        displayListManager.record<::glListBase>(std::forward<GLuint>(base));
+        displayListManager.record<glListBase>({}, base);
         if (DisplayListManager::shouldFinish())
             return;
     }
