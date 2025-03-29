@@ -145,8 +145,7 @@ inline GLboolean disableRecording = GL_FALSE;
     GLboolean alreadyDisabled = disableRecording; \
     disableRecording = GL_TRUE;                   \
     func(__VA_ARGS__);                            \
-    if (!alreadyDisabled)                         \
-        disableRecording = GL_FALSE;              \
+    disableRecording = alreadyDisabled;           \
 }
 
 GLAPI GLAPIENTRY GLuint glGenLists(GLsizei range);
