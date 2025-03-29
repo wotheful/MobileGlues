@@ -5,6 +5,7 @@
 #include "transformation.h"
 #include "glm/gtc/type_ptr.hpp"
 #include "list.h"
+#include "pointer_utils.h"
 
 #include <glm/ext/matrix_clip_space.hpp>
 #include <glm/ext/matrix_relational.hpp>
@@ -219,7 +220,8 @@ void glMultMatrixf(const GLfloat *m) {
     LOG_D("glMultMatrixf(%p)", m)
 
     if (!disableRecording) {
-        displayListManager.record<::glMultMatrixf>(std::forward<const GLfloat*>(m));
+        displayListManager.record<::glMultMatrixf>(std::forward<const GLfloat*>(
+                (GLfloat*) PointerUtils::copy_pointer(m, sizeof(GLfloat), 1)));
         if (DisplayListManager::shouldFinish())
             return;
     }

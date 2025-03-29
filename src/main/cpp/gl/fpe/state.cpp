@@ -5,6 +5,7 @@
 #include "state.h"
 #include "glm/gtc/type_ptr.hpp"
 #include "list.h"
+#include "pointer_utils.h"
 
 #define DEBUG 0
 
@@ -160,7 +161,8 @@ void glFogfv( GLenum pname, const GLfloat *params ) {
     LOG_D("glFogfv(%s, [...])", glEnumToString(pname))
 
     if (!disableRecording) {
-        displayListManager.record<::glFogfv>(std::forward<GLenum>(pname), std::forward<const GLfloat*>(params));
+        displayListManager.record<::glFogfv>(std::forward<GLenum>(pname), std::forward<const GLfloat*>(
+                (GLfloat*) PointerUtils::copy_pointer(params, sizeof(GLfloat), PointerUtils::pname_to_count(pname))));
         if (DisplayListManager::shouldFinish())
             return;
     }
@@ -193,7 +195,8 @@ void glFogiv( GLenum pname, const GLint *params ) {
     LOG_D("glFogiv(%s, [...])", glEnumToString(pname))
 
     if (!disableRecording) {
-        displayListManager.record<::glFogiv>(std::forward<GLenum>(pname), std::forward<const GLint*>(params));
+        displayListManager.record<::glFogiv>(std::forward<GLenum>(pname), std::forward<const GLint*>(
+                (GLint*) PointerUtils::copy_pointer(params, sizeof(GLint), PointerUtils::pname_to_count(pname))));
         if (DisplayListManager::shouldFinish())
             return;
     }
@@ -211,7 +214,7 @@ void glFogiv( GLenum pname, const GLint *params ) {
         case GL_FOG_MODE:
         case GL_FOG_INDEX:
         case GL_FOG_COORD_SRC:
-            SELF_CALL(glFogi, pname, params[0]);
+            SELF_CALL(glFogi, pname, params[0])
             break;
         case GL_FOG_DENSITY:
         case GL_FOG_START:
@@ -219,7 +222,7 @@ void glFogiv( GLenum pname, const GLint *params ) {
             SELF_CALL(glFogf, pname, (GLfloat)params[0])
             break;
         default:
-            LOG_D("ERROR: Invalid %s pname: %s", __func__, pname);
+            LOG_D("ERROR: Invalid %s pname: %s", __func__, pname)
     }
 }
 
@@ -265,7 +268,7 @@ void glLightf( GLenum light, GLenum pname, GLfloat param ) {
             lightref.quadratic_attenuation = param;
             break;
         default:
-            LOG_D("ERROR: Invalid %s pname: %s", __func__, pname);
+            LOG_D("ERROR: Invalid %s pname: %s", __func__, pname)
     }
 }
 
@@ -288,7 +291,8 @@ void glLightfv( GLenum light, GLenum pname,
     LOG_D("glLightfv(%s, %s, [...])", glEnumToString(light), glEnumToString(pname))
 
     if (!disableRecording) {
-        displayListManager.record<::glLightfv>(std::forward<GLenum>(light), std::forward<GLenum>(pname), std::forward<const GLfloat*>(params));
+        displayListManager.record<::glLightfv>(std::forward<GLenum>(light), std::forward<GLenum>(pname), std::forward<const GLfloat*>(
+                (GLfloat*) PointerUtils::copy_pointer(params, sizeof(GLfloat), PointerUtils::pname_to_count(pname))));
         if (DisplayListManager::shouldFinish())
             return;
     }
@@ -299,7 +303,7 @@ void glLightfv( GLenum light, GLenum pname,
         case GL_CONSTANT_ATTENUATION:
         case GL_LINEAR_ATTENUATION:
         case GL_QUADRATIC_ATTENUATION:
-            SELF_CALL(glLightf, light, pname, params[0]);
+            SELF_CALL(glLightf, light, pname, params[0])
             break;
 
         case GL_AMBIENT: {
@@ -338,7 +342,8 @@ void glLightiv( GLenum light, GLenum pname,
     LOG_D("glLightiv(%s, %s, [...])", glEnumToString(light), glEnumToString(pname))
 
     if (!disableRecording) {
-        displayListManager.record<::glLightiv>(std::forward<GLenum>(light), std::forward<GLenum>(pname), std::forward<const GLint*>(params));
+        displayListManager.record<::glLightiv>(std::forward<GLenum>(light), std::forward<GLenum>(pname), std::forward<const GLint*>(
+                (GLint*) PointerUtils::copy_pointer(params, sizeof(GLint), PointerUtils::pname_to_count(pname))));
         if (DisplayListManager::shouldFinish())
             return;
     }
@@ -355,13 +360,16 @@ void glLightiv( GLenum light, GLenum pname,
         case GL_AMBIENT:
         case GL_DIFFUSE:
         case GL_SPECULAR:
-        case GL_POSITION:
-        case GL_SPOT_DIRECTION: {
+        case GL_POSITION: {
             glm::vec4 vec = glm::make_vec4(params);
-            SELF_CALL(glLightfv, light, pname, glm::value_ptr(vec));
+            SELF_CALL(glLightfv, light, pname, glm::value_ptr(vec))
+        }
+        case GL_SPOT_DIRECTION: {
+            glm::vec3 vec = glm::make_vec3(params);
+            SELF_CALL(glLightfv, light, pname, glm::value_ptr(vec))
         }
         default:
-            LOG_D("ERROR: Invalid %s pname: %s", __func__, pname);
+            LOG_D("ERROR: Invalid %s pname: %s", __func__, pname)
     }
 }
 
@@ -379,9 +387,9 @@ void glLightModelf( GLenum pname, GLfloat param ) {
         case GL_LIGHT_MODEL_LOCAL_VIEWER:
         case GL_LIGHT_MODEL_COLOR_CONTROL:
         case GL_LIGHT_MODEL_TWO_SIDE:
-            SELF_CALL(glLightModeli, pname, (GLint)param);
+            SELF_CALL(glLightModeli, pname, (GLint)param)
         default:
-            LOG_D("ERROR: Invalid %s pname: %s", __func__, pname);
+            LOG_D("ERROR: Invalid %s pname: %s", __func__, pname)
     }
 }
 
@@ -406,7 +414,7 @@ void glLightModeli( GLenum pname, GLint param ) {
             g_glstate.fpe_state.light_model_two_side = param;
             break;
         default:
-            LOG_D("ERROR: Invalid %s pname: %s", __func__, pname);
+            LOG_D("ERROR: Invalid %s pname: %s", __func__, pname)
     }
 }
 
@@ -415,7 +423,8 @@ void glLightModelfv( GLenum pname, const GLfloat *params ) {
     LOG_D("glLightModelfv(%s, [...])", glEnumToString(pname))
 
     if (!disableRecording) {
-        displayListManager.record<::glLightModelfv>(std::forward<GLenum>(pname), std::forward<const GLfloat*>(params));
+        displayListManager.record<::glLightModelfv>(std::forward<GLenum>(pname), std::forward<const GLfloat*>(
+                (GLfloat*) PointerUtils::copy_pointer(params, sizeof(GLfloat), PointerUtils::pname_to_count(pname))));
         if (DisplayListManager::shouldFinish())
             return;
     }
@@ -430,7 +439,7 @@ void glLightModelfv( GLenum pname, const GLfloat *params ) {
             SELF_CALL(glLightModelf, pname, params[0]);
             break;
         default:
-            LOG_D("ERROR: Invalid %s pname: %s", __func__, pname);
+            LOG_D("ERROR: Invalid %s pname: %s", __func__, pname)
     }
 }
 
@@ -439,7 +448,8 @@ void glLightModeliv( GLenum pname, const GLint *params ) {
     LOG_D("glLightModeliv(%s, [...])", glEnumToString(pname))
 
     if (!disableRecording) {
-        displayListManager.record<::glLightModeliv>(std::forward<GLenum>(pname), std::forward<const GLint*>(params));
+        displayListManager.record<::glLightModeliv>(std::forward<GLenum>(pname), std::forward<const GLint*>(
+                (GLint*) PointerUtils::copy_pointer(params, sizeof(GLint), PointerUtils::pname_to_count(pname))));
         if (DisplayListManager::shouldFinish())
             return;
     }
@@ -447,7 +457,7 @@ void glLightModeliv( GLenum pname, const GLint *params ) {
     switch (pname) {
         case GL_LIGHT_MODEL_AMBIENT: {
             glm::vec4 v = glm::make_vec4(params);
-            SELF_CALL(glLightModelfv, pname, glm::value_ptr(v));
+            SELF_CALL(glLightModelfv, pname, glm::value_ptr(v))
             break;
         }
         case GL_LIGHT_MODEL_COLOR_CONTROL:
@@ -456,7 +466,7 @@ void glLightModeliv( GLenum pname, const GLint *params ) {
             SELF_CALL(glLightModeli, pname, params[0]);
             break;
         default:
-            LOG_D("ERROR: Invalid %s pname: %s", __func__, pname);
+            LOG_D("ERROR: Invalid %s pname: %s", __func__, pname)
     }
 }
 

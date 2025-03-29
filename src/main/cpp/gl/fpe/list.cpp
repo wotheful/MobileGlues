@@ -3,13 +3,8 @@
 //
 
 #include "list.h"
+#include "pointer_utils.h"
 #include "../log.h"
-
-#include <unordered_map>
-#include <vector>
-#include <memory>
-#include <cstdint>
-#include <type_traits>
 
 #define DEBUG 0
 
@@ -61,8 +56,8 @@ void glCallLists(GLsizei n, GLenum type, const GLvoid* lists) {
     LOG()
     LOG_D("glCallLists(%i, %s, %p)", n, glEnumToString(type), lists)
 
-    // Todo: pointer should specifically handled
-    displayListManager.record<::glCallLists>(std::forward<GLsizei>(n), std::forward<GLenum>(type), std::forward<const GLvoid*>(lists));
+    displayListManager.record<::glCallLists>(std::forward<GLsizei>(n), std::forward<GLenum>(type), std::forward<const GLvoid*>(
+            (GLvoid*) PointerUtils::copy_pointer(lists, PointerUtils::type_to_bytes(type), n)));
     if (DisplayListManager::isRecording())
         return;
 

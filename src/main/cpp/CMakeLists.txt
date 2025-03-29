@@ -58,6 +58,7 @@ add_library(${CMAKE_PROJECT_NAME} SHARED
         gl/fpe/vertexpointer.cpp
         gl/fpe/fpe_shadergen.cpp
         gl/fpe/list.cpp
+        gl/fpe/pointer_utils.cpp
 )
 
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE ./includes ./glm)

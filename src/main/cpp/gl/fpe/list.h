@@ -12,7 +12,6 @@
 #include <memory>
 #include <tuple>
 #include <unordered_map>
-#include <GLES2/gl2.h>
 
 #define DEBUG 0
 
