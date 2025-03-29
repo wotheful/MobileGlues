@@ -66,13 +66,11 @@ class DisplayListManager {
 
     template<auto Func, typename... Args>
     void recordImpl(Args&&... args) {
-        if (currentListID != 0) {
-            lists[currentListID].emplace_back(
-                    std::make_unique<GLFuncCmd<Func, Args...>>(
-                            std::forward<Args>(args)...
-                    )
-            );
-        }
+        lists[currentListID].emplace_back(
+                std::make_unique<GLFuncCmd<Func, Args...>>(
+                        std::forward<Args>(args)...
+                )
+        );
     }
 
 public:
@@ -112,14 +110,17 @@ public:
         return currentListID != 0 ? 1 : 0;
     }
 
+    static int shouldRecord() {
+        return !calling && currentListID != 0;
+    }
+
     static int shouldFinish() {
         return (currentListID != 0 && listMode == GL_COMPILE) ? 1 : 0;
     }
 
     template<auto Func, typename... Args>
     void record(Args&&... args) {
-        if (!calling)
-            recordImpl<Func>(std::forward<Args>(args)...);
+        recordImpl<Func>(std::forward<Args>(args)...);
     }
 
     static void callList(GLuint listID) {
