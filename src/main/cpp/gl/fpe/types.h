@@ -11,6 +11,7 @@
 #include "defines.h"
 #include <glm/glm.hpp>
 #include <unordered_map>
+#include <vector>
 #include "fpe_shadergen.h"
 
 struct transformation_t {
