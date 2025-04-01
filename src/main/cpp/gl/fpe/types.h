@@ -12,6 +12,7 @@
 #include <glm/glm.hpp>
 #include <unordered_map>
 #include <vector>
+#include <sstream>
 #include "fpe_shadergen.h"
 
 struct transformation_t {
@@ -91,7 +92,7 @@ struct fixed_function_state_t {
 
     std::vector<uint32_t> fpe_ib;
 
-    std::vector<uint8_t> fpe_vb;
+    std::stringstream fpe_vb;
 
     struct vertex_pointer_array_t vertexpointer_array;
     struct fixed_function_bool_t fpe_bools;
