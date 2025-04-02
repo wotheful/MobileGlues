@@ -25,6 +25,18 @@ void populate_vertex_pointer(GLenum array) {
             };
             va.stride += 4 * sizeof(GLfloat);
             break;
+        case GL_NORMAL_ARRAY:
+            va.attributes[vp2idx(GL_NORMAL_ARRAY)] = {
+                    .size = 4,
+                    .usage = GL_NORMAL_ARRAY,
+                    .type = GL_FLOAT,
+                    .normalized = GL_FALSE,
+                    .stride = 0,
+                    .pointer = 0,
+                    .varies = true
+            };
+            va.stride += 4 * sizeof(GLfloat);
+            break;
         case GL_TEXTURE_COORD_ARRAY:
             va.attributes[vp2idx(GL_TEXTURE_COORD_ARRAY)] = {
                     .size = 4,
@@ -45,6 +57,12 @@ void glBegin( GLenum mode ) {
     LOG()
     LOG_D("glBegin(%s)", glEnumToString(mode))
 
+    if (!disableRecording && DisplayListManager::shouldRecord()) {
+        displayListManager.record<glBegin>({}, mode);
+        if (DisplayListManager::shouldFinish())
+            return;
+    }
+
 //    if (!fpe_inited) {
 //        if (init_fpe() != 0)
 //            abort();
@@ -64,6 +82,13 @@ void glBegin( GLenum mode ) {
 
 void glEnd() {
     LOG()
+    LOG_D("glEnd()")
+
+    if (!disableRecording && DisplayListManager::shouldRecord()) {
+        displayListManager.record<glEnd>({});
+        if (DisplayListManager::shouldFinish())
+            return;
+    }
 
     INIT_CHECK_GL_ERROR
 
@@ -174,13 +199,50 @@ void glEnd() {
     vb.clear();
 }
 
+void glNormal3f( GLfloat nx, GLfloat ny, GLfloat nz ) {
+    LOG()
+    LOG_D("glNormal3f(%.2f, %.2f, %.2f)", nx, ny, nz)
+
+    if (!disableRecording && DisplayListManager::shouldRecord()) {
+        displayListManager.record<glNormal3f>({}, nx, ny, nz);
+        if (DisplayListManager::shouldFinish())
+            return;
+    }
+
+    auto& state = g_glstate.fpe_draw;
+    auto& va = g_glstate.fpe_state.vertexpointer_array;
+
+    state.normal = glm::vec3(nx, ny, nz);
+    auto mask = vp_mask(GL_NORMAL_ARRAY);
+    auto index = vp2idx(GL_NORMAL_ARRAY);
+    if (!(va.enabled_pointers & mask)) {
+        va.enabled_pointers |= mask;
+        populate_vertex_pointer(GL_NORMAL_ARRAY);
+    }
+}
+
 void glTexCoord2f( GLfloat s, GLfloat t ) {
-    glTexCoord4f(s, t, 0, 1);
+    LOG()
+    LOG_D("glTexCoord2f(%.2f, %.2f)", s, t)
+
+    if (!disableRecording && DisplayListManager::shouldRecord()) {
+        displayListManager.record<glTexCoord2f>({}, s, t);
+        if (DisplayListManager::shouldFinish())
+            return;
+    }
+
+    SELF_CALL(glTexCoord4f, s, t, 0, 1);
 }
 
 void glTexCoord4f( GLfloat s, GLfloat t, GLfloat r, GLfloat q ) {
     LOG()
     LOG_D("glTexCoord4f(%.2f, %.2f, %.2f, %.2f)", s, t, r, q)
+
+    if (!disableRecording && DisplayListManager::shouldRecord()) {
+        displayListManager.record<glTexCoord4f>({}, s, t, r, q);
+        if (DisplayListManager::shouldFinish())
+            return;
+    }
 
     auto& state = g_glstate.fpe_draw;
     auto& va = g_glstate.fpe_state.vertexpointer_array;
@@ -194,17 +256,64 @@ void glTexCoord4f( GLfloat s, GLfloat t, GLfloat r, GLfloat q ) {
     }
 }
 
+void glMultiTexCoord2f( GLenum target, GLfloat s, GLfloat t ) {
+    LOG()
+    LOG_D("glMultiTexCoord2f(%s, %.2f, %.2f)", glEnumToString(target), s, t)
+
+    if (!disableRecording && DisplayListManager::shouldRecord()) {
+        displayListManager.record<glMultiTexCoord2f>({}, target, s, t);
+        if (DisplayListManager::shouldFinish())
+            return;
+    }
+
+    SELF_CALL(glMultiTexCoord4f, target, s, t, 0, 1);
+}
+
+// Todo: target - GL_TEXTURE0
+void glMultiTexCoord4f( GLenum target, GLfloat s, GLfloat t, GLfloat r, GLfloat q ) {
+    LOG()
+    LOG_D("glMultiTexCoord4f(%s, %.2f, %.2f, %.2f, %.2f)", glEnumToString(target), s, t, r, q)
+
+    if (!disableRecording && DisplayListManager::shouldRecord()) {
+        displayListManager.record<glMultiTexCoord4f>({}, target, s, t, r, q);
+        if (DisplayListManager::shouldFinish())
+            return;
+    }
+
+    auto& state = g_glstate.fpe_draw;
+    auto& va = g_glstate.fpe_state.vertexpointer_array;
+
+    state.texcoord[target - GL_TEXTURE0] = glm::vec4(s, t, r, q);
+    auto mask = vp_mask(GL_TEXTURE_COORD_ARRAY);
+    auto index = vp2idx(GL_TEXTURE_COORD_ARRAY);
+    if (!(va.enabled_pointers & mask)) {
+        va.enabled_pointers |= mask;
+        populate_vertex_pointer(GL_TEXTURE_COORD_ARRAY);
+    }
+}
 
 void glVertex3f( GLfloat x, GLfloat y, GLfloat z ) {
     LOG()
     LOG_D("glVertex3f(%.2f, %.2f, %.2f)", x, y, z)
 
-    glVertex4f(x, y, z, 1.f);
+    if (!disableRecording && DisplayListManager::shouldRecord()) {
+        displayListManager.record<glVertex3f>({}, x, y, z);
+        if (DisplayListManager::shouldFinish())
+            return;
+    }
+
+    SELF_CALL(glVertex4f, x, y, z, 1.f);
 }
 
 void glVertex4f( GLfloat x, GLfloat y, GLfloat z, GLfloat w ) {
     LOG()
     LOG_D("glVertex4f(%.2f, %.2f, %.2f, %.2f)", x, y, z, w)
+
+    if (!disableRecording && DisplayListManager::shouldRecord()) {
+        displayListManager.record<glVertex4f>({}, x, y, z, w);
+        if (DisplayListManager::shouldFinish())
+            return;
+    }
 
     auto& drawstate = g_glstate.fpe_draw;
 
@@ -249,6 +358,19 @@ void glVertex4f( GLfloat x, GLfloat y, GLfloat z, GLfloat w ) {
             }
         }
     }
+}
+
+void glColor3f( GLfloat red, GLfloat green, GLfloat blue ) {
+    LOG()
+    LOG_D("glColor3f(%f, %f, %f)", red, green, blue)
+
+    if (!disableRecording && DisplayListManager::shouldRecord()) {
+        displayListManager.record<glColor3f>({}, red, green, blue);
+        if (DisplayListManager::shouldFinish())
+            return;
+    }
+
+    SELF_CALL(glColor4f, red, green, blue, 1)
 }
 
 void glColor4f( GLfloat red, GLfloat green,

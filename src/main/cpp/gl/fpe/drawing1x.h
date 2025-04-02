@@ -155,6 +155,47 @@ GLAPI void GLAPIENTRY glTexCoord4iv( const GLint *v );
 GLAPI void GLAPIENTRY glTexCoord4sv( const GLshort *v );
 
 
+GLAPI void GLAPIENTRY glMultiTexCoord1d( GLenum target, GLdouble s );
+GLAPI void GLAPIENTRY glMultiTexCoord1f( GLenum target, GLfloat s );
+GLAPI void GLAPIENTRY glMultiTexCoord1i( GLenum target, GLint s );
+GLAPI void GLAPIENTRY glMultiTexCoord1s( GLenum target, GLshort s );
+
+GLAPI void GLAPIENTRY glMultiTexCoord2d( GLenum target, GLdouble s, GLdouble t );
+GLAPI void GLAPIENTRY glMultiTexCoord2f( GLenum target, GLfloat s, GLfloat t );
+GLAPI void GLAPIENTRY glMultiTexCoord2i( GLenum target, GLint s, GLint t );
+GLAPI void GLAPIENTRY glMultiTexCoord2s( GLenum target, GLshort s, GLshort t );
+
+GLAPI void GLAPIENTRY glMultiTexCoord3d( GLenum target, GLdouble s, GLdouble t, GLdouble r );
+GLAPI void GLAPIENTRY glMultiTexCoord3f( GLenum target, GLfloat s, GLfloat t, GLfloat r );
+GLAPI void GLAPIENTRY glMultiTexCoord3i( GLenum target, GLint s, GLint t, GLint r );
+GLAPI void GLAPIENTRY glMultiTexCoord3s( GLenum target, GLshort s, GLshort t, GLshort r );
+
+GLAPI void GLAPIENTRY glMultiTexCoord4d( GLenum target, GLdouble s, GLdouble t, GLdouble r, GLdouble q );
+GLAPI void GLAPIENTRY glMultiTexCoord4f( GLenum target, GLfloat s, GLfloat t, GLfloat r, GLfloat q );
+GLAPI void GLAPIENTRY glMultiTexCoord4i( GLenum target, GLint s, GLint t, GLint r, GLint q );
+GLAPI void GLAPIENTRY glMultiTexCoord4s( GLenum target, GLshort s, GLshort t, GLshort r, GLshort q );
+
+GLAPI void GLAPIENTRY glMultiTexCoord1dv( GLenum target, const GLdouble *v );
+GLAPI void GLAPIENTRY glMultiTexCoord1fv( GLenum target, const GLfloat *v );
+GLAPI void GLAPIENTRY glMultiTexCoord1iv( GLenum target, const GLint *v );
+GLAPI void GLAPIENTRY glMultiTexCoord1sv( GLenum target, const GLshort *v );
+
+GLAPI void GLAPIENTRY glMultiTexCoord2dv( GLenum target, const GLdouble *v );
+GLAPI void GLAPIENTRY glMultiTexCoord2fv( GLenum target, const GLfloat *v );
+GLAPI void GLAPIENTRY glMultiTexCoord2iv( GLenum target, const GLint *v );
+GLAPI void GLAPIENTRY glMultiTexCoord2sv( GLenum target, const GLshort *v );
+
+GLAPI void GLAPIENTRY glMultiTexCoord3dv( GLenum target, const GLdouble *v );
+GLAPI void GLAPIENTRY glMultiTexCoord3fv( GLenum target, const GLfloat *v );
+GLAPI void GLAPIENTRY glMultiTexCoord3iv( GLenum target, const GLint *v );
+GLAPI void GLAPIENTRY glMultiTexCoord3sv( GLenum target, const GLshort *v );
+
+GLAPI void GLAPIENTRY glMultiTexCoord4dv( GLenum target, const GLdouble *v );
+GLAPI void GLAPIENTRY glMultiTexCoord4fv( GLenum target, const GLfloat *v );
+GLAPI void GLAPIENTRY glMultiTexCoord4iv( GLenum target, const GLint *v );
+GLAPI void GLAPIENTRY glMultiTexCoord4sv( GLenum target, const GLshort *v );
+
+
 GLAPI void GLAPIENTRY glRasterPos2d( GLdouble x, GLdouble y );
 GLAPI void GLAPIENTRY glRasterPos2f( GLfloat x, GLfloat y );
 GLAPI void GLAPIENTRY glRasterPos2i( GLint x, GLint y );
