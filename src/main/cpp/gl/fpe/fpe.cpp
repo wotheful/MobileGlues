@@ -380,5 +380,36 @@ int commit_fpe_state_on_draw(GLenum* mode, GLint* first, GLsizei* count) {
         CHECK_GL_ERROR_NO_INIT
     }
 
+    //update_fpe_uniforms(prog_id);
+
     return ret;
+}
+
+int update_fpe_uniforms(GLuint prog_id) {
+    INIT_CHECK_GL_ERROR
+    const auto& mv = g_glstate.fpe_uniform.transformation.matrices[matrix_idx(GL_MODELVIEW)];
+    const auto& proj = g_glstate.fpe_uniform.transformation.matrices[matrix_idx(GL_PROJECTION)];
+
+//    LOG_D("GL_MODELVIEW: ")
+//    print_matrix(mv);
+//    LOG_D("GL_PROJECTION: ")
+//    print_matrix(proj);
+
+    // TODO: detect change and only set dirty bits here
+    GLES.glBindVertexArray(g_glstate.fpe_state.fpe_vao);
+    CHECK_GL_ERROR_NO_INIT
+    GLint mvmat = GLES.glGetUniformLocation(prog_id, "ModelViewMat");
+    CHECK_GL_ERROR_NO_INIT
+//    GLint projmat = GLES.glGetUniformLocation(prog_id, "ProjMat");
+//    CHECK_GL_ERROR_NO_INIT
+    GLint mat_id = GLES.glGetUniformLocation(prog_id, "ModelViewProjMat");
+    CHECK_GL_ERROR_NO_INIT
+    const auto mat = proj * mv;
+    GLES.glUniformMatrix4fv(mvmat, 1, GL_FALSE, glm::value_ptr(g_glstate.fpe_uniform.transformation.matrices[matrix_idx(GL_MODELVIEW)]));
+    CHECK_GL_ERROR_NO_INIT
+//    GLES.glUniformMatrix4fv(projmat, 1, GL_FALSE, glm::value_ptr(g_glstate.fpe_uniform.transformation.matrices[matrix_idx(GL_PROJECTION)]));
+//    CHECK_GL_ERROR_NO_INIT
+    GLES.glUniformMatrix4fv(mat_id, 1, GL_FALSE, glm::value_ptr(mat));
+    CHECK_GL_ERROR_NO_INIT
+    GLES.glUniform1i(GLES.glGetUniformLocation(prog_id, "Sampler0"), 0);
 }

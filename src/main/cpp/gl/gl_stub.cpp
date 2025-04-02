@@ -95,7 +95,7 @@ STUB_FUNCTION_HEAD(void, glVertex3d, GLdouble x, GLdouble y, GLdouble z ) STUB_F
 STUB_FUNCTION_HEAD(void, glVertex3i, GLint x, GLint y, GLint z ) STUB_FUNCTION_END_NO_RETURN(void, glVertex3i,x,y,z)
 STUB_FUNCTION_HEAD(void, glVertex3s, GLshort x, GLshort y, GLshort z ) STUB_FUNCTION_END_NO_RETURN(void, glVertex3s,x,y,z)
 STUB_FUNCTION_HEAD(void, glVertex4d, GLdouble x, GLdouble y, GLdouble z, GLdouble w ) STUB_FUNCTION_END_NO_RETURN(void, glVertex4d,x,y,z,w)
-STUB_FUNCTION_HEAD(void, glVertex4f, GLfloat x, GLfloat y, GLfloat z, GLfloat w ) STUB_FUNCTION_END_NO_RETURN(void, glVertex4f,x,y,z,w)
+//STUB_FUNCTION_HEAD(void, glVertex4f, GLfloat x, GLfloat y, GLfloat z, GLfloat w ) STUB_FUNCTION_END_NO_RETURN(void, glVertex4f,x,y,z,w)
 STUB_FUNCTION_HEAD(void, glVertex4i, GLint x, GLint y, GLint z, GLint w ) STUB_FUNCTION_END_NO_RETURN(void, glVertex4i,x,y,z,w)
 STUB_FUNCTION_HEAD(void, glVertex4s, GLshort x, GLshort y, GLshort z, GLshort w ) STUB_FUNCTION_END_NO_RETURN(void, glVertex4s,x,y,z,w)
 STUB_FUNCTION_HEAD(void, glVertex2dv, const GLdouble *v ) STUB_FUNCTION_END_NO_RETURN(void, glVertex2dv,v)

@@ -67,6 +67,13 @@ struct fixed_function_draw_state_t {
     glm::vec3 normal = {0, 0, 1};
     glm::vec4 color = {1, 1, 1, 1};
     glm::vec4 texcoord[MAX_TEX];
+
+    size_t vertex_count = 0;
+
+    inline void reset() {
+        primitive = GL_NONE;
+        vertex_count = 0;
+    }
 };
 
 struct fixed_function_state_t {
