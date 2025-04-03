@@ -277,7 +277,8 @@ int commit_fpe_state_on_draw(GLenum* mode, GLint* first, GLsizei* count) {
             }
             else {
                 GLES.glDisableVertexAttribArray(i);
-                CHECK_GL_ERROR_NO_INIT
+                CLEAR_GL_ERROR_NO_INIT
+                //CHECK_GL_ERROR_NO_INIT
             }
         }
     }
@@ -381,7 +382,6 @@ int commit_fpe_state_on_draw(GLenum* mode, GLint* first, GLsizei* count) {
     }
 
     //update_fpe_uniforms(prog_id);
-
     return ret;
 }
 

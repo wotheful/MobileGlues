@@ -11,6 +11,9 @@
 #include "state.h"
 #include "vertexpointer.h"
 
+#define GET_PREV_PROGRAM GLint m_prev_program; GLES.glGetIntegerv(GL_CURRENT_PROGRAM, &m_prev_program);
+#define SET_PREV_PROGRAM if (m_prev_program) GLES.glUseProgram(m_prev_program);
+
 #define g_glstate glstate_t::get_instance()
 
 extern bool fpe_inited;

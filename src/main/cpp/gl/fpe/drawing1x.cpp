@@ -100,7 +100,9 @@ void glEnd() {
         LOG_E("glEnd() without effect: already ended");
         return;
     }
-
+    
+    GET_PREV_PROGRAM
+    
     // actual assembly work, and draw!
     {
         // Program
@@ -193,6 +195,8 @@ void glEnd() {
         CHECK_GL_ERROR_NO_INIT
     }
 
+    SET_PREV_PROGRAM
+    
     // resetting draw state
     s.reset();
     va.enabled_pointers = 0;
