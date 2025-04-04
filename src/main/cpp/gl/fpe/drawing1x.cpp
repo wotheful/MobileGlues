@@ -2,7 +2,7 @@
 // Created by Swung 0x48 on 2025/4/1.
 //
 
-#include <glm/gtc/type_ptr.hpp>
+#include <glm/glm/gtc/type_ptr.hpp>
 #include "drawing1x.h"
 #include "fpe.hpp"
 #include "list.h"
