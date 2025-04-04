@@ -4,19 +4,24 @@
 
 #include "buffer.h"
 #include <unordered_map>
+#include "ankerl/unordered_dense.h"
+
+template <typename K, typename V>
+using unordered_map = ankerl::unordered_dense::map<K, V>;
+//using unordered_map = std::unordered_map<K, V>;
 
 #define DEBUG 0
 
 GLint maxBufferId = 0;
 GLint maxArrayId = 0;
 
-std::unordered_map<GLuint, GLuint> g_gen_buffers;
-std::unordered_map<GLuint, GLuint> g_gen_arrays;
+unordered_map<GLuint, GLuint> g_gen_buffers;
+unordered_map<GLuint, GLuint> g_gen_arrays;
 
-std::unordered_map<GLenum, GLuint> g_bound_buffers;
+unordered_map<GLenum, GLuint> g_bound_buffers;
 GLuint bound_array = 0;
 
-std::unordered_map<GLuint, BufferMapping> g_active_mappings;
+unordered_map<GLuint, BufferMapping> g_active_mappings;
 
 GLuint gen_buffer() {
     maxBufferId++;
