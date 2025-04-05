@@ -48,6 +48,8 @@ GLAPI GLAPIENTRY void mg_glMultiDrawElements_drawelements(GLenum mode, const GLs
 
 GLAPI GLAPIENTRY void glMultiDrawElements(GLenum mode, const GLsizei *count, GLenum type, const void *const *indices, GLsizei primcount);
 
+GLAPI GLAPIENTRY void glDrawArrays(GLenum mode, GLint first, GLsizei count);
+
 GLAPI GLAPIENTRY void glDrawElements(GLenum mode, GLsizei count, GLenum type, const void* indices);
 
 GLAPI GLAPIENTRY void glBindImageTexture(GLuint unit, GLuint texture, GLint level, GLboolean layered, GLint layer, GLenum access, GLenum format);
