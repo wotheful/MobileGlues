@@ -4,7 +4,7 @@
 
 #include "vertexattrib.h"
 
-#define DEBUG 0
+#define DEBUG 1
 
 void glVertexAttribI1ui(GLuint index, GLuint x) {
     LOG()
