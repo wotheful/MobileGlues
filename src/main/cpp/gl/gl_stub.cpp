@@ -3,6 +3,7 @@
 //
 #include "../includes.h"
 #include "gl.h"
+#include "glext.h"
 #include "log.h"
 #include "../gles/loader.h"
 #include "mg.h"
