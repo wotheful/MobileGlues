@@ -132,7 +132,7 @@ void glDrawBuffer(GLenum buffer) {
                    buffer < GL_COLOR_ATTACHMENT0 + static_cast<GLenum>(maxAttachments)) {
             auto *buffers = (GLenum *)alloca(maxAttachments * sizeof(GLenum));
             for (int i = 0; i < maxAttachments; i++) {
-                buffers[i] = (i == static_cast<GLenum>(buffer - GL_COLOR_ATTACHMENT0)) ? buffer : GL_NONE;
+                buffers[i] = (i == buffer - GL_COLOR_ATTACHMENT0) ? buffer : GL_NONE;
             }
             GLES.glDrawBuffers(maxAttachments, buffers);
         }
