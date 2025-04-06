@@ -152,7 +152,7 @@ void internal_convert(GLenum* internal_format, GLenum* type, GLenum* format) {
             if (format)
                 *format = GL_RGBA;
             break;
-            
+
         case GL_RGBA16F:
         case GL_R16F:
             if(type)
@@ -172,7 +172,7 @@ void internal_convert(GLenum* internal_format, GLenum* type, GLenum* format) {
             if(format)
                 *format = GL_RGB;
             break;
-            
+
         case GL_RGB16F:
             if(type)
                 *type = GL_HALF_FLOAT;
@@ -216,7 +216,7 @@ void internal_convert(GLenum* internal_format, GLenum* type, GLenum* format) {
                     *format = GL_RGB;
             }
             else if (type && *internal_format == GL_RGBA16_SNORM && *type != GL_SHORT) {
-                *type = GL_SHORT; 
+                *type = GL_SHORT;
             }
             break;
     }
@@ -297,10 +297,10 @@ void glTexImage2D(GLenum target, GLint level,GLint internalFormat,GLsizei width,
     auto& tex = g_textures[bound_texture];
     tex.internal_format = internalFormat;
     GLenum transfer_format = format;
-//    tex.format = format;
-    LOG_D("mg_glTexImage2D,target: %s,level: %d,internalFormat: %s->%s,width: %d,height: %d,border: %d,format: %s,type: %s, pixels: 0x%x",
-          glEnumToString(target),level,glEnumToString(internalFormat),glEnumToString(internalFormat),
-          width,height,border,glEnumToString(format),glEnumToString(type), pixels)
+    GLenum transfer_type = type;
+    LOG_D("mg_glTexImage2D, target: %s, level: %d, internalFormat: %s->%s, width: %d, height: %d, border: %d, format: %s, type: %s, pixels: 0x%x",
+          glEnumToString(target), level, glEnumToString(internalFormat), glEnumToString(internalFormat),
+          width, height, border, glEnumToString(format), glEnumToString(type), pixels)
     internal_convert(reinterpret_cast<GLenum *>(&internalFormat), &type, &format);
     LOG_D("GLES.glTexImage2D,target: %s,level: %d,internalFormat: %s->%s,width: %d,height: %d,border: %d,format: %s,type: %s, pixels: 0x%x",
           glEnumToString(target),level,glEnumToString(internalFormat),glEnumToString(internalFormat),
@@ -339,6 +339,38 @@ void glTexImage2D(GLenum target, GLint level,GLint internalFormat,GLsizei width,
         GLES.glTexParameteri(target, GL_TEXTURE_SWIZZLE_G, tex.swizzle_param[1]);
         GLES.glTexParameteri(target, GL_TEXTURE_SWIZZLE_B, tex.swizzle_param[2]);
         GLES.glTexParameteri(target, GL_TEXTURE_SWIZZLE_A, tex.swizzle_param[3]);
+        CHECK_GL_ERROR
+    }
+
+    // Fix for 1.12
+    if (transfer_format == GL_BGRA && tex.format != transfer_format
+        && transfer_type == GL_UNSIGNED_INT_8_8_8_8_REV)
+    {
+        LOG_D("Detected GL_BGRA/GL_UNSIGNED_INT_8_8_8_8_REV format @ tex = %d, do swizzle", bound_texture)
+        internalFormat = GL_BGRA;
+        format = GL_BGRA;
+        type = GL_UNSIGNED_BYTE;
+//        if (tex.swizzle_param[0] == 0) {
+//            tex.swizzle_param[0] = GL_RED;
+//            tex.swizzle_param[1] = GL_GREEN;
+//            tex.swizzle_param[2] = GL_BLUE;
+//            tex.swizzle_param[3] = GL_ALPHA;
+//        }
+//
+//        GLint r = tex.swizzle_param[0];
+//        GLint g = tex.swizzle_param[1];
+//        GLint b = tex.swizzle_param[2];
+//        GLint a = tex.swizzle_param[3];
+//        tex.swizzle_param[0] = b;
+//        tex.swizzle_param[1] = g;
+//        tex.swizzle_param[2] = r;
+//        tex.swizzle_param[3] = a;
+//        tex.format = transfer_format;
+//
+//        GLES.glTexParameteri(target, GL_TEXTURE_SWIZZLE_R, tex.swizzle_param[0]);
+//        GLES.glTexParameteri(target, GL_TEXTURE_SWIZZLE_G, tex.swizzle_param[1]);
+//        GLES.glTexParameteri(target, GL_TEXTURE_SWIZZLE_B, tex.swizzle_param[2]);
+//        GLES.glTexParameteri(target, GL_TEXTURE_SWIZZLE_A, tex.swizzle_param[3]);
         CHECK_GL_ERROR
     }
 
@@ -680,9 +712,11 @@ void glTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, G
             glEnumToString(target), level, xoffset, yoffset, width, height, glEnumToString(format),
           glEnumToString(type), pixels)
 
-          // TODO: fix BGRA little endian here
-    if (format == GL_BGRA && (type == GL_UNSIGNED_INT_8_8_8_8 || type == GL_UNSIGNED_INT_8_8_8_8_REV)) {
+    if (format == GL_BGRA && (type == GL_UNSIGNED_INT_8_8_8_8)) {
         format = GL_RGBA;
+        type = GL_UNSIGNED_BYTE;
+    }
+    if (format == GL_BGRA && type == GL_UNSIGNED_INT_8_8_8_8_REV) {
         type = GL_UNSIGNED_BYTE;
     }
 
