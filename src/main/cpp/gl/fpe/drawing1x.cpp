@@ -6,6 +6,7 @@
 #include "drawing1x.h"
 #include "fpe.hpp"
 #include "list.h"
+#include <bit>
 
 #define DEBUG 0
 
@@ -23,7 +24,6 @@ void populate_vertex_pointer(GLenum array) {
                     .pointer = 0,
                     .varies = true
             };
-            va.stride += 4 * sizeof(GLfloat);
             break;
         case GL_NORMAL_ARRAY:
             va.attributes[vp2idx(GL_NORMAL_ARRAY)] = {
@@ -35,7 +35,6 @@ void populate_vertex_pointer(GLenum array) {
                     .pointer = 0,
                     .varies = true
             };
-            va.stride += 4 * sizeof(GLfloat);
             break;
         case GL_TEXTURE_COORD_ARRAY:
             va.attributes[vp2idx(GL_TEXTURE_COORD_ARRAY)] = {
@@ -47,7 +46,6 @@ void populate_vertex_pointer(GLenum array) {
                     .pointer = 0,
                     .varies = true
             };
-            va.stride += 4 * sizeof(GLfloat);
             break;
     }
     g_glstate.fpe_state.vertexpointer_array.dirty = true;
@@ -135,6 +133,9 @@ void glEnd() {
         if (va.dirty) {
             va.dirty = false;
 
+            auto enabled_vp_cnt = std::popcount(va.enabled_pointers);
+            va.stride = enabled_vp_cnt * 4 * sizeof(GLfloat); // assuming all of them are vec4
+
             size_t offset = 0;
             for (int i = 0; i < VERTEX_POINTER_COUNT; ++i) {
                 bool enabled = ((va.enabled_pointers >> i) & 1);
@@ -149,8 +150,8 @@ void glEnd() {
                     GLES.glEnableVertexAttribArray(i);
                     CHECK_GL_ERROR_NO_INIT
 
-                    LOG_D("attrib #%d: type = %s, size = %d, stride = %d, usage = %s, ptr = 0x%x",
-                          i, glEnumToString(vp.type), vp.size, vp.stride, glEnumToString(vp.usage))
+                    LOG_D("attrib #%d: type = %s, size = %d, stride = %d, usage = %s, ptr = %p",
+                          i, glEnumToString(vp.type), vp.size, vp.stride, glEnumToString(vp.usage), offset)
 
                     offset += (vp.size * type_size(vp.type));
                 }
