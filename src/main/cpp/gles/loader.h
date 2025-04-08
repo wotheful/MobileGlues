@@ -123,16 +123,16 @@ extern "C" GLAPI GLAPIENTRY type name(__VA_ARGS__)  { \
 }
 #endif
 
-#define STUB_FUNCTION_HEAD(type,name,...)                                   \
+__attribute__((visibility("default"))) #define STUB_FUNCTION_HEAD(type,name,...)                                   \
 extern "C" GLAPI GLAPIENTRY type name(__VA_ARGS__) { \
     LOG()
 
-#define STUB_FUNCTION_END(type,name,...)                                    \
+__attribute__((visibility("default"))) #define STUB_FUNCTION_END(type,name,...)                                    \
     LOG_W("Stub function: %s @ %s(...)", RENDERERNAME, __FUNCTION__);       \
     return (type)0;                                                         \
 }
 
-#define STUB_FUNCTION_END_NO_RETURN(type,name,...)                          \
+__attribute__((visibility("default"))) #define STUB_FUNCTION_END_NO_RETURN(type,name,...)                          \
     LOG_W("Stub function: %s @ %s(...)", RENDERERNAME, __FUNCTION__);       \
 }
 
