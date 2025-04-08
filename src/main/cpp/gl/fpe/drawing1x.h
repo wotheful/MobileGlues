@@ -6,6 +6,57 @@
 #define MOBILEGLUES_VERTEXDATA_H
 
 #include "types.h"
+#include "fpe.hpp"
+
+// a bit bad for perf, but keep this for now...
+template <typename Type, GLint N>
+void mglNormal(std::array<Type, N> normal) {
+    auto& state = g_glstate.fpe_draw;
+    auto& cur = state.current_data.normal;
+    // let's hope this vectorizes well...
+    for (auto i = 0; i < N; ++i) {
+        glm::value_ptr(cur)[i] = (GLfloat)normal[i];
+    }
+    state.current_data.sizes.normal_size = N;
+}
+
+template <typename Type, GLint N>
+void mglTexCoord(std::array<Type, N> uv, GLint texid) {
+    auto& state = g_glstate.fpe_draw;
+    auto& cur = state.current_data.texcoord[texid];
+    // let's hope this vectorizes well...
+    for (auto i = 0; i < N; ++i) {
+        glm::value_ptr(cur)[i] = (GLfloat)uv[i];
+    }
+    state.current_data.sizes.texcoord_size[texid] = N;
+}
+
+template <typename Type, GLint N>
+void mglColor(std::array<Type, N> color) {
+    auto& state = g_glstate.fpe_draw;
+    auto& cur = state.current_data.color;
+    // let's hope this vectorizes well...
+    for (auto i = 0; i < N; ++i) {
+        glm::value_ptr(cur)[i] = (GLfloat)color[i];
+    }
+    state.current_data.sizes.color_size = N;
+}
+
+template <typename Type, GLint N>
+void mglVertex(std::array<Type, N> vertex) {
+    assert(g_glstate.fpe_draw.primitive != GL_NONE);
+
+    auto& state = g_glstate.fpe_draw;
+    auto& cur = state.current_data.vertex;
+    // let's hope this vectorizes well...
+    for (auto i = 0; i < N; ++i) {
+        glm::value_ptr(cur)[i] = (GLfloat)vertex[i];
+    }
+    state.current_data.sizes.vertex_size = N;
+
+    // let's collect one vertex here!
+    state.advance();
+}
 
 GLAPI void GLAPIENTRY glBegin( GLenum mode );
 

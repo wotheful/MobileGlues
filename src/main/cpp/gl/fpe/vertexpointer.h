@@ -2,18 +2,15 @@
 // Created by Swung 0x48 on 2025/2/10.
 //
 
-#ifndef FOLD_CRAFT_LAUNCHER_VERTEXPOINTER_H
-#define FOLD_CRAFT_LAUNCHER_VERTEXPOINTER_H
+#ifndef MOBILEGLUES_VERTEXPOINTER_H
+#define MOBILEGLUES_VERTEXPOINTER_H
 
 #include "../gl.h"
 #include "../gles/loader.h"
 #include "../gl/log.h"
 #include "types.h"
 #include "fpe.hpp"
-
-int vp2idx(GLenum vp);
-uint32_t vp_mask(GLenum vp);
-GLenum idx2vp(int idx);
+#include "vertexpointer_utils.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -35,4 +32,4 @@ GLAPI GLAPIENTRY void glDisableClientState(GLenum cap);
 }
 #endif
 
-#endif //FOLD_CRAFT_LAUNCHER_VERTEXPOINTER_H
+#endif //MOBILEGLUES_VERTEXPOINTER_H
