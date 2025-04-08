@@ -85,7 +85,7 @@ static name##_PTR egl_##name = NULL;                                        \
 #endif
 
 #define INIT_CHECK_GL_ERROR_FORCE                                           \
-    GLenum ERR = GL_NO_ERROR;
+    __attribute__((visibility("default"))) GLenum ERR = GL_NO_ERROR;
 
 #define NATIVE_FUNCTION_HEAD(type,name,...)                                 \
 extern "C" GLAPI GLAPIENTRY type name##ARB(__VA_ARGS__) __attribute__((alias(#name))); \
