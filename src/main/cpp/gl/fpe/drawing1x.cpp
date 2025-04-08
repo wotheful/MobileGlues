@@ -222,7 +222,7 @@ void glNormal3f( GLfloat nx, GLfloat ny, GLfloat nz ) {
 
     state.normal = glm::vec3(nx, ny, nz);
     auto mask = vp_mask(GL_NORMAL_ARRAY);
-    auto index = vp2idx(GL_NORMAL_ARRAY); (void)index; __attribute__((visibility("default")))
+    auto index = vp2idx(GL_NORMAL_ARRAY); (void)index;
     if (!(va.enabled_pointers & mask)) {
         va.enabled_pointers |= mask;
         populate_vertex_pointer(GL_NORMAL_ARRAY);
@@ -257,7 +257,7 @@ void glTexCoord4f( GLfloat s, GLfloat t, GLfloat r, GLfloat q ) {
 
     state.texcoord[0] = glm::vec4(s, t, r, q);
     auto mask = vp_mask(GL_TEXTURE_COORD_ARRAY);
-    auto index = vp2idx(GL_TEXTURE_COORD_ARRAY); (void)index; __attribute__((visibility("default")))
+    auto index = vp2idx(GL_TEXTURE_COORD_ARRAY); (void)index;
     if (!(va.enabled_pointers & mask)) {
         va.enabled_pointers |= mask;
         populate_vertex_pointer(GL_TEXTURE_COORD_ARRAY);
@@ -293,7 +293,7 @@ void glMultiTexCoord4f( GLenum target, GLfloat s, GLfloat t, GLfloat r, GLfloat 
 
     state.texcoord[target - GL_TEXTURE0] = glm::vec4(s, t, r, q);
     auto mask = vp_mask(GL_TEXTURE_COORD_ARRAY);
-    auto index = vp2idx(GL_TEXTURE_COORD_ARRAY);
+    auto index = vp2idx(GL_TEXTURE_COORD_ARRAY); (void)index;
     if (!(va.enabled_pointers & mask)) {
         va.enabled_pointers |= mask;
         populate_vertex_pointer(GL_TEXTURE_COORD_ARRAY);
@@ -400,7 +400,7 @@ void glColor4f( GLfloat red, GLfloat green,
 
     auto& attr = g_glstate.fpe_state.vertexpointer_array.attributes[vp2idx(GL_COLOR_ARRAY)];
     auto& vpa = g_glstate.fpe_state.vertexpointer_array;
-    (void)vpa.enabled_pointers; __attribute__((visibility("default")))
+    (void)vpa.enabled_pointers;
     if (vpa.buffer_based) {
         attr.size = 4;
         attr.usage = GL_COLOR_ARRAY;
