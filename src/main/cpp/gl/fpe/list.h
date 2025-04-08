@@ -150,16 +150,19 @@ public:
         }, argsTuple);
     }
 
-    static void callList(GLuint listID) {
-        if (auto it = lists.find(listID); it != lists.end()) {
-            LOG_D("Start executing list, list id = %d", listID)
-            calling = GL_TRUE;
-            for (auto& cmd : it->second) {
-                cmd->execute();
-            }
-            calling = GL_FALSE;
-            LOG_D("End executing list, list id = %d", listID)
+    static void callList(GLuint listID) {auto it = lists.find(listID);
+        if (it == lists.end())
+            return;
+
+        LOG_D("Start executing list, list id = %d, cmdCount = %d\n", listID, it->second.size())
+
+        calling = GL_TRUE;
+        for (auto& cmd : it->second) {
+            cmd->execute();
         }
+        calling = GL_FALSE;
+
+        LOG_D("End executing list, list id = %d", listID)
     }
 };
 
