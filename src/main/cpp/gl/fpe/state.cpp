@@ -33,6 +33,7 @@ bool hijack_fpe_states(GLenum cap, bool enable, fixed_function_bool_t* bools) {
         case GL_LIGHT6:
         case GL_LIGHT7:
         case GL_TEXTURE_2D:
+        case GL_RESCALE_NORMAL:
             return true;
         default:
             break;
