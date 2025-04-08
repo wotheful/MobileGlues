@@ -254,7 +254,7 @@ void glPushMatrix( void ) {
 
 void glPopMatrix( void ) {
     LOG()
-    LOG_D("glPopMatrix(%p)")
+    LOG_D("glPopMatrix()")
 
     if (!disableRecording && DisplayListManager::shouldRecord()) {
         displayListManager.record<glPopMatrix>({});

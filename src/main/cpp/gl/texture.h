@@ -19,6 +19,7 @@ struct texture_t {
     GLint swizzle_param[4];
 };
 
+GLAPI GLAPIENTRY void glGenTextures( GLsizei n, GLuint *textures );
 GLAPI GLAPIENTRY void glTexParameterf(GLenum target, GLenum pname, GLfloat param);
 GLAPI GLAPIENTRY void glTexParameteri(GLenum target, GLenum pname, GLint param);
 GLAPI GLAPIENTRY void glTexImage1D(GLenum target, GLint level, GLint internalFormat, GLsizei width, GLint border, GLenum format, GLenum type, const GLvoid* pixels);

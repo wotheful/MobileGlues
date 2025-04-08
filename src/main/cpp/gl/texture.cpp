@@ -222,6 +222,13 @@ void internal_convert(GLenum* internal_format, GLenum* type, GLenum* format) {
     }
 }
 
+void glGenTextures( GLsizei n, GLuint *textures ) {
+    LOG()
+    LOG_D("glGenTextures, n = %d, textures = 0x%x", n, textures);
+    GLES.glGenTextures(n, textures);
+    CHECK_GL_ERROR
+}
+
 void glTexParameterf(GLenum target, GLenum pname, GLfloat param) {
     LOG()
     pname = pname_convert(pname);
@@ -660,15 +667,15 @@ void glGetTexLevelParameteriv(GLenum target, GLint level,GLenum pname, GLint *pa
         switch (pname) {
             case GL_TEXTURE_WIDTH:
                 (*params) = nlevel(gl_state->proxy_width, level);
-                break;
+                return;
             case GL_TEXTURE_HEIGHT:
                 (*params) = nlevel(gl_state->proxy_height, level);
-                break;
+                return;
             case GL_TEXTURE_INTERNAL_FORMAT:
                 (*params) = (GLint)gl_state->proxy_intformat;
-                break;
-            default:
                 return;
+            default:
+                break;
         }
     }
     LOG_D("es.glGetTexLevelParameteriv,target: %s, level: %d, pname: %s",glEnumToString(target),level,glEnumToString(pname))

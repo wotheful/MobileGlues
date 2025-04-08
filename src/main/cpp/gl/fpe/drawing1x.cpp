@@ -141,6 +141,7 @@ void glEnd() {
 
                 if (enabled) {
                     auto &vp = va.attributes[i];
+                    vp.stride = va.stride;
 
                     GLES.glVertexAttribPointer(i, vp.size, vp.type, vp.normalized, vp.stride, (const void*)offset);
                     CHECK_GL_ERROR_NO_INIT
@@ -154,6 +155,7 @@ void glEnd() {
                     offset += (vp.size * type_size(vp.type));
                 }
                 else {
+                    LOG_D("attrib #%d: (disabled)", i)
                     GLES.glDisableVertexAttribArray(i);
                     CHECK_GL_ERROR_NO_INIT
                 }
@@ -188,6 +190,7 @@ void glEnd() {
             GLES.glUniformMatrix4fv(mat_id, 1, GL_FALSE, glm::value_ptr(mat));
             CHECK_GL_ERROR_NO_INIT
             GLES.glUniform1i(GLES.glGetUniformLocation(prog_id, "Sampler0"), 0);
+            CHECK_GL_ERROR_NO_INIT
         }
 
         // Draw

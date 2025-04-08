@@ -22,6 +22,9 @@ GLsizei type_size(GLenum type) {
             return 4;
         case GL_DOUBLE:
             return 8;
+        default:
+            LOG_D("%s: unknown type: %s", __FUNCTION__, glEnumToString(type))
+            return 0;
     }
 }
 
