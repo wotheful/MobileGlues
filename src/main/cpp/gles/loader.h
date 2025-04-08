@@ -80,7 +80,7 @@ static name##_PTR egl_##name = NULL;                                        \
     }
 #else
 #define CHECK_GL_ERROR {}
-#define INIT_CHECK_GL_ERROR GLenum ERR = GL_NO_ERROR;
+#define INIT_CHECK_GL_ERROR __attribute__((visibility("default"))) GLenum ERR = GL_NO_ERROR;
 #define CHECK_GL_ERROR_NO_INIT {}
 #endif
 
