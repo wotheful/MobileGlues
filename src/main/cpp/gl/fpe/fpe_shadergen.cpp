@@ -146,7 +146,7 @@ void add_vs_inout(const fixed_function_state_t& state, scratch_t& scratch, std::
 
         // hack in color (static, disabled vertex array) here...
         // TODO: fix this using uniform
-        if (enabled/* || vpa.attributes[i].usage == GL_COLOR_ARRAY*/) {
+        if (enabled || vpa.attributes[i].usage == GL_COLOR_ARRAY) {
             auto &vp = vpa.attributes[i];
 
             LOG_D("attrib #%d: type = %s, size = %d, stride = %d, usage = %s, ptr = %p",
