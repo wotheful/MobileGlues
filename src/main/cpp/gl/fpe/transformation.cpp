@@ -220,15 +220,22 @@ void glMultMatrixf(const GLfloat *m) {
     LOG_D("glMultMatrixf(%p)", m)
 
     if (!disableRecording && DisplayListManager::shouldRecord()) {
-        displayListManager.record<glMultMatrixf>({{0, sizeof(GLfloat)}}, m);
+        displayListManager.record<glMultMatrixf>({{0, sizeof(GLfloat) * 16}}, m);
         if (DisplayListManager::shouldFinish())
             return;
     }
 
     auto& transformation = g_glstate.fpe_uniform.transformation;
-    transformation.matrices[matrix_idx(transformation.matrix_mode)] *= glm::make_mat4(m);
 
     LOG_D("Matrix %s:", glEnumToString(transformation.matrix_mode))
+    print_matrix(transformation.matrices[matrix_idx(transformation.matrix_mode)]);
+    LOG_D("*")
+    auto mat = glm::make_mat4(m);
+    print_matrix(mat);
+
+    transformation.matrices[matrix_idx(transformation.matrix_mode)] *= mat;
+    LOG_D("=")
+
     print_matrix(transformation.matrices[matrix_idx(transformation.matrix_mode)]);
 }
 
@@ -254,7 +261,7 @@ void glPushMatrix( void ) {
 
 void glPopMatrix( void ) {
     LOG()
-    LOG_D("glPopMatrix(%p)")
+    LOG_D("glPopMatrix()")
 
     if (!disableRecording && DisplayListManager::shouldRecord()) {
         displayListManager.record<glPopMatrix>({});

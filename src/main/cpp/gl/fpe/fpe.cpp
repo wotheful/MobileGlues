@@ -22,6 +22,9 @@ GLsizei type_size(GLenum type) {
             return 4;
         case GL_DOUBLE:
             return 8;
+        default:
+            LOG_D("%s: unknown type: %s", __FUNCTION__, glEnumToString(type))
+            return 0;
     }
 }
 
@@ -257,8 +260,8 @@ int commit_fpe_state_on_draw(GLenum* mode, GLint* first, GLsizei* count) {
                 GLES.glEnableVertexAttribArray(i);
                 CHECK_GL_ERROR_NO_INIT
 
-                LOG_D("attrib #%d: type = %s, size = %d, stride = %d, usage = %s, ptr = 0x%x",
-                      i, glEnumToString(vp.type), vp.size, vp.stride, glEnumToString(vp.usage))
+                LOG_D("attrib #%d: type = %s, size = %d, stride = %d, usage = %s, ptr = %p",
+                      i, glEnumToString(vp.type), vp.size, vp.stride, glEnumToString(vp.usage), vp.pointer)
 
                 is_first = false;
             }

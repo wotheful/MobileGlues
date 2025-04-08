@@ -148,8 +148,8 @@ void add_vs_inout(const fixed_function_state_t& state, scratch_t& scratch, std::
         if (enabled || vpa.attributes[i].usage == GL_COLOR_ARRAY) {
             auto &vp = vpa.attributes[i];
 
-            LOG_D("attrib #%d: type = %s, size = %d, stride = %d, usage = %s, ptr = 0x%x",
-                  i, glEnumToString(vp.type), vp.size, vp.stride, glEnumToString(vp.usage))
+            LOG_D("attrib #%d: type = %s, size = %d, stride = %d, usage = %s, ptr = %p",
+                  i, glEnumToString(vp.type), vp.size, vp.stride, glEnumToString(vp.usage), vp.pointer)
 
             std::string in_name = vp2in_name(vp.usage, i);
             std::string type = type2str(vp.type, vp.size);

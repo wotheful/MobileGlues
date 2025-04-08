@@ -21,6 +21,9 @@ bool hijack_fpe_states(GLenum cap, bool enable, fixed_function_bool_t* bools) {
         case GL_LIGHTING:
             bools->lighting_enable = enable;
             return true;
+        // TODO: implement these states
+        case GL_COLOR_MATERIAL:
+        case GL_ALPHA_TEST:
         case GL_LIGHT0:
         case GL_LIGHT1:
         case GL_LIGHT2:
@@ -29,7 +32,9 @@ bool hijack_fpe_states(GLenum cap, bool enable, fixed_function_bool_t* bools) {
         case GL_LIGHT5:
         case GL_LIGHT6:
         case GL_LIGHT7:
-
+        case GL_TEXTURE_2D:
+        case GL_RESCALE_NORMAL:
+            return true;
         default:
             break;
     }
@@ -50,6 +55,7 @@ void glEnable(GLenum cap) {
         return;
 
     GLES.glEnable(cap);
+    CHECK_GL_ERROR
 }
 
 void glDisable(GLenum cap) {
@@ -66,6 +72,7 @@ void glDisable(GLenum cap) {
         return;
 
     GLES.glDisable(cap);
+    CHECK_GL_ERROR
 }
 
 void glClientActiveTexture(GLenum texture) {

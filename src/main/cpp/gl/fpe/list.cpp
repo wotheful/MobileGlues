@@ -15,6 +15,7 @@ GLuint glGenLists(GLsizei range) {
     LOG()
     LOG_D("glGenLists(%i)", range)
     GLuint first = DisplayListManager::genDisplayList(range);
+    LOG_D("-> ", first)
     return first;
 }
 
