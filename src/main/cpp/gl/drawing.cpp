@@ -6,6 +6,7 @@
 #include "buffer.h"
 #include "framebuffer.h"
 #include "fpe/fpe.hpp"
+#include "fpe/list.h"
 
 #define DEBUG 0
 
@@ -387,6 +388,12 @@ void glMultiDrawElements(GLenum mode, const GLsizei* count, GLenum type, const v
 void glDrawArrays(GLenum mode, GLint first, GLsizei count) {
     LOG()
     LOG_D("glDrawArrays(), mode = %s, first = %d, count = %u", glEnumToString(mode), first, count)
+
+    if (!disableRecording && DisplayListManager::shouldRecord()) {
+        displayListManager.record<glDrawArrays>({}, mode, first, count);
+        if (DisplayListManager::shouldFinish())
+            return;
+    }
 
     INIT_CHECK_GL_ERROR
 
