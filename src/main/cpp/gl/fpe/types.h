@@ -141,7 +141,7 @@ struct fixed_function_draw_state_t {
         {
             if (sizes.texcoord_size[i] > 0) {
                 vb.write(
-                        (const char*)glm::value_ptr(current_data.color),
+                        (const char*)glm::value_ptr(current_data.texcoord[i]),
                         sizeof(GLfloat) * sizes.texcoord_size[i]);
             }
         }
