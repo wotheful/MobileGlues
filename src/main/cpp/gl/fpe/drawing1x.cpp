@@ -4,52 +4,51 @@
 
 #include <glm/glm/gtc/type_ptr.hpp>
 #include "drawing1x.h"
-#include "fpe.hpp"
 #include "list.h"
 #include <bit>
 
 #define DEBUG 0
 
-// act a bit like gl*Pointer
-void populate_vertex_pointer(GLenum array) {
-    auto& va = g_glstate.fpe_state.vertexpointer_array;
-    switch (array) {
-        case GL_ARRAY_BUFFER:
-            va.attributes[vp2idx(GL_ARRAY_BUFFER)] = {
-                    .size = 4,
-                    .usage = GL_ARRAY_BUFFER,
-                    .type = GL_FLOAT,
-                    .normalized = GL_FALSE,
-                    .stride = 0,
-                    .pointer = 0,
-                    .varies = true
-            };
-            break;
-        case GL_NORMAL_ARRAY:
-            va.attributes[vp2idx(GL_NORMAL_ARRAY)] = {
-                    .size = 4,
-                    .usage = GL_NORMAL_ARRAY,
-                    .type = GL_FLOAT,
-                    .normalized = GL_FALSE,
-                    .stride = 0,
-                    .pointer = 0,
-                    .varies = true
-            };
-            break;
-        case GL_TEXTURE_COORD_ARRAY:
-            va.attributes[vp2idx(GL_TEXTURE_COORD_ARRAY)] = {
-                    .size = 4,
-                    .usage = GL_TEXTURE_COORD_ARRAY + (g_glstate.fpe_state.client_active_texture - GL_TEXTURE0),
-                    .type = GL_FLOAT,
-                    .normalized = GL_FALSE,
-                    .stride = 0,
-                    .pointer = 0,
-                    .varies = true
-            };
-            break;
-    }
-    g_glstate.fpe_state.vertexpointer_array.dirty = true;
-}
+//// act a bit like gl*Pointer
+//void populate_vertex_pointer(GLenum array) {
+//    auto& va = g_glstate.fpe_state.vertexpointer_array;
+//    switch (array) {
+//        case GL_ARRAY_BUFFER:
+//            va.attributes[vp2idx(GL_VERTEX_ARRAY)] = {
+//                    .size = 4,
+//                    .usage = GL_VERTEX_ARRAY,
+//                    .type = GL_FLOAT,
+//                    .normalized = GL_FALSE,
+//                    .stride = 0,
+//                    .pointer = 0,
+//                    .varies = true
+//            };
+//            break;
+//        case GL_NORMAL_ARRAY:
+//            va.attributes[vp2idx(GL_NORMAL_ARRAY)] = {
+//                    .size = 4,
+//                    .usage = GL_NORMAL_ARRAY,
+//                    .type = GL_FLOAT,
+//                    .normalized = GL_FALSE,
+//                    .stride = 0,
+//                    .pointer = 0,
+//                    .varies = true
+//            };
+//            break;
+//        case GL_TEXTURE_COORD_ARRAY:
+//            va.attributes[vp2idx(GL_TEXTURE_COORD_ARRAY)] = {
+//                    .size = 4,
+//                    .usage = GL_TEXTURE_COORD_ARRAY + (g_glstate.fpe_state.client_active_texture - GL_TEXTURE0),
+//                    .type = GL_FLOAT,
+//                    .normalized = GL_FALSE,
+//                    .stride = 0,
+//                    .pointer = 0,
+//                    .varies = true
+//            };
+//            break;
+//    }
+//    g_glstate.fpe_state.vertexpointer_array.dirty = true;
+//}
 
 void glBegin( GLenum mode ) {
     LOG()
@@ -61,12 +60,12 @@ void glBegin( GLenum mode ) {
             return;
     }
 
-//    if (!fpe_inited) {
-//        if (init_fpe() != 0)
-//            abort();
-//        else
-//            fpe_inited = true;
-//    }
+    if (!fpe_inited) {
+        if (init_fpe() != 0)
+            abort();
+        else
+            fpe_inited = true;
+    }
 
     auto& s = g_glstate.fpe_draw;
 
@@ -92,7 +91,8 @@ void glEnd() {
 
     auto& s = g_glstate.fpe_draw;
     auto& va = g_glstate.fpe_state.vertexpointer_array;
-    auto& vb = g_glstate.fpe_state.fpe_vb;
+//    auto& vb = g_glstate.fpe_state.fpe_vb;
+    auto& vb = g_glstate.fpe_draw.vb;
 
     if (s.primitive == GL_NONE) {
         LOG_E("glEnd() without effect: already ended");
@@ -103,6 +103,9 @@ void glEnd() {
     
     // actual assembly work, and draw!
     {
+        // Vertex Pointer State Machine Update
+        g_glstate.fpe_draw.compile_vertexattrib(va);
+
         // Program
         // TODO: Make a proper hash
         uint32_t key = g_glstate.fpe_state.vertexpointer_array.enabled_pointers;
@@ -129,14 +132,10 @@ void glEnd() {
         GLES.glBufferData(GL_ARRAY_BUFFER, vbbuf.size(), vbbuf.c_str(), GL_DYNAMIC_DRAW);
         CHECK_GL_ERROR_NO_INIT
 
-        // Vertex Pointer
+        // Vertex Pointer to ES
         if (va.dirty) {
             va.dirty = false;
 
-            auto enabled_vp_cnt = std::popcount(va.enabled_pointers);
-            va.stride = enabled_vp_cnt * 4 * sizeof(GLfloat); // assuming all of them are vec4
-
-            size_t offset = 0;
             for (int i = 0; i < VERTEX_POINTER_COUNT; ++i) {
                 bool enabled = ((va.enabled_pointers >> i) & 1);
 
@@ -144,16 +143,14 @@ void glEnd() {
                     auto &vp = va.attributes[i];
                     vp.stride = va.stride;
 
-                    GLES.glVertexAttribPointer(i, vp.size, vp.type, vp.normalized, vp.stride, (const void*)offset);
+                    GLES.glVertexAttribPointer(i, vp.size, vp.type, vp.normalized, vp.stride, vp.pointer);
                     CHECK_GL_ERROR_NO_INIT
 
                     GLES.glEnableVertexAttribArray(i);
                     CHECK_GL_ERROR_NO_INIT
 
                     LOG_D("attrib #%d: type = %s, size = %d, stride = %d, usage = %s, ptr = %p",
-                          i, glEnumToString(vp.type), vp.size, vp.stride, glEnumToString(vp.usage), offset)
-
-                    offset += (vp.size * type_size(vp.type));
+                          i, glEnumToString(vp.type), vp.size, vp.stride, glEnumToString(vp.usage), vp.pointer)
                 }
                 else {
                     LOG_D("attrib #%d: (disabled)", i)
@@ -195,6 +192,7 @@ void glEnd() {
         }
 
         // Draw
+        LOG_D("glEnd: glDrawArrays(%s, %d, %d), vb = %d, vb size = %d", glEnumToString(s.primitive), 0, s.vertex_count, g_glstate.fpe_state.fpe_vbo, vbbuf.size())
         GLES.glDrawArrays(s.primitive, 0, s.vertex_count);
         CHECK_GL_ERROR_NO_INIT
     }
@@ -217,16 +215,19 @@ void glNormal3f( GLfloat nx, GLfloat ny, GLfloat nz ) {
             return;
     }
 
-    auto& state = g_glstate.fpe_draw;
-    auto& va = g_glstate.fpe_state.vertexpointer_array;
+    mglNormal<GLfloat, 3>({nx, ny, nz});
 
-    state.normal = glm::vec3(nx, ny, nz);
-    auto mask = vp_mask(GL_NORMAL_ARRAY);
-    auto index = vp2idx(GL_NORMAL_ARRAY); (void)index;
-    if (!(va.enabled_pointers & mask)) {
-        va.enabled_pointers |= mask;
-        populate_vertex_pointer(GL_NORMAL_ARRAY);
-    }
+//    auto& state = g_glstate.fpe_draw;
+//    auto& va = g_glstate.fpe_state.vertexpointer_array;
+//
+//    state.current_data.normal = glm::vec3(nx, ny, nz);
+//    state.current_data.normal_size = 3;
+//    auto mask = vp_mask(GL_NORMAL_ARRAY);
+//    auto index = vp2idx(GL_NORMAL_ARRAY);
+//    if (!(va.enabled_pointers & mask)) {
+//        va.enabled_pointers |= mask;
+//        populate_vertex_pointer(GL_NORMAL_ARRAY);
+//    }
 }
 
 void glTexCoord2f( GLfloat s, GLfloat t ) {
@@ -239,7 +240,7 @@ void glTexCoord2f( GLfloat s, GLfloat t ) {
             return;
     }
 
-    SELF_CALL(glTexCoord4f, s, t, 0, 1);
+    mglTexCoord<GLfloat, 2>({s, t}, 0);
 }
 
 void glTexCoord4f( GLfloat s, GLfloat t, GLfloat r, GLfloat q ) {
@@ -252,16 +253,17 @@ void glTexCoord4f( GLfloat s, GLfloat t, GLfloat r, GLfloat q ) {
             return;
     }
 
-    auto& state = g_glstate.fpe_draw;
-    auto& va = g_glstate.fpe_state.vertexpointer_array;
-
-    state.texcoord[0] = glm::vec4(s, t, r, q);
-    auto mask = vp_mask(GL_TEXTURE_COORD_ARRAY);
-    auto index = vp2idx(GL_TEXTURE_COORD_ARRAY); (void)index;
-    if (!(va.enabled_pointers & mask)) {
-        va.enabled_pointers |= mask;
-        populate_vertex_pointer(GL_TEXTURE_COORD_ARRAY);
-    }
+    mglTexCoord<GLfloat, 4>({s, t, r, q}, 0);
+//    auto& state = g_glstate.fpe_draw;
+//    auto& va = g_glstate.fpe_state.vertexpointer_array;
+//
+//    state.texcoord[0] = glm::vec4(s, t, r, q);
+//    auto mask = vp_mask(GL_TEXTURE_COORD_ARRAY);
+//    auto index = vp2idx(GL_TEXTURE_COORD_ARRAY);
+//    if (!(va.enabled_pointers & mask)) {
+//        va.enabled_pointers |= mask;
+//        populate_vertex_pointer(GL_TEXTURE_COORD_ARRAY);
+//    }
 }
 
 void glMultiTexCoord2f( GLenum target, GLfloat s, GLfloat t ) {
@@ -274,7 +276,8 @@ void glMultiTexCoord2f( GLenum target, GLfloat s, GLfloat t ) {
             return;
     }
 
-    SELF_CALL(glMultiTexCoord4f, target, s, t, 0, 1);
+    assert(target - GL_TEXTURE0 < MAX_TEX);
+    mglTexCoord<GLfloat, 2>({s, t}, target - GL_TEXTURE0);
 }
 
 // Todo: target - GL_TEXTURE0
@@ -288,16 +291,18 @@ void glMultiTexCoord4f( GLenum target, GLfloat s, GLfloat t, GLfloat r, GLfloat 
             return;
     }
 
-    auto& state = g_glstate.fpe_draw;
-    auto& va = g_glstate.fpe_state.vertexpointer_array;
-
-    state.texcoord[target - GL_TEXTURE0] = glm::vec4(s, t, r, q);
-    auto mask = vp_mask(GL_TEXTURE_COORD_ARRAY);
-    auto index = vp2idx(GL_TEXTURE_COORD_ARRAY); (void)index;
-    if (!(va.enabled_pointers & mask)) {
-        va.enabled_pointers |= mask;
-        populate_vertex_pointer(GL_TEXTURE_COORD_ARRAY);
-    }
+    assert(target - GL_TEXTURE0 < MAX_TEX);
+    mglTexCoord<GLfloat, 4>({s, t, r, q}, target - GL_TEXTURE0);
+//    auto& state = g_glstate.fpe_draw;
+//    auto& va = g_glstate.fpe_state.vertexpointer_array;
+//
+//    state.texcoord[target - GL_TEXTURE0] = glm::vec4(s, t, r, q);
+//    auto mask = vp_mask(GL_TEXTURE_COORD_ARRAY);
+//    auto index = vp2idx(GL_TEXTURE_COORD_ARRAY);
+//    if (!(va.enabled_pointers & mask)) {
+//        va.enabled_pointers |= mask;
+//        populate_vertex_pointer(GL_TEXTURE_COORD_ARRAY);
+//    }
 }
 
 void glVertex3f( GLfloat x, GLfloat y, GLfloat z ) {
@@ -310,7 +315,8 @@ void glVertex3f( GLfloat x, GLfloat y, GLfloat z ) {
             return;
     }
 
-    SELF_CALL(glVertex4f, x, y, z, 1.f);
+    mglVertex<GLfloat, 3>({x, y, z});
+//    SELF_CALL(glVertex4f, x, y, z, 1.f);
 }
 
 void glVertex4f( GLfloat x, GLfloat y, GLfloat z, GLfloat w ) {
@@ -323,49 +329,50 @@ void glVertex4f( GLfloat x, GLfloat y, GLfloat z, GLfloat w ) {
             return;
     }
 
-    auto& drawstate = g_glstate.fpe_draw;
-
-    drawstate.vertex_count++;
-
-    // assuming vertex layout won't change since here
-    auto& va = g_glstate.fpe_state.vertexpointer_array;
-    auto& vb = g_glstate.fpe_state.fpe_vb;
-
-    auto mask = vp_mask(GL_VERTEX_ARRAY);
-    if (!(va.enabled_pointers & mask)) {
-        va.enabled_pointers |= vp_mask(GL_VERTEX_ARRAY);
-        populate_vertex_pointer(GL_VERTEX_ARRAY);
-    }
-
-    // Put in 1 vertex (with attributes)
-    for (int i = 0; i < VERTEX_POINTER_COUNT; ++i) {
-        bool enabled = ((va.enabled_pointers >> i) & 1);
-
-        if (enabled) {
-            auto &vp = va.attributes[i];
-
-            // Fill in data of this attribute
-            switch (vp.usage) {
-                case GL_VERTEX_ARRAY:
-                    vb.write((const char*)&x, sizeof(GLfloat));
-                    vb.write((const char*)&y, sizeof(GLfloat));
-                    vb.write((const char*)&z, sizeof(GLfloat));
-                    vb.write((const char*)&w, sizeof(GLfloat));
-                    break;
-                case GL_TEXTURE_COORD_ARRAY + 0:
-                case GL_TEXTURE_COORD_ARRAY + 1:
-                case GL_TEXTURE_COORD_ARRAY + 2:
-                case GL_TEXTURE_COORD_ARRAY + 3:
-                case GL_TEXTURE_COORD_ARRAY + 4:
-                case GL_TEXTURE_COORD_ARRAY + 5:
-                case GL_TEXTURE_COORD_ARRAY + 6:
-                case GL_TEXTURE_COORD_ARRAY + 7: {
-                    auto& texcoord = drawstate.texcoord[vp.usage - GL_TEXTURE_COORD_ARRAY];
-                    vb.write((const char*)glm::value_ptr(texcoord), sizeof(GLfloat) * 4);
-                }
-            }
-        }
-    }
+    mglVertex<GLfloat, 4>({x, y, z, w});
+//    auto& drawstate = g_glstate.fpe_draw;
+//
+//    drawstate.vertex_count++;
+//
+//    // assuming vertex layout won't change since here
+//    auto& va = g_glstate.fpe_state.vertexpointer_array;
+//    auto& vb = g_glstate.fpe_state.fpe_vb;
+//
+//    auto mask = vp_mask(GL_VERTEX_ARRAY);
+//    if (!(va.enabled_pointers & mask)) {
+//        va.enabled_pointers |= vp_mask(GL_VERTEX_ARRAY);
+//        populate_vertex_pointer(GL_VERTEX_ARRAY);
+//    }
+//
+//    // Put in 1 vertex (with attributes)
+//    for (int i = 0; i < VERTEX_POINTER_COUNT; ++i) {
+//        bool enabled = ((va.enabled_pointers >> i) & 1);
+//
+//        if (enabled) {
+//            auto &vp = va.attributes[i];
+//
+//            // Fill in data of this attribute
+//            switch (vp.usage) {
+//                case GL_VERTEX_ARRAY:
+//                    vb.write((const char*)&x, sizeof(GLfloat));
+//                    vb.write((const char*)&y, sizeof(GLfloat));
+//                    vb.write((const char*)&z, sizeof(GLfloat));
+//                    vb.write((const char*)&w, sizeof(GLfloat));
+//                    break;
+//                case GL_TEXTURE_COORD_ARRAY + 0:
+//                case GL_TEXTURE_COORD_ARRAY + 1:
+//                case GL_TEXTURE_COORD_ARRAY + 2:
+//                case GL_TEXTURE_COORD_ARRAY + 3:
+//                case GL_TEXTURE_COORD_ARRAY + 4:
+//                case GL_TEXTURE_COORD_ARRAY + 5:
+//                case GL_TEXTURE_COORD_ARRAY + 6:
+//                case GL_TEXTURE_COORD_ARRAY + 7: {
+//                    auto& texcoord = drawstate.texcoord[vp.usage - GL_TEXTURE_COORD_ARRAY];
+//                    vb.write((const char*)glm::value_ptr(texcoord), sizeof(GLfloat) * 4);
+//                }
+//            }
+//        }
+//    }
 }
 
 void glColor3f( GLfloat red, GLfloat green, GLfloat blue ) {
@@ -378,7 +385,8 @@ void glColor3f( GLfloat red, GLfloat green, GLfloat blue ) {
             return;
     }
 
-    SELF_CALL(glColor4f, red, green, blue, 1)
+    mglColor<GLfloat, 3>({red, green, blue});
+//    SELF_CALL(glColor4f, red, green, blue, 1)
 }
 
 void glColor4f( GLfloat red, GLfloat green,
@@ -400,7 +408,6 @@ void glColor4f( GLfloat red, GLfloat green,
 
     auto& attr = g_glstate.fpe_state.vertexpointer_array.attributes[vp2idx(GL_COLOR_ARRAY)];
     auto& vpa = g_glstate.fpe_state.vertexpointer_array;
-    (void)vpa.enabled_pointers;
     if (vpa.buffer_based) {
         attr.size = 4;
         attr.usage = GL_COLOR_ARRAY;
@@ -410,8 +417,7 @@ void glColor4f( GLfloat red, GLfloat green,
         attr.pointer = 0;
         attr.value = glm::vec4(red, green, blue, alpha);
         attr.varies = false;
-    } else {
-        LOG_D("Not implemented!")
     }
-}
 
+    mglColor<GLfloat, 4>({red, green, blue, alpha});
+}

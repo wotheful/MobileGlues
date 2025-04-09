@@ -8,7 +8,7 @@
 
 #define FORCE_SYNC_WITH_LOG_FILE 0
 
-#define GLOBAL_DEBUG 0
+#define GLOBAL_DEBUG 1
 
 #define GLOBAL_DEBUG_E 1
 
@@ -47,7 +47,7 @@ const char *glEnumToString(GLenum e);
 void log_unique_function(const char* func_name);
 #else
 #define LOG() \
-    if(DEBUG||GLOBAL_DEBUG) {__android_log_print(ANDROID_LOG_DEBUG, RENDERERNAME, "Use function: %s", __FUNCTION__);printf("Use function: %s\n", __FUNCTION__);write_log("Use function: %s\n", __FUNCTION__);}
+    if(DEBUG||GLOBAL_DEBUG) {__android_log_print(ANDROID_LOG_DEBUG, RENDERERNAME, "\nUse function: %s", __FUNCTION__);printf("\nUse function: %s\n", __FUNCTION__);write_log("\nUse function: %s\n", __FUNCTION__);}
 #endif
 
 #define LOG_D(...) if(DEBUG||GLOBAL_DEBUG) {__android_log_print(ANDROID_LOG_DEBUG, RENDERERNAME, __VA_ARGS__);printf(__VA_ARGS__);printf("\n");write_log(__VA_ARGS__);}

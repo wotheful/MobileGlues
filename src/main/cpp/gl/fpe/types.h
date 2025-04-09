@@ -10,10 +10,12 @@
 #include "../gl/log.h"
 #include "defines.h"
 #include <glm/glm/glm.hpp>
+#include <glm/glm/gtc/type_ptr.hpp>
 #include <unordered_map>
 #include <vector>
 #include <sstream>
 #include "fpe_shadergen.h"
+#include "vertexpointer_utils.h"
 
 struct transformation_t {
     glm::mat4 matrices[4];
@@ -41,6 +43,15 @@ struct vertex_pointer_array_t {
     uint32_t enabled_pointers = 0;
     bool dirty = false;
     bool buffer_based = false;
+
+    void reset() {
+        starting_pointer = NULL;
+        stride = 0;
+        enabled_pointers = 0;
+        dirty = false;
+        buffer_based = false;
+        memset(&attributes, 0, sizeof(attributes));
+    }
 };
 
 struct fixed_function_bool_t { // glEnable/glDisable
@@ -62,18 +73,163 @@ struct light_t {
     GLfloat spot_cutoff = 180.; // 0-90, 180
 };
 
-struct fixed_function_draw_state_t {
-    GLenum primitive = GL_NONE;
+// size = 0 means disabled
+struct fixed_function_draw_size_t {
+    GLint normal_size = 3;
+    GLint color_size = 0;
+    GLint vertex_size = 0;
+    GLint texcoord_size[MAX_TEX] = {0};
+};
+
+struct fixed_function_draw_data_t {
+    glm::vec4 vertex = {0, 0, 0, 1};
     glm::vec3 normal = {0, 0, 1};
     glm::vec4 color = {1, 1, 1, 1};
     glm::vec4 texcoord[MAX_TEX];
 
+    fixed_function_draw_size_t sizes;
+};
+
+struct fixed_function_draw_state_t {
+    GLenum primitive = GL_NONE;
+
+    fixed_function_draw_data_t current_data;
+
+    std::stringstream vb;
+
     size_t vertex_count = 0;
 
+#define DEBUG 0
     inline void reset() {
         primitive = GL_NONE;
         vertex_count = 0;
+        vb.str(std::string()); // clearing vb stringstream
     }
+
+    inline void advance() {
+        ++vertex_count;
+
+        const auto& sizes = current_data.sizes;
+
+        // vertex
+        if (sizes.vertex_size > 0)
+        {
+            vb.write(
+                    (const char*)glm::value_ptr(current_data.vertex),
+                    sizeof(GLfloat) * sizes.vertex_size);
+        }
+
+        // normal
+        if (sizes.normal_size > 0)
+        {
+            vb.write(
+                    (const char*)glm::value_ptr(current_data.normal),
+                    sizeof(GLfloat) * sizes.normal_size);
+        }
+
+        // color
+        if (sizes.color_size > 0)
+        {
+            vb.write(
+                    (const char*)glm::value_ptr(current_data.color),
+                    sizeof(GLfloat) * sizes.color_size);
+        }
+
+        // texcoord
+        for (GLint i = 0; i < MAX_TEX; ++i)
+        {
+            if (sizes.texcoord_size[i] > 0) {
+                vb.write(
+                        (const char*)glm::value_ptr(current_data.texcoord[i]),
+                        sizeof(GLfloat) * sizes.texcoord_size[i]);
+            }
+        }
+
+        LOG_D("advance(): vertexcount = %d, vbsize = %d", vertex_count, vb.str().size())
+    }
+
+    inline void compile_vertexattrib(vertex_pointer_array_t& va) const {
+        va.reset();
+
+        va.dirty = true;
+        va.buffer_based = false;
+
+        const auto& sizes = current_data.sizes;
+        GLsizei offset = 0;
+
+        // vertex
+        if (sizes.vertex_size > 0)
+        {
+            va.enabled_pointers |= vp_mask(GL_VERTEX_ARRAY);
+
+            va.attributes[vp2idx(GL_VERTEX_ARRAY)] = {
+                    .size = sizes.vertex_size,
+                    .usage = GL_VERTEX_ARRAY,
+                    .type = GL_FLOAT,
+                    .normalized = GL_FALSE,
+                    .stride = 0,
+                    .pointer = (const void*)offset,
+                    .varies = true
+            };
+            offset += sizes.vertex_size * sizeof(GLfloat);
+        }
+
+        // normal
+        if (sizes.normal_size > 0) {
+            va.enabled_pointers |= vp_mask(GL_NORMAL_ARRAY);
+
+            va.attributes[vp2idx(GL_NORMAL_ARRAY)] = {
+                    .size = sizes.normal_size,
+                    .usage = GL_NORMAL_ARRAY,
+                    .type = GL_FLOAT,
+                    .normalized = GL_FALSE,
+                    .stride = 0,
+                    .pointer = (const void*)offset,
+                    .varies = true
+            };
+            offset += sizes.normal_size * sizeof(GLfloat);
+        }
+
+        // color
+        if (sizes.color_size > 0)
+        {
+            va.enabled_pointers |= vp_mask(GL_COLOR_ARRAY);
+            va.attributes[vp2idx(GL_COLOR_ARRAY)] = {
+                    .size = sizes.color_size,
+                    .usage = GL_COLOR_ARRAY,
+                    .type = GL_FLOAT,
+                    .normalized = GL_FALSE,
+                    .stride = 0,
+                    .pointer = (const void*)offset,
+                    .varies = true
+            };
+            offset += sizes.color_size * sizeof(GLfloat);
+        }
+
+        // texcoord
+        for (GLint i = 0; i < MAX_TEX; ++i)
+        {
+            if (sizes.texcoord_size[i] > 0) {
+                LOG_D("texcoord_size[%d] = %d", i, sizes.texcoord_size[i])
+                // TODO: fix vp_mask()/vp2idx(), make it adapt to here
+                va.enabled_pointers |= (1 << (7 + i));
+                va.attributes[7 + i] = {
+                        .size = sizes.texcoord_size[i],
+                        .usage = GL_TEXTURE_COORD_ARRAY,
+                        .type = GL_FLOAT,
+                        .normalized = GL_FALSE,
+                        .stride = 0,
+                        .pointer = (const void*)offset,
+                        .varies = true
+                };
+                offset += sizes.texcoord_size[i] * sizeof(GLfloat);
+            }
+        }
+
+        va.stride = offset;
+    }
+
+#undef DEBUG
 };
 
 struct fixed_function_state_t {
@@ -98,8 +254,6 @@ struct fixed_function_state_t {
     GLuint fpe_ibo = 0;
 
     std::vector<uint32_t> fpe_ib;
-
-    std::stringstream fpe_vb;
 
     struct vertex_pointer_array_t vertexpointer_array;
     struct fixed_function_bool_t fpe_bools;
