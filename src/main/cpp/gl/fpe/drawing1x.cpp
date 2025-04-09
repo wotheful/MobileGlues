@@ -60,12 +60,12 @@ void glBegin( GLenum mode ) {
             return;
     }
 
-//    if (!fpe_inited) {
-//        if (init_fpe() != 0)
-//            abort();
-//        else
-//            fpe_inited = true;
-//    }
+    if (!fpe_inited) {
+        if (init_fpe() != 0)
+            abort();
+        else
+            fpe_inited = true;
+    }
 
     auto& s = g_glstate.fpe_draw;
 
