@@ -107,6 +107,10 @@ public:
     static int isRecording() {
         return currentListID != 0 ? 1 : 0;
     }
+    
+    static int isCalling() {
+        return calling;
+    }
 
     static int shouldRecord() {
         return !calling && currentListID != 0;
