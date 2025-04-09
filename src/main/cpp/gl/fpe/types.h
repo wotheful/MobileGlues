@@ -99,9 +99,11 @@ struct fixed_function_draw_state_t {
 
     size_t vertex_count = 0;
 
+#define DEBUG 0
     inline void reset() {
         primitive = GL_NONE;
         vertex_count = 0;
+        vb.str(std::string()); // clearing vb stringstream
         memset(&current_data.sizes, 0, sizeof(fixed_function_draw_size_t));
     }
 
@@ -143,13 +145,15 @@ struct fixed_function_draw_state_t {
                         sizeof(GLfloat) * sizes.texcoord_size[i]);
             }
         }
+
+        LOG_D("advance(): vertexcount = %d, vbsize = %d", vertex_count, vb.str().size())
     }
 
-#define DEBUG 0
     inline void compile_vertexattrib(vertex_pointer_array_t& va) const {
         va.reset();
 
         va.dirty = true;
+        va.buffer_based = false;
 
         const auto& sizes = current_data.sizes;
         GLsizei offset = 0;

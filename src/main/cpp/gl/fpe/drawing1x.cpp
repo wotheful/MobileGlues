@@ -192,6 +192,7 @@ void glEnd() {
         }
 
         // Draw
+        LOG_D("glEnd: glDrawArrays(%s, %d, %d), vb = %d, vb size = %d", glEnumToString(s.primitive), 0, s.vertex_count, g_glstate.fpe_state.fpe_vbo, vbbuf.size())
         GLES.glDrawArrays(s.primitive, 0, s.vertex_count);
         CHECK_GL_ERROR_NO_INIT
     }
@@ -416,8 +417,8 @@ void glColor4f( GLfloat red, GLfloat green,
         attr.pointer = 0;
         attr.value = glm::vec4(red, green, blue, alpha);
         attr.varies = false;
-    } else {
-        mglColor<GLfloat, 4>({red, green, blue, alpha});
     }
+
+    mglColor<GLfloat, 4>({red, green, blue, alpha});
 }
 
