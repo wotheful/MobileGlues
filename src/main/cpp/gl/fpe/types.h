@@ -104,7 +104,6 @@ struct fixed_function_draw_state_t {
         primitive = GL_NONE;
         vertex_count = 0;
         vb.str(std::string()); // clearing vb stringstream
-        memset(&current_data.sizes, 0, sizeof(fixed_function_draw_size_t));
     }
 
     inline void advance() {

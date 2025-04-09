@@ -268,6 +268,9 @@ int commit_fpe_state_on_draw(GLenum* mode, GLint* first, GLsizei* count) {
             else if (vpa.attributes[i].usage == GL_COLOR_ARRAY) {
                 auto &vp = vpa.attributes[i];
 
+                // TODO: fix this nonsense
+                vp.value = g_glstate.fpe_draw.current_data.color;
+
                 LOG_D("attrib #%d: type = %s, usage = %s, value = (%.2f, %.2f, %.2f, %.2f)",
                       i, glEnumToString(vp.type), glEnumToString(vp.usage),
                       vp.value[0], vp.value[1], vp.value[2], vp.value[3])

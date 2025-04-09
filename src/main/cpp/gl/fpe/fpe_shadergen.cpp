@@ -141,6 +141,9 @@ std::string type2str(GLenum type, int size) {
 void add_vs_inout(const fixed_function_state_t& state, scratch_t& scratch, std::string& vs) {
     auto& vpa = state.vertexpointer_array;
     LOG_D("[shadergen] enabled_ptr: 0x%x", vpa.enabled_pointers)
+#if DEBUG || GLOBAL_DEBUG
+    vs += std::format("// enabled_ptr: 0x{:x}\n", vpa.enabled_pointers);
+#endif
     for (int i = 0; i < VERTEX_POINTER_COUNT; ++i) {
         bool enabled = ((vpa.enabled_pointers >> i) & 1);
 
