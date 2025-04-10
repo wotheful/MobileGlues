@@ -202,7 +202,6 @@ void glEnd() {
     // resetting draw state
     s.reset();
     va.enabled_pointers = 0;
-    vb.clear();
 }
 
 void glNormal3f( GLfloat nx, GLfloat ny, GLfloat nz ) {
@@ -416,7 +415,7 @@ void glColor4f( GLfloat red, GLfloat green,
         attr.stride = 0;
         attr.pointer = 0;
         attr.value = glm::vec4(red, green, blue, alpha);
-        attr.varies = false;
+        attr.varying = false;
     }
 
     mglColor<GLfloat, 4>({red, green, blue, alpha});

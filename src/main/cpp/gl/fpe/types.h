@@ -31,7 +31,7 @@ struct vertexattribute_t {
     GLsizei stride;
     const void *pointer;
     glm::vec4 value;
-    bool varies = true;
+    bool varying = true;
 };
 
 #define VERTEX_POINTER_COUNT (8 + MAX_TEX)
@@ -169,7 +169,7 @@ struct fixed_function_draw_state_t {
                     .normalized = GL_FALSE,
                     .stride = 0,
                     .pointer = (const void*)offset,
-                    .varies = true
+                    .varying = true
             };
             offset += sizes.vertex_size * sizeof(GLfloat);
         }
@@ -185,7 +185,7 @@ struct fixed_function_draw_state_t {
                     .normalized = GL_FALSE,
                     .stride = 0,
                     .pointer = (const void*)offset,
-                    .varies = true
+                    .varying = true
             };
             offset += sizes.normal_size * sizeof(GLfloat);
         }
@@ -201,7 +201,7 @@ struct fixed_function_draw_state_t {
                     .normalized = GL_FALSE,
                     .stride = 0,
                     .pointer = (const void*)offset,
-                    .varies = true
+                    .varying = true
             };
             offset += sizes.color_size * sizeof(GLfloat);
         }
@@ -220,7 +220,7 @@ struct fixed_function_draw_state_t {
                         .normalized = GL_FALSE,
                         .stride = 0,
                         .pointer = (const void*)offset,
-                        .varies = true
+                        .varying = true
                 };
                 offset += sizes.texcoord_size[i] * sizeof(GLfloat);
             }
