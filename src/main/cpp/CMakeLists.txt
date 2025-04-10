@@ -50,7 +50,8 @@ add_library(${CMAKE_PROJECT_NAME} SHARED
         config/config.cpp
         config/gpu_utils.cpp
         config/settings.cpp
-
+        gl/dsa/buffer.cpp
+        gl/dsa/framebuffer.cpp
         gl/fpe/fpe.cpp
         gl/fpe/state.cpp
         gl/fpe/transformation.cpp
