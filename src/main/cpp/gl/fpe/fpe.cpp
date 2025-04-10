@@ -366,6 +366,7 @@ int commit_fpe_state_on_draw(GLenum* mode, GLint* first, GLsizei* count) {
     GLES.glUniformMatrix4fv(mat_id, 1, GL_FALSE, glm::value_ptr(mat));
     CHECK_GL_ERROR_NO_INIT
     GLES.glUniform1i(GLES.glGetUniformLocation(prog_id, "Sampler0"), 0);
+    CHECK_GL_ERROR_NO_INIT
 
     if (g_glstate.fpe_state.fpe_bools.fog_enable) {
         GLint fogcolor_id = GLES.glGetUniformLocation(prog_id, "fogParam.color");

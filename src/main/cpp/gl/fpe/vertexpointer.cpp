@@ -19,7 +19,7 @@ void glVertexPointer(GLint size,
     attr.normalized = GL_FALSE;
     attr.stride = stride;
     attr.pointer = pointer;
-    attr.varies = true;
+    attr.varying = true;
     g_glstate.fpe_state.vertexpointer_array.dirty = true;
     g_glstate.fpe_state.vertexpointer_array.buffer_based = true;
 }
@@ -33,7 +33,7 @@ void glNormalPointer(GLenum type, GLsizei stride, const GLvoid *pointer) {
             .normalized = GL_FALSE,
             .stride = stride,
             .pointer = pointer,
-            .varies = true
+            .varying = true
     };
     g_glstate.fpe_state.vertexpointer_array.dirty = true;
 }
@@ -47,7 +47,7 @@ void glColorPointer(GLint size, GLenum type, GLsizei stride, const GLvoid *point
             .normalized = GL_TRUE,
             .stride = stride,
             .pointer = pointer,
-            .varies = true
+            .varying = true
     };
     g_glstate.fpe_state.vertexpointer_array.dirty = true;
 }
@@ -61,7 +61,7 @@ void glTexCoordPointer(GLint size, GLenum type, GLsizei stride, const GLvoid *po
             .normalized = GL_FALSE,
             .stride = stride,
             .pointer = pointer,
-            .varies = true
+            .varying = true
     };
     g_glstate.fpe_state.vertexpointer_array.dirty = true;
 }
@@ -75,7 +75,7 @@ void glIndexPointer(GLenum type, GLsizei stride, const GLvoid *pointer ) {
             .normalized = GL_FALSE,
             .stride = stride,
             .pointer = pointer,
-            .varies = true
+            .varying = true
     };
     g_glstate.fpe_state.vertexpointer_array.dirty = true;
 }
