@@ -80,12 +80,12 @@ static name##_PTR egl_##name = NULL;                                        \
     }
 #else
 #define CHECK_GL_ERROR {}
-#define INIT_CHECK_GL_ERROR __attribute__((visibility("default"))) GLenum ERR = GL_NO_ERROR; (void)ERR;
+#define INIT_CHECK_GL_ERROR __attribute__((used)) GLenum ERR = GL_NO_ERROR; (void)ERR;
 #define CHECK_GL_ERROR_NO_INIT {}
 #endif
 
 #define INIT_CHECK_GL_ERROR_FORCE                                           \
-    __attribute__((visibility("default"))) GLenum ERR = GL_NO_ERROR; (void)ERR;
+    __attribute__((used)) GLenum ERR = GL_NO_ERROR; (void)ERR;
 
 #define NATIVE_FUNCTION_HEAD(type,name,...)                                 \
 extern "C" GLAPI GLAPIENTRY type name##ARB(__VA_ARGS__) __attribute__((alias(#name))); \
