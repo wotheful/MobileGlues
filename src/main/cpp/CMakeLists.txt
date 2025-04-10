@@ -61,6 +61,7 @@ add_library(${CMAKE_PROJECT_NAME} SHARED
         gl/fpe/pointer_utils.cpp
         gl/fpe/drawing1x.cpp
         gl/fpe/vertexpointer_utils.cpp
+        gl/fpe/drawstate1x.cpp
 )
 
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE ./includes ./glm)
