@@ -254,15 +254,15 @@ int commit_fpe_state_on_draw(GLenum* mode, GLint* first, GLsizei* count) {
             else if (vpa.attributes[i].usage == GL_COLOR_ARRAY) {
                 auto &vp = vpa.attributes[i];
 
-                // TODO: fix this nonsense
-                vp.value = g_glstate.fpe_draw.current_data.color;
+                if (g_glstate.fpe_draw.current_data.sizes.color_size > 0) {
+                    const auto& color = g_glstate.fpe_draw.current_data.color;
+                    LOG_D("attrib #%d: type = %s, usage = %s, value = (%.2f, %.2f, %.2f, %.2f)",
+                          i, glEnumToString(vp.type), glEnumToString(vp.usage),
+                          color[0], color[1], color[2], color[3])
 
-                LOG_D("attrib #%d: type = %s, usage = %s, value = (%.2f, %.2f, %.2f, %.2f)",
-                      i, glEnumToString(vp.type), glEnumToString(vp.usage),
-                      vp.value[0], vp.value[1], vp.value[2], vp.value[3])
-
-                GLES.glVertexAttrib4fv(i, glm::value_ptr(vp.value));
-                CHECK_GL_ERROR_NO_INIT
+                    GLES.glVertexAttrib4fv(i, glm::value_ptr(color));
+                    CHECK_GL_ERROR_NO_INIT
+                }
 
                 GLES.glDisableVertexAttribArray(i);
                 CHECK_GL_ERROR_NO_INIT

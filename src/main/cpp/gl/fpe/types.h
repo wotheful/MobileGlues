@@ -75,7 +75,7 @@ struct light_t {
 
 // size = 0 means disabled
 struct fixed_function_draw_size_t {
-    GLint normal_size = 3;
+    GLint normal_size = 0;
     GLint color_size = 0;
     GLint vertex_size = 0;
     GLint texcoord_size[MAX_TEX] = {0};
