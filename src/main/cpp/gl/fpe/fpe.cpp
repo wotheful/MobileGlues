@@ -225,55 +225,56 @@ int commit_fpe_state_on_draw(GLenum* mode, GLint* first, GLsizei* count) {
         CHECK_GL_ERROR_NO_INIT
     }
 
-    if (vpa.dirty) {
-        vpa.dirty = false;
-
-        for (int i = 0; i < VERTEX_POINTER_COUNT; ++i) {
-            bool enabled = ((vpa.enabled_pointers >> i) & 1);
-
-            if (enabled) {
-                auto &vp = vpa.attributes[i];
-
-                if (is_first) {
-                    vpa.starting_pointer = vp.pointer;
-                    vpa.stride = vp.stride; // TODO: stride == 0?
-                }
-
-                const void* offset = (const void*)((const char*)vp.pointer - (const char*)vpa.starting_pointer);
-                GLES.glVertexAttribPointer(i, vp.size, vp.type, vp.normalized, vp.stride, offset);
-                CHECK_GL_ERROR_NO_INIT
-
-                GLES.glEnableVertexAttribArray(i);
-                CHECK_GL_ERROR_NO_INIT
-
-                LOG_D("attrib #%d: type = %s, size = %d, stride = %d, usage = %s, ptr = %p",
-                      i, glEnumToString(vp.type), vp.size, vp.stride, glEnumToString(vp.usage), vp.pointer)
-
-                is_first = false;
-            }
-            else if (vpa.attributes[i].usage == GL_COLOR_ARRAY) {
-                auto &vp = vpa.attributes[i];
-
-                if (g_glstate.fpe_draw.current_data.sizes.color_size > 0) {
-                    const auto& color = g_glstate.fpe_draw.current_data.color;
-                    LOG_D("attrib #%d: type = %s, usage = %s, value = (%.2f, %.2f, %.2f, %.2f)",
-                          i, glEnumToString(vp.type), glEnumToString(vp.usage),
-                          color[0], color[1], color[2], color[3])
-
-                    GLES.glVertexAttrib4fv(i, glm::value_ptr(color));
-                    CHECK_GL_ERROR_NO_INIT
-                }
-
-                GLES.glDisableVertexAttribArray(i);
-                CHECK_GL_ERROR_NO_INIT
-            }
-            else {
-                GLES.glDisableVertexAttribArray(i);
-                CLEAR_GL_ERROR_NO_INIT
-                //CHECK_GL_ERROR_NO_INIT
-            }
-        }
-    }
+    g_glstate.send_vertex_attributes();
+//    if (vpa.dirty) {
+//        vpa.dirty = false;
+//
+//        for (int i = 0; i < VERTEX_POINTER_COUNT; ++i) {
+//            bool enabled = ((vpa.enabled_pointers >> i) & 1);
+//
+//            if (enabled) {
+//                auto &vp = vpa.attributes[i];
+//
+//                if (is_first) {
+//                    vpa.starting_pointer = vp.pointer;
+//                    vpa.stride = vp.stride; // TODO: stride == 0?
+//                }
+//
+//                const void* offset = (const void*)((const char*)vp.pointer - (const char*)vpa.starting_pointer);
+//                GLES.glVertexAttribPointer(i, vp.size, vp.type, vp.normalized, vp.stride, offset);
+//                CHECK_GL_ERROR_NO_INIT
+//
+//                GLES.glEnableVertexAttribArray(i);
+//                CHECK_GL_ERROR_NO_INIT
+//
+//                LOG_D("attrib #%d: type = %s, size = %d, stride = %d, usage = %s, ptr = %p",
+//                      i, glEnumToString(vp.type), vp.size, vp.stride, glEnumToString(vp.usage), vp.pointer)
+//
+//                is_first = false;
+//            }
+//            else if (vpa.attributes[i].usage == GL_COLOR_ARRAY) {
+//                auto &vp = vpa.attributes[i];
+//
+//                if (g_glstate.fpe_draw.current_data.sizes.color_size > 0) {
+//                    const auto& color = g_glstate.fpe_draw.current_data.color;
+//                    LOG_D("attrib #%d: type = %s, usage = %s, value = (%.2f, %.2f, %.2f, %.2f)",
+//                          i, glEnumToString(vp.type), glEnumToString(vp.usage),
+//                          color[0], color[1], color[2], color[3])
+//
+//                    GLES.glVertexAttrib4fv(i, glm::value_ptr(color));
+//                    CHECK_GL_ERROR_NO_INIT
+//                }
+//
+//                GLES.glDisableVertexAttribArray(i);
+//                CHECK_GL_ERROR_NO_INIT
+//            }
+//            else {
+//                GLES.glDisableVertexAttribArray(i);
+//                CLEAR_GL_ERROR_NO_INIT
+//                //CHECK_GL_ERROR_NO_INIT
+//            }
+//        }
+//    }
 
     int ret = 0;
 

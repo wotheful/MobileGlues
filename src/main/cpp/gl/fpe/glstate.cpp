@@ -7,6 +7,7 @@
 #define DEBUG 0
 
 void glstate_t::send_uniforms(int program) {
+    INIT_CHECK_GL_ERROR
     const auto& mv = fpe_uniform.transformation.matrices[matrix_idx(GL_MODELVIEW)];
     const auto& proj = fpe_uniform.transformation.matrices[matrix_idx(GL_PROJECTION)];
 
@@ -80,6 +81,7 @@ program_t& glstate_t::get_or_generate_program() {
 }
 
 void glstate_t::send_vertex_attributes() {
+    INIT_CHECK_GL_ERROR
     auto& va = g_glstate.fpe_state.vertexpointer_array;
     if (!va.dirty) return;
 
