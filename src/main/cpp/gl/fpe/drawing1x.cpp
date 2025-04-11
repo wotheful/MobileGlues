@@ -66,19 +66,12 @@ void glEnd() {
         g_glstate.fpe_draw.compile_vertexattrib(va);
 
         // Program
-        // TODO: Make a proper hash
-        uint32_t key = g_glstate.fpe_state.vertexpointer_array.enabled_pointers;
-        key |= ((g_glstate.fpe_state.fpe_bools.fog_enable & 1) << 31);
-        if (g_glstate.fpe_programs.find(key)
-            == g_glstate.fpe_programs.end()) {
-            LOG_D("Generating new shader: 0x%x", key)
-            fpe_shader_generator gen(g_glstate.fpe_state);
-            g_glstate.fpe_programs[key] = gen.generate_program();
-        }
-        auto& prog = g_glstate.fpe_programs[key];
+        auto& prog = g_glstate.get_or_generate_program();
+
         int prog_id = prog.get_program();
-        if (prog_id < 0)
+        if (prog_id < 0) {
             LOG_D("Error: FPE shader link failed!")
+        }
         GLES.glUseProgram(prog_id);
         CHECK_GL_ERROR_NO_INIT
 

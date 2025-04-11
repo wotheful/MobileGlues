@@ -186,6 +186,8 @@ struct glstate_t {
     static glstate_t& get_instance();
 
     void send_uniforms(int program);
+
+    program_t& get_or_generate_program();
 };
 
 #endif //MOBILEGLUES_TYPES_H

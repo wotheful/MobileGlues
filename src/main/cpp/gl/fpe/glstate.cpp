@@ -54,3 +54,27 @@ void glstate_t::send_uniforms(int program) {
         CHECK_GL_ERROR_NO_INIT
     }
 }
+
+program_t& glstate_t::get_or_generate_program() {
+    // TODO: Make a proper hash
+    uint32_t key = g_glstate.fpe_state.vertexpointer_array.enabled_pointers;
+    key |= ((g_glstate.fpe_state.fpe_bools.fog_enable & 1) << 31);
+    assert(key != 0);
+    if (g_glstate.fpe_programs.find(key)
+        == g_glstate.fpe_programs.end()) {
+        LOG_D("Generating new shader: 0x%x", key)
+        fpe_shader_generator gen(g_glstate.fpe_state);
+        program_t program = gen.generate_program();
+        int prog_id = program.get_program();
+        if (prog_id > 0)
+            g_glstate.fpe_programs[key] = program;
+        else {
+            LOG_D("Error: FPE shader link failed!")
+            // reserve key==0 as null program for failure
+            return g_glstate.fpe_programs[0];
+        }
+    }
+
+    auto& prog = g_glstate.fpe_programs[key];
+    return prog;
+}
