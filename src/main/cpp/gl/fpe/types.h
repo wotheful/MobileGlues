@@ -64,29 +64,32 @@ struct vertex_pointer_array_t {
             bool enabled = ((enabled_pointers >> i) & 1);
             if (!enabled) continue;
 
-            if (first_va_idx == -1)
+            if (first_va_idx == -1) {
                 first_va_idx = i;
-
-            auto &vp = attributes[i];
-            // attribPointer == 0 must be starting pointer?
-            if (vp.pointer == nullptr) {
-                starting_pointer = nullptr;
                 break;
             }
 
-            // starting_pointer == 0
-            //     => never encountered valid pointer before
-            if (starting_pointer == nullptr) {
-                starting_pointer = vp.pointer;
-                continue;
-            }
-
-            // Save smallest pointer value as starting pointer
-            starting_pointer =
-                    std::min(starting_pointer, vp.pointer);
+//            auto &vp = attributes[i];
+//            // attribPointer == 0 must be starting pointer?
+//            if (vp.pointer == nullptr) {
+//                starting_pointer = nullptr;
+//                break;
+//            }
+//
+//            // starting_pointer == 0
+//            //     => never encountered valid pointer before
+//            if (starting_pointer == nullptr) {
+//                starting_pointer = vp.pointer;
+//                continue;
+//            }
+//
+//            // Save smallest pointer value as starting pointer
+//            starting_pointer =
+//                    std::min(starting_pointer, vp.pointer);
         }
 
         stride = attributes[first_va_idx].stride;
+        starting_pointer = attributes[first_va_idx].pointer;
 
         // stride==0 && stride in pointer == 0
         // => tightly packed, infer stride from offset below
