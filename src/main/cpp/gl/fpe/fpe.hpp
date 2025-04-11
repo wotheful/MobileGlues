@@ -25,6 +25,4 @@ int init_fpe();
 // 0 - keep DrawArray, 1 - switch to DrawElements
 int commit_fpe_state_on_draw(GLenum* mode, GLint* first, GLsizei* count);
 
-int update_fpe_uniforms(GLuint program);
-
 #endif //MOBILEGLUES_FPE_HPP

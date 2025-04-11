@@ -101,6 +101,7 @@ struct fixed_function_draw_state_t {
 
     void reset();
 
+    // Put one vertex into vb, from current draw state
     void advance();
 
     void compile_vertexattrib(vertex_pointer_array_t& va) const;
@@ -183,6 +184,8 @@ struct glstate_t {
     const char* fpe_frag_shader_src;
 
     static glstate_t& get_instance();
+
+    void send_uniforms(int program);
 };
 
 #endif //MOBILEGLUES_TYPES_H
