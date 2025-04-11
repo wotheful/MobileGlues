@@ -56,7 +56,7 @@ void fixed_function_draw_state_t::advance() {
 void fixed_function_draw_state_t::compile_vertexattrib(vertex_pointer_array_t& va) const {
     va.reset();
 
-    va.dirty = true;
+    va.dirty = false;
     va.buffer_based = false;
 
     const auto& sizes = current_data.sizes;

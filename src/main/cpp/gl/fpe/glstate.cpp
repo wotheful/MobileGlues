@@ -78,3 +78,63 @@ program_t& glstate_t::get_or_generate_program() {
     auto& prog = g_glstate.fpe_programs[key];
     return prog;
 }
+
+void glstate_t::send_vertex_attributes() {
+    auto& va = g_glstate.fpe_state.vertexpointer_array;
+    if (!va.dirty) return;
+
+    va.dirty = false;
+
+    va.normalize();
+
+    for (int i = 0; i < VERTEX_POINTER_COUNT; ++i) {
+        bool enabled = ((va.enabled_pointers >> i) & 1);
+
+        auto &vp = va.attributes[i];
+        if (enabled) {
+            vp.stride = va.stride;
+
+            GLES.glVertexAttribPointer(
+                    i, vp.size, vp.type, vp.normalized, vp.stride, vp.pointer);
+            CHECK_GL_ERROR_NO_INIT
+
+            GLES.glEnableVertexAttribArray(i);
+            CHECK_GL_ERROR_NO_INIT
+
+            LOG_D("attrib #%d: type = %s, size = %d, stride = %d, usage = %s, ptr = %p",
+                  i, glEnumToString(vp.type), vp.size, vp.stride, glEnumToString(vp.usage), vp.pointer)
+        }
+        else {
+            switch (vp.usage) {
+                case GL_COLOR_ARRAY:
+                    if (g_glstate.fpe_draw.current_data.sizes.color_size > 0) {
+                        const auto& v = g_glstate.fpe_draw.current_data.color;
+                        LOG_D("attrib #%d: type = %s, usage = %s, value = (%.2f, %.2f, %.2f, %.2f) (disabled)",
+                              i, glEnumToString(vp.type), glEnumToString(vp.usage),
+                              v[0], v[1], v[2], v[3])
+
+                        GLES.glVertexAttrib4fv(i, glm::value_ptr(v));
+                        CHECK_GL_ERROR_NO_INIT
+                    }
+                    break;
+                case GL_NORMAL_ARRAY:
+                    if (g_glstate.fpe_draw.current_data.sizes.normal_size > 0) {
+                        const auto& v = g_glstate.fpe_draw.current_data.normal;
+                        LOG_D("attrib #%d: type = %s, usage = %s, value = (%.2f, %.2f, %.2f, %.2f) (disabled)",
+                              i, glEnumToString(vp.type), glEnumToString(vp.usage),
+                              v[0], v[1], v[2], v[3])
+
+                        GLES.glVertexAttrib4fv(i, glm::value_ptr(v));
+                        CHECK_GL_ERROR_NO_INIT
+                    }
+                    break;
+                default:
+                    LOG_D("attrib #%d: (disabled)", i)
+                    break;
+            }
+
+            GLES.glDisableVertexAttribArray(i);
+            CHECK_GL_ERROR_NO_INIT
+        }
+    }
+}

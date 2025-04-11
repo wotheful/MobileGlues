@@ -52,6 +52,54 @@ struct vertex_pointer_array_t {
         buffer_based = false;
         memset(&attributes, 0, sizeof(attributes));
     }
+
+    // Split into starting pointer & offset into buffer per pointer
+    void normalize() {
+        int first_va_idx = -1;
+
+        // Find starting pointer
+        for (int i = 0; i < VERTEX_POINTER_COUNT; ++i) {
+            bool enabled = ((enabled_pointers >> i) & 1);
+            if (!enabled) continue;
+
+            if (first_va_idx == -1)
+                first_va_idx = i;
+
+            auto &vp = attributes[i];
+            // attribPointer == 0 must be starting pointer?
+            if (vp.pointer == nullptr) {
+                starting_pointer = nullptr;
+                break;
+            }
+
+            // starting_pointer == 0
+            //     => never encountered valid pointer before
+            if (starting_pointer == nullptr) {
+                starting_pointer = vp.pointer;
+                continue;
+            }
+
+            // Save smaller pointer value
+            starting_pointer =
+                    std::min(starting_pointer, vp.pointer);
+        }
+
+        stride = attributes[first_va_idx].stride;
+
+        // Adjust pointer offsets according to starting pointer
+        // Getting actual stride if stride==0
+        for (int i = 0; i < VERTEX_POINTER_COUNT; ++i) {
+            bool enabled = ((enabled_pointers >> i) & 1);
+            if (!enabled) continue;
+
+            auto &vp = attributes[i];
+
+            vp.pointer =
+                    (const void*)((const uint64_t)vp.pointer - (const uint64_t)starting_pointer);
+
+//            stride = std::max(stride, vp.stride);
+        }
+    }
 };
 
 struct fixed_function_bool_t { // glEnable/glDisable
@@ -188,6 +236,8 @@ struct glstate_t {
     void send_uniforms(int program);
 
     program_t& get_or_generate_program();
+
+    void send_vertex_attributes();
 };
 
 #endif //MOBILEGLUES_TYPES_H
