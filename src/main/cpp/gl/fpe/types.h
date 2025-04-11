@@ -17,6 +17,8 @@
 #include "fpe_shadergen.h"
 #include "vertexpointer_utils.h"
 
+GLsizei type_size(GLenum type);
+
 struct transformation_t {
     glm::mat4 matrices[4];
     std::vector<glm::mat4> matrices_stack[4];
@@ -79,12 +81,16 @@ struct vertex_pointer_array_t {
                 continue;
             }
 
-            // Save smaller pointer value
+            // Save smallest pointer value as starting pointer
             starting_pointer =
                     std::min(starting_pointer, vp.pointer);
         }
 
         stride = attributes[first_va_idx].stride;
+
+        // stride==0 && stride in pointer == 0
+        // => tightly packed, infer stride from offset below
+        bool do_calc_stride = (stride == 0);
 
         // Adjust pointer offsets according to starting pointer
         // Getting actual stride if stride==0
@@ -97,7 +103,8 @@ struct vertex_pointer_array_t {
             vp.pointer =
                     (const void*)((const uint64_t)vp.pointer - (const uint64_t)starting_pointer);
 
-//            stride = std::max(stride, vp.stride);
+            if (do_calc_stride)
+                stride = std::max((uint64_t)stride, (uint64_t)vp.pointer + vp.size * type_size(vp.type));
         }
     }
 };

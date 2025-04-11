@@ -18,8 +18,6 @@
 
 extern bool fpe_inited;
 
-GLsizei type_size(GLenum type);
-
 int init_fpe();
 
 // 0 - keep DrawArray, 1 - switch to DrawElements
