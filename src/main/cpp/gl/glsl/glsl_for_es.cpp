@@ -1007,7 +1007,8 @@ std::vector<unsigned int> glsl_to_spirv(GLenum shader_type, int glsl_version, co
 std::string spirv_to_essl(std::vector<unsigned int> spirv, uint essl_version, int& errc) {
     spvc_context context = nullptr;
     spvc_parsed_ir ir = nullptr;
-    spvc_compiler compiler_glsl = nullptr;
+    spvc_compiler compiler = nullptr;
+    spvc_set active = nullptr;
     spvc_compiler_options options = nullptr;
     spvc_resources resources = nullptr;
     const spvc_reflected_resource *list = nullptr;
@@ -1020,14 +1021,15 @@ std::string spirv_to_essl(std::vector<unsigned int> spirv, uint essl_version, in
     LOG_D("spirv_code.size(): %d", spirv.size())
     spvc_context_create(&context);
     spvc_context_parse_spirv(context, p_spirv, word_count, &ir);
-    spvc_context_create_compiler(context, SPVC_BACKEND_GLSL, ir, SPVC_CAPTURE_MODE_TAKE_OWNERSHIP, &compiler_glsl);
-    spvc_compiler_create_shader_resources(compiler_glsl, &resources);
+    spvc_context_create_compiler(context, SPVC_BACKEND_GLSL, ir, SPVC_CAPTURE_MODE_TAKE_OWNERSHIP, &compiler);
+    spvc_compiler_create_shader_resources(compiler, &resources);
+    spvc_compiler_create_shader_resources_for_active_variables(compiler, &resources, active);
     spvc_resources_get_resource_list_for_type(resources, SPVC_RESOURCE_TYPE_UNIFORM_BUFFER, &list, &count);
-    spvc_compiler_create_compiler_options(compiler_glsl, &options);
+    spvc_compiler_create_compiler_options(compiler, &options);
     spvc_compiler_options_set_uint(options, SPVC_COMPILER_OPTION_GLSL_VERSION, essl_version >= 300 ? essl_version : 300);
     spvc_compiler_options_set_bool(options, SPVC_COMPILER_OPTION_GLSL_ES, SPVC_TRUE);
-    spvc_compiler_install_compiler_options(compiler_glsl, options);
-    spvc_compiler_compile(compiler_glsl, &result);
+    spvc_compiler_install_compiler_options(compiler, options);
+    spvc_compiler_compile(compiler, &result);
 
     if (!result) {
         LOG_E("Error: unexpected error in spirv-cross.")
