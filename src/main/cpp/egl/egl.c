@@ -3,5 +3,3 @@
 //
 
 #include "egl.h"
-
-thread_local context_t *current_context;
