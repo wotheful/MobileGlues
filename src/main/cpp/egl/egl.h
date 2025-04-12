@@ -48,6 +48,7 @@ typedef EGLBoolean (*EGLWAITNATIVEPROCP)(EGLint engine);
 typedef EGLBoolean (*EGLSWAPBUFFERSPROCP)(EGLDisplay dpy, EGLSurface surface);
 typedef EGLBoolean (*EGLCOPYBUFFERSPROCP)(EGLDisplay dpy, EGLSurface surface, EGLNativePixmapType target);
 
+
 #define MAX_BOUND_BUFFERS 9
 #define MAX_BOUND_BASEBUFFERS 4
 #define MAX_DRAWBUFFERS 8
@@ -117,6 +118,8 @@ typedef struct {
     int nextensions_es;
     char** extra_extensions_array;
 } context_t;
+
+extern thread_local context_t *current_context;
 
 // Undocumented libmali internals, needed for ODROID Go Ultra
 //NativePixmapType (*EGL_CREATE_PIXMAP_ID_MAPPINGPROCP)(void *pixmap);
