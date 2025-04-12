@@ -9,6 +9,7 @@
 #define DEBUG 1
 
 struct thread_local framebuffer_t* bound_framebuffer;
+thread_local context_t *current_context;
 
 GLint MAX_DRAW_BUFFERS = 0;
 
