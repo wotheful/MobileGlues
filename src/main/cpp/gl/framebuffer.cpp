@@ -179,3 +179,13 @@ GLenum glCheckFramebufferStatus(GLenum target) {
     return status;
     CHECK_GL_ERROR
 }
+
+void glDeleteFramebuffers (GLsizei n, const GLuint *framebuffers) {
+    LOG()
+    GLES.glDeleteFramebuffers(n, framebuffers);
+}
+
+void glGenFramebuffers (GLsizei n, GLuint *framebuffers) {
+    LOG()
+    GLES.glGenFramebuffers(n, framebuffers);
+}
