@@ -11,7 +11,7 @@
 
 #define DEBUG 0
 
-void glClearDepth_static(GLclampd depth) {
+void glClearDepth(GLclampd depth) {
     LOG()
     GLES.glClearDepthf((float)depth);
     CHECK_GL_ERROR
