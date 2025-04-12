@@ -47,7 +47,7 @@ static name##_PTR egl_##name = NULL;                                        \
             egl_##name = (name##_PTR)proc_address(egl, #name);              \
         }                                                                   \
         if (egl_##name == NULL)                                             \
-        LOG_W("Error: " #name " is NULL\n");                                \
+        LOG_E("Error: " #name " is NULL\n");                                \
     }                                                                       \
 }
 
@@ -103,7 +103,7 @@ extern "C" GLAPI GLAPIENTRY type name(__VA_ARGS__)  { \
 }
 #else
 #define NATIVE_FUNCTION_END(type,name,...)                                  \
-    LOG_D("Use native function: %s @ %s(...)", RENDERERNAME, __FUNCTION__); \
+    LOG_E("Use native function: %s @ %s(...)", RENDERERNAME, __FUNCTION__); \
     type ret = GLES.name(__VA_ARGS__);                                    \
     CHECK_GL_ERROR                                                          \
     return ret;                                                             \
@@ -118,7 +118,7 @@ extern "C" GLAPI GLAPIENTRY type name(__VA_ARGS__)  { \
 }
 #else
 #define NATIVE_FUNCTION_END_NO_RETURN(type,name,...)                        \
-    LOG_D("Use native function: %s @ %s(...)", RENDERERNAME, __FUNCTION__); \
+    LOG_E("Use native function: %s @ %s(...)", RENDERERNAME, __FUNCTION__); \
     GLES.name(__VA_ARGS__);                                               \
 }
 #endif
