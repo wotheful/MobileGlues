@@ -22,6 +22,7 @@ typedef struct framebuffer_t {
     struct attachment_t* draw_attachment;
     struct attachment_t* read_attachment;
 };
+extern thread_local framebuffer_t* bound_framebuffer;
 
 GLint getMaxDrawBuffers();
 
