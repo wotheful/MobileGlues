@@ -1023,7 +1023,6 @@ std::string spirv_to_essl(std::vector<unsigned int> spirv, uint essl_version, in
     spvc_context_parse_spirv(context, p_spirv, word_count, &ir);
     spvc_context_create_compiler(context, SPVC_BACKEND_GLSL, ir, SPVC_CAPTURE_MODE_TAKE_OWNERSHIP, &compiler);
     spvc_compiler_create_shader_resources(compiler, &resources);
-    spvc_compiler_create_shader_resources_for_active_variables(compiler, &resources, active);
     spvc_resources_get_resource_list_for_type(resources, SPVC_RESOURCE_TYPE_UNIFORM_BUFFER, &list, &count);
     spvc_compiler_create_compiler_options(compiler, &options);
     spvc_compiler_options_set_uint(options, SPVC_COMPILER_OPTION_GLSL_VERSION, essl_version >= 300 ? essl_version : 300);
