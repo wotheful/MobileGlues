@@ -17,6 +17,8 @@
 #include "fpe_shadergen.h"
 #include "vertexpointer_utils.h"
 
+GLsizei type_size(GLenum type);
+
 struct transformation_t {
     glm::mat4 matrices[4];
     std::vector<glm::mat4> matrices_stack[4];
@@ -52,6 +54,62 @@ struct vertex_pointer_array_t {
         buffer_based = false;
         memset(&attributes, 0, sizeof(attributes));
     }
+
+    // Split into starting pointer & offset into buffer per pointer
+    void normalize() {
+        int first_va_idx = -1;
+
+        // Find starting pointer
+        for (int i = 0; i < VERTEX_POINTER_COUNT; ++i) {
+            bool enabled = ((enabled_pointers >> i) & 1);
+            if (!enabled) continue;
+
+            if (first_va_idx == -1) {
+                first_va_idx = i;
+                break;
+            }
+
+//            auto &vp = attributes[i];
+//            // attribPointer == 0 must be starting pointer?
+//            if (vp.pointer == nullptr) {
+//                starting_pointer = nullptr;
+//                break;
+//            }
+//
+//            // starting_pointer == 0
+//            //     => never encountered valid pointer before
+//            if (starting_pointer == nullptr) {
+//                starting_pointer = vp.pointer;
+//                continue;
+//            }
+//
+//            // Save smallest pointer value as starting pointer
+//            starting_pointer =
+//                    std::min(starting_pointer, vp.pointer);
+        }
+
+        stride = attributes[first_va_idx].stride;
+        starting_pointer = attributes[first_va_idx].pointer;
+
+        // stride==0 && stride in pointer == 0
+        // => tightly packed, infer stride from offset below
+        bool do_calc_stride = (stride == 0);
+
+        // Adjust pointer offsets according to starting pointer
+        // Getting actual stride if stride==0
+        for (int i = 0; i < VERTEX_POINTER_COUNT; ++i) {
+            bool enabled = ((enabled_pointers >> i) & 1);
+            if (!enabled) continue;
+
+            auto &vp = attributes[i];
+
+            vp.pointer =
+                    (const void*)((const uint64_t)vp.pointer - (const uint64_t)starting_pointer);
+
+            if (do_calc_stride)
+                stride = std::max((uint64_t)stride, (uint64_t)vp.pointer + vp.size * type_size(vp.type));
+        }
+    }
 };
 
 struct fixed_function_bool_t { // glEnable/glDisable
@@ -75,7 +133,7 @@ struct light_t {
 
 // size = 0 means disabled
 struct fixed_function_draw_size_t {
-    GLint normal_size = 3;
+    GLint normal_size = 0;
     GLint color_size = 0;
     GLint vertex_size = 0;
     GLint texcoord_size[MAX_TEX] = {0};
@@ -183,6 +241,12 @@ struct glstate_t {
     const char* fpe_frag_shader_src;
 
     static glstate_t& get_instance();
+
+    void send_uniforms(int program);
+
+    program_t& get_or_generate_program();
+
+    void send_vertex_attributes();
 };
 
 #endif //MOBILEGLUES_TYPES_H

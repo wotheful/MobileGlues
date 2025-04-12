@@ -198,21 +198,7 @@ int commit_fpe_state_on_draw(GLenum* mode, GLint* first, GLsizei* count) {
             fpe_inited = true;
     }
 
-//    fpe_shader_generator gen(g_glstate.fpe_state);
-//    program_t program = gen.generate_program();
-//    LOG_D("Generated VS: \n%s", program.vs.c_str())
-//    LOG_D("Generated FS: \n%s", program.fs.c_str())
-
-    // TODO: Make a proper hash
-    uint32_t key = g_glstate.fpe_state.vertexpointer_array.enabled_pointers;
-    key |= ((g_glstate.fpe_state.fpe_bools.fog_enable & 1) << 31);
-    if (g_glstate.fpe_programs.find(key)
-        == g_glstate.fpe_programs.end()) {
-        LOG_D("Generating new shader: 0x%x", key)
-        fpe_shader_generator gen(g_glstate.fpe_state);
-        g_glstate.fpe_programs[key] = gen.generate_program();
-    }
-    auto& prog = g_glstate.fpe_programs[key];
+    auto& prog = g_glstate.get_or_generate_program();
     int prog_id = prog.get_program();
     if (prog_id < 0)
         LOG_D("Error: FPE shader link failed!")
@@ -239,55 +225,56 @@ int commit_fpe_state_on_draw(GLenum* mode, GLint* first, GLsizei* count) {
         CHECK_GL_ERROR_NO_INIT
     }
 
-    if (vpa.dirty) {
-        vpa.dirty = false;
-
-        for (int i = 0; i < VERTEX_POINTER_COUNT; ++i) {
-            bool enabled = ((vpa.enabled_pointers >> i) & 1);
-
-            if (enabled) {
-                auto &vp = vpa.attributes[i];
-
-                if (is_first) {
-                    vpa.starting_pointer = vp.pointer;
-                    vpa.stride = vp.stride; // TODO: stride == 0?
-                }
-
-                const void* offset = (const void*)((const char*)vp.pointer - (const char*)vpa.starting_pointer);
-                GLES.glVertexAttribPointer(i, vp.size, vp.type, vp.normalized, vp.stride, offset);
-                CHECK_GL_ERROR_NO_INIT
-
-                GLES.glEnableVertexAttribArray(i);
-                CHECK_GL_ERROR_NO_INIT
-
-                LOG_D("attrib #%d: type = %s, size = %d, stride = %d, usage = %s, ptr = %p",
-                      i, glEnumToString(vp.type), vp.size, vp.stride, glEnumToString(vp.usage), vp.pointer)
-
-                is_first = false;
-            }
-            else if (vpa.attributes[i].usage == GL_COLOR_ARRAY) {
-                auto &vp = vpa.attributes[i];
-
-                // TODO: fix this nonsense
-                vp.value = g_glstate.fpe_draw.current_data.color;
-
-                LOG_D("attrib #%d: type = %s, usage = %s, value = (%.2f, %.2f, %.2f, %.2f)",
-                      i, glEnumToString(vp.type), glEnumToString(vp.usage),
-                      vp.value[0], vp.value[1], vp.value[2], vp.value[3])
-
-                GLES.glVertexAttrib4fv(i, glm::value_ptr(vp.value));
-                CHECK_GL_ERROR_NO_INIT
-
-                GLES.glDisableVertexAttribArray(i);
-                CHECK_GL_ERROR_NO_INIT
-            }
-            else {
-                GLES.glDisableVertexAttribArray(i);
-                CLEAR_GL_ERROR_NO_INIT
-                //CHECK_GL_ERROR_NO_INIT
-            }
-        }
-    }
+    g_glstate.send_vertex_attributes();
+//    if (vpa.dirty) {
+//        vpa.dirty = false;
+//
+//        for (int i = 0; i < VERTEX_POINTER_COUNT; ++i) {
+//            bool enabled = ((vpa.enabled_pointers >> i) & 1);
+//
+//            if (enabled) {
+//                auto &vp = vpa.attributes[i];
+//
+//                if (is_first) {
+//                    vpa.starting_pointer = vp.pointer;
+//                    vpa.stride = vp.stride; // TODO: stride == 0?
+//                }
+//
+//                const void* offset = (const void*)((const char*)vp.pointer - (const char*)vpa.starting_pointer);
+//                GLES.glVertexAttribPointer(i, vp.size, vp.type, vp.normalized, vp.stride, offset);
+//                CHECK_GL_ERROR_NO_INIT
+//
+//                GLES.glEnableVertexAttribArray(i);
+//                CHECK_GL_ERROR_NO_INIT
+//
+//                LOG_D("attrib #%d: type = %s, size = %d, stride = %d, usage = %s, ptr = %p",
+//                      i, glEnumToString(vp.type), vp.size, vp.stride, glEnumToString(vp.usage), vp.pointer)
+//
+//                is_first = false;
+//            }
+//            else if (vpa.attributes[i].usage == GL_COLOR_ARRAY) {
+//                auto &vp = vpa.attributes[i];
+//
+//                if (g_glstate.fpe_draw.current_data.sizes.color_size > 0) {
+//                    const auto& color = g_glstate.fpe_draw.current_data.color;
+//                    LOG_D("attrib #%d: type = %s, usage = %s, value = (%.2f, %.2f, %.2f, %.2f)",
+//                          i, glEnumToString(vp.type), glEnumToString(vp.usage),
+//                          color[0], color[1], color[2], color[3])
+//
+//                    GLES.glVertexAttrib4fv(i, glm::value_ptr(color));
+//                    CHECK_GL_ERROR_NO_INIT
+//                }
+//
+//                GLES.glDisableVertexAttribArray(i);
+//                CHECK_GL_ERROR_NO_INIT
+//            }
+//            else {
+//                GLES.glDisableVertexAttribArray(i);
+//                CLEAR_GL_ERROR_NO_INIT
+//                //CHECK_GL_ERROR_NO_INIT
+//            }
+//        }
+//    }
 
     int ret = 0;
 
@@ -341,82 +328,6 @@ int commit_fpe_state_on_draw(GLenum* mode, GLint* first, GLsizei* count) {
         ret = 1;
     }
 
-    const auto& mv = g_glstate.fpe_uniform.transformation.matrices[matrix_idx(GL_MODELVIEW)];
-    const auto& proj = g_glstate.fpe_uniform.transformation.matrices[matrix_idx(GL_PROJECTION)];
-
-    LOG_D("GL_MODELVIEW: ")
-    print_matrix(mv);
-    LOG_D("GL_PROJECTION: ")
-    print_matrix(proj);
-
-    // TODO: detect change and only set dirty bits here
-    GLES.glBindVertexArray(g_glstate.fpe_state.fpe_vao);
-    CHECK_GL_ERROR_NO_INIT
-    GLint mvmat = GLES.glGetUniformLocation(prog_id, "ModelViewMat");
-    CHECK_GL_ERROR_NO_INIT
-//    GLint projmat = GLES.glGetUniformLocation(prog_id, "ProjMat");
-//    CHECK_GL_ERROR_NO_INIT
-    GLint mat_id = GLES.glGetUniformLocation(prog_id, "ModelViewProjMat");
-    CHECK_GL_ERROR_NO_INIT
-    const auto mat = proj * mv;
-    GLES.glUniformMatrix4fv(mvmat, 1, GL_FALSE, glm::value_ptr(g_glstate.fpe_uniform.transformation.matrices[matrix_idx(GL_MODELVIEW)]));
-    CHECK_GL_ERROR_NO_INIT
-//    GLES.glUniformMatrix4fv(projmat, 1, GL_FALSE, glm::value_ptr(g_glstate.fpe_uniform.transformation.matrices[matrix_idx(GL_PROJECTION)]));
-//    CHECK_GL_ERROR_NO_INIT
-    GLES.glUniformMatrix4fv(mat_id, 1, GL_FALSE, glm::value_ptr(mat));
-    CHECK_GL_ERROR_NO_INIT
-    GLES.glUniform1i(GLES.glGetUniformLocation(prog_id, "Sampler0"), 0);
-    CHECK_GL_ERROR_NO_INIT
-
-    if (g_glstate.fpe_state.fpe_bools.fog_enable) {
-        GLint fogcolor_id = GLES.glGetUniformLocation(prog_id, "fogParam.color");
-        CHECK_GL_ERROR_NO_INIT
-        LOG_D("fogcolor_id = %d", fogcolor_id)
-        GLES.glUniform4fv(fogcolor_id, 1, glm::value_ptr(g_glstate.fpe_uniform.fog_color));
-        CHECK_GL_ERROR_NO_INIT
-        GLint fogdensity_id = GLES.glGetUniformLocation(prog_id, "fogParam.density");
-        CHECK_GL_ERROR_NO_INIT
-        GLES.glUniform1f(fogdensity_id, g_glstate.fpe_uniform.fog_density);
-        CHECK_GL_ERROR_NO_INIT
-        GLint fogstart_id = GLES.glGetUniformLocation(prog_id, "fogParam.start");
-        CHECK_GL_ERROR_NO_INIT
-        GLES.glUniform1f(fogstart_id, g_glstate.fpe_uniform.fog_start);
-        CHECK_GL_ERROR_NO_INIT
-        GLint fogend_id = GLES.glGetUniformLocation(prog_id, "fogParam.end");
-        CHECK_GL_ERROR_NO_INIT
-        GLES.glUniform1f(fogend_id, g_glstate.fpe_uniform.fog_end);
-        CHECK_GL_ERROR_NO_INIT
-    }
-
-    //update_fpe_uniforms(prog_id);
+    g_glstate.send_uniforms(prog_id);
     return ret;
-}
-
-int update_fpe_uniforms(GLuint prog_id) {
-    INIT_CHECK_GL_ERROR
-    const auto& mv = g_glstate.fpe_uniform.transformation.matrices[matrix_idx(GL_MODELVIEW)];
-    const auto& proj = g_glstate.fpe_uniform.transformation.matrices[matrix_idx(GL_PROJECTION)];
-
-//    LOG_D("GL_MODELVIEW: ")
-//    print_matrix(mv);
-//    LOG_D("GL_PROJECTION: ")
-//    print_matrix(proj);
-
-    // TODO: detect change and only set dirty bits here
-    GLES.glBindVertexArray(g_glstate.fpe_state.fpe_vao);
-    CHECK_GL_ERROR_NO_INIT
-    GLint mvmat = GLES.glGetUniformLocation(prog_id, "ModelViewMat");
-    CHECK_GL_ERROR_NO_INIT
-//    GLint projmat = GLES.glGetUniformLocation(prog_id, "ProjMat");
-//    CHECK_GL_ERROR_NO_INIT
-    GLint mat_id = GLES.glGetUniformLocation(prog_id, "ModelViewProjMat");
-    CHECK_GL_ERROR_NO_INIT
-    const auto mat = proj * mv;
-    GLES.glUniformMatrix4fv(mvmat, 1, GL_FALSE, glm::value_ptr(g_glstate.fpe_uniform.transformation.matrices[matrix_idx(GL_MODELVIEW)]));
-    CHECK_GL_ERROR_NO_INIT
-//    GLES.glUniformMatrix4fv(projmat, 1, GL_FALSE, glm::value_ptr(g_glstate.fpe_uniform.transformation.matrices[matrix_idx(GL_PROJECTION)]));
-//    CHECK_GL_ERROR_NO_INIT
-    GLES.glUniformMatrix4fv(mat_id, 1, GL_FALSE, glm::value_ptr(mat));
-    CHECK_GL_ERROR_NO_INIT
-    GLES.glUniform1i(GLES.glGetUniformLocation(prog_id, "Sampler0"), 0);
 }

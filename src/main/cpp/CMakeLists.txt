@@ -6,6 +6,7 @@ enable_language(C)
 enable_language(CXX)
 
 set(CAMKE_C_STANDARD 17)
+
 set(CMAKE_CXX_STANDARD 20)
 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -17,7 +18,7 @@ set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_LINK_OPTIONS} -fuse-ld=lld -flto=thin -Wl,-p
 set(CMAKE_ANDROID_STL_TYPE system)
 set(CMAKE_ANDROID_LD "lld")
 
-set(CMAKE_BUILD_TYPE Release)
+#set(CMAKE_BUILD_TYPE Release)
 
 set(PROFILING OFF)
 
@@ -64,6 +65,7 @@ add_library(${CMAKE_PROJECT_NAME} SHARED
         gl/fpe/drawing1x.cpp
         gl/fpe/vertexpointer_utils.cpp
         gl/fpe/drawstate1x.cpp
+        gl/fpe/glstate.cpp
 )
 
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE ./includes ./glm)

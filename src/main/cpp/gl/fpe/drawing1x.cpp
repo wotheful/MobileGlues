@@ -9,47 +9,6 @@
 
 #define DEBUG 0
 
-//// act a bit like gl*Pointer
-//void populate_vertex_pointer(GLenum array) {
-//    auto& va = g_glstate.fpe_state.vertexpointer_array;
-//    switch (array) {
-//        case GL_ARRAY_BUFFER:
-//            va.attributes[vp2idx(GL_VERTEX_ARRAY)] = {
-//                    .size = 4,
-//                    .usage = GL_VERTEX_ARRAY,
-//                    .type = GL_FLOAT,
-//                    .normalized = GL_FALSE,
-//                    .stride = 0,
-//                    .pointer = 0,
-//                    .varies = true
-//            };
-//            break;
-//        case GL_NORMAL_ARRAY:
-//            va.attributes[vp2idx(GL_NORMAL_ARRAY)] = {
-//                    .size = 4,
-//                    .usage = GL_NORMAL_ARRAY,
-//                    .type = GL_FLOAT,
-//                    .normalized = GL_FALSE,
-//                    .stride = 0,
-//                    .pointer = 0,
-//                    .varies = true
-//            };
-//            break;
-//        case GL_TEXTURE_COORD_ARRAY:
-//            va.attributes[vp2idx(GL_TEXTURE_COORD_ARRAY)] = {
-//                    .size = 4,
-//                    .usage = GL_TEXTURE_COORD_ARRAY + (g_glstate.fpe_state.client_active_texture - GL_TEXTURE0),
-//                    .type = GL_FLOAT,
-//                    .normalized = GL_FALSE,
-//                    .stride = 0,
-//                    .pointer = 0,
-//                    .varies = true
-//            };
-//            break;
-//    }
-//    g_glstate.fpe_state.vertexpointer_array.dirty = true;
-//}
-
 void glBegin( GLenum mode ) {
     LOG()
     LOG_D("glBegin(%s)", glEnumToString(mode))
@@ -107,19 +66,12 @@ void glEnd() {
         g_glstate.fpe_draw.compile_vertexattrib(va);
 
         // Program
-        // TODO: Make a proper hash
-        uint32_t key = g_glstate.fpe_state.vertexpointer_array.enabled_pointers;
-        key |= ((g_glstate.fpe_state.fpe_bools.fog_enable & 1) << 31);
-        if (g_glstate.fpe_programs.find(key)
-            == g_glstate.fpe_programs.end()) {
-            LOG_D("Generating new shader: 0x%x", key)
-            fpe_shader_generator gen(g_glstate.fpe_state);
-            g_glstate.fpe_programs[key] = gen.generate_program();
-        }
-        auto& prog = g_glstate.fpe_programs[key];
+        auto& prog = g_glstate.get_or_generate_program();
+
         int prog_id = prog.get_program();
-        if (prog_id < 0)
+        if (prog_id < 0) {
             LOG_D("Error: FPE shader link failed!")
+        }
         GLES.glUseProgram(prog_id);
         CHECK_GL_ERROR_NO_INIT
 
@@ -133,62 +85,37 @@ void glEnd() {
         CHECK_GL_ERROR_NO_INIT
 
         // Vertex Pointer to ES
-        if (va.dirty) {
-            va.dirty = false;
-
-            for (int i = 0; i < VERTEX_POINTER_COUNT; ++i) {
-                bool enabled = ((va.enabled_pointers >> i) & 1);
-
-                if (enabled) {
-                    auto &vp = va.attributes[i];
-                    vp.stride = va.stride;
-
-                    GLES.glVertexAttribPointer(i, vp.size, vp.type, vp.normalized, vp.stride, vp.pointer);
-                    CHECK_GL_ERROR_NO_INIT
-
-                    GLES.glEnableVertexAttribArray(i);
-                    CHECK_GL_ERROR_NO_INIT
-
-                    LOG_D("attrib #%d: type = %s, size = %d, stride = %d, usage = %s, ptr = %p",
-                          i, glEnumToString(vp.type), vp.size, vp.stride, glEnumToString(vp.usage), vp.pointer)
-                }
-                else {
-                    LOG_D("attrib #%d: (disabled)", i)
-                    GLES.glDisableVertexAttribArray(i);
-                    CHECK_GL_ERROR_NO_INIT
-                }
-            }
-        }
+        g_glstate.send_vertex_attributes();
+//        if (va.dirty) {
+//            va.dirty = false;
+//
+//            for (int i = 0; i < VERTEX_POINTER_COUNT; ++i) {
+//                bool enabled = ((va.enabled_pointers >> i) & 1);
+//
+//                if (enabled) {
+//                    auto &vp = va.attributes[i];
+//                    vp.stride = va.stride;
+//
+//                    GLES.glVertexAttribPointer(i, vp.size, vp.type, vp.normalized, vp.stride, vp.pointer);
+//                    CHECK_GL_ERROR_NO_INIT
+//
+//                    GLES.glEnableVertexAttribArray(i);
+//                    CHECK_GL_ERROR_NO_INIT
+//
+//                    LOG_D("attrib #%d: type = %s, size = %d, stride = %d, usage = %s, ptr = %p",
+//                          i, glEnumToString(vp.type), vp.size, vp.stride, glEnumToString(vp.usage), vp.pointer)
+//                }
+//                else {
+//                    LOG_D("attrib #%d: (disabled)", i)
+//                    GLES.glDisableVertexAttribArray(i);
+//                    CHECK_GL_ERROR_NO_INIT
+//                }
+//            }
+//        }
 
         // Uniform
-//        update_fpe_uniforms(prog_id);
         {
-            const auto& mv = g_glstate.fpe_uniform.transformation.matrices[matrix_idx(GL_MODELVIEW)];
-            const auto& proj = g_glstate.fpe_uniform.transformation.matrices[matrix_idx(GL_PROJECTION)];
-
-            //    LOG_D("GL_MODELVIEW: ")
-            //    print_matrix(mv);
-            //    LOG_D("GL_PROJECTION: ")
-            //    print_matrix(proj);
-
-            // TODO: detect change and only set dirty bits here
-            GLES.glBindVertexArray(g_glstate.fpe_state.fpe_vao);
-            CHECK_GL_ERROR_NO_INIT
-            GLint mvmat = GLES.glGetUniformLocation(prog_id, "ModelViewMat");
-            CHECK_GL_ERROR_NO_INIT
-            //    GLint projmat = GLES.glGetUniformLocation(prog_id, "ProjMat");
-            //    CHECK_GL_ERROR_NO_INIT
-            GLint mat_id = GLES.glGetUniformLocation(prog_id, "ModelViewProjMat");
-            CHECK_GL_ERROR_NO_INIT
-            const auto mat = proj * mv;
-            GLES.glUniformMatrix4fv(mvmat, 1, GL_FALSE, glm::value_ptr(g_glstate.fpe_uniform.transformation.matrices[matrix_idx(GL_MODELVIEW)]));
-            CHECK_GL_ERROR_NO_INIT
-            //    GLES.glUniformMatrix4fv(projmat, 1, GL_FALSE, glm::value_ptr(g_glstate.fpe_uniform.transformation.matrices[matrix_idx(GL_PROJECTION)]));
-            //    CHECK_GL_ERROR_NO_INIT
-            GLES.glUniformMatrix4fv(mat_id, 1, GL_FALSE, glm::value_ptr(mat));
-            CHECK_GL_ERROR_NO_INIT
-            GLES.glUniform1i(GLES.glGetUniformLocation(prog_id, "Sampler0"), 0);
-            CHECK_GL_ERROR_NO_INIT
+            g_glstate.send_uniforms(prog_id);
         }
 
         // Draw
@@ -215,18 +142,6 @@ void glNormal3f( GLfloat nx, GLfloat ny, GLfloat nz ) {
     }
 
     mglNormal<GLfloat, 3>({nx, ny, nz});
-
-//    auto& state = g_glstate.fpe_draw;
-//    auto& va = g_glstate.fpe_state.vertexpointer_array;
-//
-//    state.current_data.normal = glm::vec3(nx, ny, nz);
-//    state.current_data.normal_size = 3;
-//    auto mask = vp_mask(GL_NORMAL_ARRAY);
-//    auto index = vp2idx(GL_NORMAL_ARRAY);
-//    if (!(va.enabled_pointers & mask)) {
-//        va.enabled_pointers |= mask;
-//        populate_vertex_pointer(GL_NORMAL_ARRAY);
-//    }
 }
 
 void glTexCoord2f( GLfloat s, GLfloat t ) {
@@ -253,16 +168,6 @@ void glTexCoord4f( GLfloat s, GLfloat t, GLfloat r, GLfloat q ) {
     }
 
     mglTexCoord<GLfloat, 4>({s, t, r, q}, 0);
-//    auto& state = g_glstate.fpe_draw;
-//    auto& va = g_glstate.fpe_state.vertexpointer_array;
-//
-//    state.texcoord[0] = glm::vec4(s, t, r, q);
-//    auto mask = vp_mask(GL_TEXTURE_COORD_ARRAY);
-//    auto index = vp2idx(GL_TEXTURE_COORD_ARRAY);
-//    if (!(va.enabled_pointers & mask)) {
-//        va.enabled_pointers |= mask;
-//        populate_vertex_pointer(GL_TEXTURE_COORD_ARRAY);
-//    }
 }
 
 void glMultiTexCoord2f( GLenum target, GLfloat s, GLfloat t ) {
@@ -292,16 +197,6 @@ void glMultiTexCoord4f( GLenum target, GLfloat s, GLfloat t, GLfloat r, GLfloat 
 
     assert(target - GL_TEXTURE0 < MAX_TEX);
     mglTexCoord<GLfloat, 4>({s, t, r, q}, target - GL_TEXTURE0);
-//    auto& state = g_glstate.fpe_draw;
-//    auto& va = g_glstate.fpe_state.vertexpointer_array;
-//
-//    state.texcoord[target - GL_TEXTURE0] = glm::vec4(s, t, r, q);
-//    auto mask = vp_mask(GL_TEXTURE_COORD_ARRAY);
-//    auto index = vp2idx(GL_TEXTURE_COORD_ARRAY);
-//    if (!(va.enabled_pointers & mask)) {
-//        va.enabled_pointers |= mask;
-//        populate_vertex_pointer(GL_TEXTURE_COORD_ARRAY);
-//    }
 }
 
 void glVertex3f( GLfloat x, GLfloat y, GLfloat z ) {
@@ -315,7 +210,6 @@ void glVertex3f( GLfloat x, GLfloat y, GLfloat z ) {
     }
 
     mglVertex<GLfloat, 3>({x, y, z});
-//    SELF_CALL(glVertex4f, x, y, z, 1.f);
 }
 
 void glVertex4f( GLfloat x, GLfloat y, GLfloat z, GLfloat w ) {
@@ -329,49 +223,6 @@ void glVertex4f( GLfloat x, GLfloat y, GLfloat z, GLfloat w ) {
     }
 
     mglVertex<GLfloat, 4>({x, y, z, w});
-//    auto& drawstate = g_glstate.fpe_draw;
-//
-//    drawstate.vertex_count++;
-//
-//    // assuming vertex layout won't change since here
-//    auto& va = g_glstate.fpe_state.vertexpointer_array;
-//    auto& vb = g_glstate.fpe_state.fpe_vb;
-//
-//    auto mask = vp_mask(GL_VERTEX_ARRAY);
-//    if (!(va.enabled_pointers & mask)) {
-//        va.enabled_pointers |= vp_mask(GL_VERTEX_ARRAY);
-//        populate_vertex_pointer(GL_VERTEX_ARRAY);
-//    }
-//
-//    // Put in 1 vertex (with attributes)
-//    for (int i = 0; i < VERTEX_POINTER_COUNT; ++i) {
-//        bool enabled = ((va.enabled_pointers >> i) & 1);
-//
-//        if (enabled) {
-//            auto &vp = va.attributes[i];
-//
-//            // Fill in data of this attribute
-//            switch (vp.usage) {
-//                case GL_VERTEX_ARRAY:
-//                    vb.write((const char*)&x, sizeof(GLfloat));
-//                    vb.write((const char*)&y, sizeof(GLfloat));
-//                    vb.write((const char*)&z, sizeof(GLfloat));
-//                    vb.write((const char*)&w, sizeof(GLfloat));
-//                    break;
-//                case GL_TEXTURE_COORD_ARRAY + 0:
-//                case GL_TEXTURE_COORD_ARRAY + 1:
-//                case GL_TEXTURE_COORD_ARRAY + 2:
-//                case GL_TEXTURE_COORD_ARRAY + 3:
-//                case GL_TEXTURE_COORD_ARRAY + 4:
-//                case GL_TEXTURE_COORD_ARRAY + 5:
-//                case GL_TEXTURE_COORD_ARRAY + 6:
-//                case GL_TEXTURE_COORD_ARRAY + 7: {
-//                    auto& texcoord = drawstate.texcoord[vp.usage - GL_TEXTURE_COORD_ARRAY];
-//                    vb.write((const char*)glm::value_ptr(texcoord), sizeof(GLfloat) * 4);
-//                }
-//            }
-//        }
-//    }
 }
 
 void glColor3f( GLfloat red, GLfloat green, GLfloat blue ) {
@@ -385,7 +236,6 @@ void glColor3f( GLfloat red, GLfloat green, GLfloat blue ) {
     }
 
     mglColor<GLfloat, 3>({red, green, blue});
-//    SELF_CALL(glColor4f, red, green, blue, 1)
 }
 
 void glColor4f( GLfloat red, GLfloat green,
@@ -417,6 +267,5 @@ void glColor4f( GLfloat red, GLfloat green,
         attr.value = glm::vec4(red, green, blue, alpha);
         attr.varying = false;
     }
-
     mglColor<GLfloat, 4>({red, green, blue, alpha});
 }
