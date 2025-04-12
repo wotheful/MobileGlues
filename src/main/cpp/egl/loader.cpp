@@ -42,7 +42,7 @@ void init_target_egl() {
             EGL_DEPTH_SIZE, 24,
             EGL_ALPHA_MASK_SIZE, 8,
             EGL_SURFACE_TYPE, EGL_WINDOW_BIT|EGL_PBUFFER_BIT,
-            EGL_CONFORMANT, EGL_OPENGL_ES3_BIT
+            EGL_CONFORMANT, EGL_OPENGL_ES3_BIT,
             EGL_RENDERABLE_TYPE, EGL_OPENGL_ES3_BIT,
             EGL_NONE
     };
