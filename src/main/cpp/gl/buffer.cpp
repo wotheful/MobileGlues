@@ -197,6 +197,7 @@ void glBindBuffer(GLenum target, GLuint buffer) {
         modify_buffer(buffer, real_buffer);
         CHECK_GL_ERROR
     }
+    LOG_D("glBindBuffer: %d -> %d", buffer, real_buffer)
     GLES.glBindBuffer(target, real_buffer);
     CHECK_GL_ERROR
 }
@@ -446,16 +447,19 @@ void glBindVertexArray(GLuint array) {
     LOG_D("glBindVertexArray(%d)", array)
     bound_array = array;
     if (!has_array(array) || array == 0) {
+        LOG_D("Does not have va=%d found!", array)
         GLES.glBindVertexArray(array);
         CHECK_GL_ERROR
         return;
     }
     GLuint real_array = find_real_array(array);
     if (!real_array) {
+        LOG_D("va=%d not initialized, initializing...", array)
         GLES.glGenVertexArrays(1, &real_array);
         modify_array(array, real_array);
         CHECK_GL_ERROR
     }
+    LOG_D("glBindVertexArray: %d -> %d", array, real_array)
     GLES.glBindVertexArray(real_array);
     CHECK_GL_ERROR
 }
