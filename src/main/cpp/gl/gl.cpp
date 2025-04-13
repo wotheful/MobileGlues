@@ -22,28 +22,3 @@ void glHint(GLenum target, GLenum mode) {
     LOG_D("glHint, target = %s, mode = %s", glEnumToString(target), glEnumToString(mode))
     GLES.glHint(target, mode);
 }
-
-void glDepthMask(GLboolean flag) {
-    LOG()
-    GLES.glDepthMask(flag);
-}
-
-void glColorMask(GLboolean red, GLboolean green, GLboolean blue, GLboolean alpha) {
-    LOG()
-    GLES.glColorMask(red, green, blue, alpha);
-}
-
-void glViewport(GLint x, GLint y, GLsizei width, GLsizei height) {
-    LOG()
-    GLES.glViewport(x, y, width, height);
-}
-
-void glClear (GLbitfield mask) {
-    LOG()
-    GLES.glClear(mask);
-}
-
-void glClearColor (GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha) {
-    LOG()
-    GLES.glClearColor(red, green, blue, alpha);
-}
