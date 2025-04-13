@@ -123,7 +123,7 @@ NATIVE_FUNCTION_HEAD(void, glTexParameterfv, GLenum target, GLenum pname, const 
 //NATIVE_FUNCTION_HEAD(void, glTexSubImage2D, GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const void *pixels) NATIVE_FUNCTION_END_NO_RETURN(void, glTexSubImage2D, target,level,xoffset,yoffset,width,height,format,type,pixels)
 NATIVE_FUNCTION_HEAD(void, glUniform1f, GLint location, GLfloat v0) NATIVE_FUNCTION_END_NO_RETURN(void, glUniform1f, location,v0)
 NATIVE_FUNCTION_HEAD(void, glUniform1fv, GLint location, GLsizei count, const GLfloat *value) NATIVE_FUNCTION_END_NO_RETURN(void, glUniform1fv, location,count,value)
-NATIVE_FUNCTION_HEAD(void, glUniform1i, GLint location, GLint v0) NATIVE_FUNCTION_END_NO_RETURN(void, glUniform1i, location,v0)
+//NATIVE_FUNCTION_HEAD(void, glUniform1i, GLint location, GLint v0) NATIVE_FUNCTION_END_NO_RETURN(void, glUniform1i, location,v0)
 NATIVE_FUNCTION_HEAD(void, glUniform1iv, GLint location, GLsizei count, const GLint *value) NATIVE_FUNCTION_END_NO_RETURN(void, glUniform1iv, location,count,value)
 NATIVE_FUNCTION_HEAD(void, glUniform2f, GLint location, GLfloat v0, GLfloat v1) NATIVE_FUNCTION_END_NO_RETURN(void, glUniform2f, location,v0,v1)
 NATIVE_FUNCTION_HEAD(void, glUniform2fv, GLint location, GLsizei count, const GLfloat *value) NATIVE_FUNCTION_END_NO_RETURN(void, glUniform2fv, location,count,value)
