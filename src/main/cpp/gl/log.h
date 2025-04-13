@@ -10,7 +10,7 @@
 
 #define GLOBAL_DEBUG 0
 
-#define GLOBAL_DEBUG_E 1
+#define GLOBAL_DEBUG_E 0
 
 #define LOG_CALLED_FUNCS 0
 
