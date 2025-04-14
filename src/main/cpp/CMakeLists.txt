@@ -65,7 +65,10 @@ add_library(${CMAKE_PROJECT_NAME} SHARED
         gl/fpe/glstate.cpp
 )
 
-target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE ./includes ./glm)
+target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
+        ./includes
+        ./glm
+        ./3rdparty/xxhash)
 
 target_link_libraries(${CMAKE_PROJECT_NAME}
         ${CMAKE_SOURCE_DIR}/libraries/${ANDROID_ABI}/libglslang.a
