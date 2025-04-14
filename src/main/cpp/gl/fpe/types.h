@@ -225,18 +225,23 @@ private:
 };
 
 struct glstate_t {
+    template <typename K, typename V>
+    using unordered_map = std::unordered_map<K, V>;
+
+    // States that can led to layout change / shader recompile
     struct fixed_function_state_t fpe_state;
     struct fixed_function_uniform_t fpe_uniform;
 
     struct fixed_function_draw_state_t fpe_draw;
 
-    GLuint fpe_vtx_shader = 0;
-    GLuint fpe_frag_shader = 0;
+//    GLuint fpe_vtx_shader = 0;
+//    GLuint fpe_frag_shader = 0;
 //    GLuint fpe_program = 0;
 
     // enabled_vertexpointers - program
     // TODO: using vp as key is bad! Try to hash the whole fpe_state
-    std::unordered_map<uint32_t, program_t> fpe_programs;
+    unordered_map<uint64_t, program_t> fpe_programs;
+    unordered_map<uint64_t, GLuint> fpe_vaos;
 
     const char* fpe_vtx_shader_src;
     const char* fpe_frag_shader_src;
@@ -245,7 +250,13 @@ struct glstate_t {
 
     void send_uniforms(int program);
 
-    program_t& get_or_generate_program();
+    uint64_t hash();
+
+    program_t& get_or_generate_program(const uint64_t key);
+
+    int get_vao(const uint64_t key);
+
+    void save_vao(const uint64_t key, const GLuint vao);
 
     void send_vertex_attributes();
 };

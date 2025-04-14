@@ -408,6 +408,7 @@ void glDrawArrays(GLenum mode, GLint first, GLsizei count) {
         GLES.glDrawArrays(mode, first, count);
 
     SET_PREV_PROGRAM
+    GLES.glBindVertexArray(0);
     CHECK_GL_ERROR_NO_INIT
 }
 

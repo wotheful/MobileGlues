@@ -198,7 +198,9 @@ int commit_fpe_state_on_draw(GLenum* mode, GLint* first, GLsizei* count) {
             fpe_inited = true;
     }
 
-    auto& prog = g_glstate.get_or_generate_program();
+    auto key = g_glstate.hash();
+    LOG_D("%s: key=0x%x", __func__, key)
+    auto& prog = g_glstate.get_or_generate_program(key);
     int prog_id = prog.get_program();
     if (prog_id < 0)
         LOG_D("Error: FPE shader link failed!")

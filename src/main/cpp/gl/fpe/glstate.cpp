@@ -7,6 +7,7 @@
 #define DEBUG 0
 
 void glstate_t::send_uniforms(int program) {
+    LOG()
     INIT_CHECK_GL_ERROR
     const auto& mv = fpe_uniform.transformation.matrices[matrix_idx(GL_MODELVIEW)];
     const auto& proj = fpe_uniform.transformation.matrices[matrix_idx(GL_PROJECTION)];
@@ -56,11 +57,16 @@ void glstate_t::send_uniforms(int program) {
     }
 }
 
-program_t& glstate_t::get_or_generate_program() {
+uint64_t glstate_t::hash() {
     // TODO: Make a proper hash
-    uint32_t key = g_glstate.fpe_state.vertexpointer_array.enabled_pointers;
-    key |= ((g_glstate.fpe_state.fpe_bools.fog_enable & 1) << 31);
+    uint64_t key = g_glstate.fpe_state.vertexpointer_array.enabled_pointers;
+    key |= ((g_glstate.fpe_state.fpe_bools.fog_enable & 1) << 63);
     assert(key != 0);
+    return key;
+}
+
+program_t& glstate_t::get_or_generate_program(const uint64_t key) {
+    LOG()
     if (g_glstate.fpe_programs.find(key)
         == g_glstate.fpe_programs.end()) {
         LOG_D("Generating new shader: 0x%x", key)
@@ -80,7 +86,23 @@ program_t& glstate_t::get_or_generate_program() {
     return prog;
 }
 
+int glstate_t::get_vao(const uint64_t key) {
+    LOG()
+    if (g_glstate.fpe_vaos.find(key)
+        == g_glstate.fpe_vaos.end()) {
+        return -1;
+    }
+
+    return g_glstate.fpe_vaos[key];
+}
+
+void glstate_t::save_vao(const uint64_t key, const GLuint vao) {
+    LOG()
+    g_glstate.fpe_vaos[key] = vao;
+}
+
 void glstate_t::send_vertex_attributes() {
+    LOG()
     INIT_CHECK_GL_ERROR
     auto& va = g_glstate.fpe_state.vertexpointer_array;
     if (!va.dirty) return;

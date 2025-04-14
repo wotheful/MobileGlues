@@ -65,8 +65,10 @@ void glEnd() {
         // Vertex Pointer State Machine Update
         g_glstate.fpe_draw.compile_vertexattrib(va);
 
+        auto key = g_glstate.hash();
+
         // Program
-        auto& prog = g_glstate.get_or_generate_program();
+        auto& prog = g_glstate.get_or_generate_program(key);
 
         int prog_id = prog.get_program();
         if (prog_id < 0) {
