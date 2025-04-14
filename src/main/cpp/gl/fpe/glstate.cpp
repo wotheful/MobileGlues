@@ -3,6 +3,7 @@
 //
 #include "types.h"
 #include "transformation.h"
+#include "xxhash32.h"
 
 #define DEBUG 0
 
@@ -57,12 +58,29 @@ void glstate_t::send_uniforms(int program) {
     }
 }
 
-uint64_t glstate_t::hash() {
+uint32_t glstate_t::program_hash() {
     // TODO: Make a proper hash
     uint64_t key = g_glstate.fpe_state.vertexpointer_array.enabled_pointers;
     key |= ((g_glstate.fpe_state.fpe_bools.fog_enable & 1) << 63);
     assert(key != 0);
     return key;
+}
+
+uint32_t glstate_t::vertex_attrib_hash() {
+    uint32_t ret = 0;
+
+    auto& va = fpe_state.vertexpointer_array;
+
+    XXHash32 hash(s_hash_seed);
+    hash.add(&va.starting_pointer, sizeof(va.starting_pointer));
+    for (int i = 0; i < VERTEX_POINTER_COUNT; ++i) {
+        hash.add(&i, sizeof(i));
+        auto& attr = va.attributes[i];
+//        hash.add()
+    }
+
+    uint32_t result = hash.hash();
+
 }
 
 program_t& glstate_t::get_or_generate_program(const uint64_t key) {

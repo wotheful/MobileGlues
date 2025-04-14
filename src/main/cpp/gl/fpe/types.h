@@ -16,6 +16,7 @@
 #include <sstream>
 #include "fpe_shadergen.h"
 #include "vertexpointer_utils.h"
+#include "../version.h"
 
 GLsizei type_size(GLenum type);
 
@@ -32,8 +33,8 @@ struct vertexattribute_t {
     GLenum normalized;
     GLsizei stride;
     const void *pointer;
-    glm::vec4 value;
-    bool varying = true;
+//    glm::vec4 value;
+//    bool varying = true;
 };
 
 #define VERTEX_POINTER_COUNT (8 + MAX_TEX)
@@ -243,6 +244,8 @@ struct glstate_t {
     unordered_map<uint64_t, program_t> fpe_programs;
     unordered_map<uint64_t, GLuint> fpe_vaos;
 
+    static constexpr uint32_t s_hash_seed = VERSION_NUM;
+
     const char* fpe_vtx_shader_src;
     const char* fpe_frag_shader_src;
 
@@ -250,7 +253,9 @@ struct glstate_t {
 
     void send_uniforms(int program);
 
-    uint64_t hash();
+    uint32_t program_hash();
+
+    uint32_t vertex_attrib_hash();
 
     program_t& get_or_generate_program(const uint64_t key);
 

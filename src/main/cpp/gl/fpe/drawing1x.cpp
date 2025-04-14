@@ -65,7 +65,7 @@ void glEnd() {
         // Vertex Pointer State Machine Update
         g_glstate.fpe_draw.compile_vertexattrib(va);
 
-        auto key = g_glstate.hash();
+        auto key = g_glstate.program_hash();
 
         // Program
         auto& prog = g_glstate.get_or_generate_program(key);
@@ -257,18 +257,18 @@ void glColor4f( GLfloat red, GLfloat green,
             return;
     }
 
-    auto& attr = g_glstate.fpe_state.vertexpointer_array.attributes[vp2idx(GL_COLOR_ARRAY)];
-    auto& vpa = g_glstate.fpe_state.vertexpointer_array;
-    if (vpa.buffer_based) {
-        attr.size = 4;
-        attr.usage = GL_COLOR_ARRAY;
-        attr.type = GL_FLOAT;
-        attr.normalized = GL_FALSE;
-        attr.stride = 0;
-        attr.pointer = 0;
-        attr.value = glm::vec4(red, green, blue, alpha);
-        attr.varying = false;
-    }
+//    auto& attr = g_glstate.fpe_state.vertexpointer_array.attributes[vp2idx(GL_COLOR_ARRAY)];
+//    auto& vpa = g_glstate.fpe_state.vertexpointer_array;
+//    if (vpa.buffer_based) {
+//        attr.size = 4;
+//        attr.usage = GL_COLOR_ARRAY;
+//        attr.type = GL_FLOAT;
+//        attr.normalized = GL_FALSE;
+//        attr.stride = 0;
+//        attr.pointer = 0;
+//        attr.value = glm::vec4(red, green, blue, alpha);
+//        attr.varying = false;
+//    }
 
     mglColor<GLfloat, 4>({red, green, blue, alpha});
 }

@@ -198,7 +198,7 @@ int commit_fpe_state_on_draw(GLenum* mode, GLint* first, GLsizei* count) {
             fpe_inited = true;
     }
 
-    auto key = g_glstate.hash();
+    auto key = g_glstate.program_hash();
     LOG_D("%s: key=0x%x", __func__, key)
     auto& prog = g_glstate.get_or_generate_program(key);
     int prog_id = prog.get_program();
