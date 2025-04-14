@@ -11,7 +11,7 @@
 // a bit bad for perf, but keep this for now...
 template <typename Type, GLint N>
 void mglNormal(std::array<Type, N> normal) {
-    auto& state = g_glstate.fpe_draw;
+    auto& state = g_glstate.fpe_state.fpe_draw;
     auto& cur = state.current_data.normal;
     // let's hope this vectorizes well...
     for (auto i = 0; i < N; ++i) {
@@ -22,7 +22,7 @@ void mglNormal(std::array<Type, N> normal) {
 
 template <typename Type, GLint N>
 void mglTexCoord(std::array<Type, N> uv, GLint texid) {
-    auto& state = g_glstate.fpe_draw;
+    auto& state = g_glstate.fpe_state.fpe_draw;
     auto& cur = state.current_data.texcoord[texid];
     // let's hope this vectorizes well...
     for (auto i = 0; i < N; ++i) {
@@ -33,7 +33,7 @@ void mglTexCoord(std::array<Type, N> uv, GLint texid) {
 
 template <typename Type, GLint N>
 void mglColor(std::array<Type, N> color) {
-    auto& state = g_glstate.fpe_draw;
+    auto& state = g_glstate.fpe_state.fpe_draw;
     auto& cur = state.current_data.color;
     // let's hope this vectorizes well...
     for (auto i = 0; i < N; ++i) {
@@ -44,9 +44,9 @@ void mglColor(std::array<Type, N> color) {
 
 template <typename Type, GLint N>
 void mglVertex(std::array<Type, N> vertex) {
-    assert(g_glstate.fpe_draw.primitive != GL_NONE);
+    assert(g_glstate.fpe_state.fpe_draw.primitive != GL_NONE);
 
-    auto& state = g_glstate.fpe_draw;
+    auto& state = g_glstate.fpe_state.fpe_draw;
     auto& cur = state.current_data.vertex;
     // let's hope this vectorizes well...
     for (auto i = 0; i < N; ++i) {

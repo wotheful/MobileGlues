@@ -26,7 +26,7 @@ void glBegin( GLenum mode ) {
             fpe_inited = true;
     }
 
-    auto& s = g_glstate.fpe_draw;
+    auto& s = g_glstate.fpe_state.fpe_draw;
 
     if (s.primitive != GL_NONE) {
         LOG_D("glBegin() nested! \nLast mode: %s", glEnumToString(s.primitive))
@@ -48,10 +48,10 @@ void glEnd() {
 
     INIT_CHECK_GL_ERROR
 
-    auto& s = g_glstate.fpe_draw;
+    auto& s = g_glstate.fpe_state.fpe_draw;
     auto& va = g_glstate.fpe_state.vertexpointer_array;
 //    auto& vb = g_glstate.fpe_state.fpe_vb;
-    auto& vb = g_glstate.fpe_draw.vb;
+    auto& vb = g_glstate.fpe_state.fpe_draw.vb;
 
     if (s.primitive == GL_NONE) {
         LOG_E("glEnd() without effect: already ended");
@@ -63,7 +63,7 @@ void glEnd() {
     // actual assembly work, and draw!
     {
         // Vertex Pointer State Machine Update
-        g_glstate.fpe_draw.compile_vertexattrib(va);
+        g_glstate.fpe_state.fpe_draw.compile_vertexattrib(va);
 
         auto key = g_glstate.program_hash();
 

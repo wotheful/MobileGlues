@@ -59,28 +59,60 @@ void glstate_t::send_uniforms(int program) {
 }
 
 uint32_t glstate_t::program_hash() {
-    // TODO: Make a proper hash
-    uint64_t key = g_glstate.fpe_state.vertexpointer_array.enabled_pointers;
-    key |= ((g_glstate.fpe_state.fpe_bools.fog_enable & 1) << 63);
-    assert(key != 0);
+    uint64_t key = 0;
+    key |= vertex_attrib_hash();
+
+    XXHash32 hash(s_hash_seed);
+    hash.add(&fpe_state.client_active_texture, sizeof(fpe_state.client_active_texture));
+    hash.add(&fpe_state.alpha_func, sizeof(fpe_state.alpha_func));
+    hash.add(&fpe_state.fog_mode, sizeof(fpe_state.fog_mode));
+    hash.add(&fpe_state.fog_index, sizeof(fpe_state.fog_index));
+    hash.add(&fpe_state.fog_coord_src, sizeof(fpe_state.fog_coord_src));
+    hash.add(&fpe_state.shade_model, sizeof(fpe_state.shade_model));
+    hash.add(&fpe_state.light_model_color_ctrl, sizeof(fpe_state.light_model_color_ctrl));
+    hash.add(&fpe_state.light_model_local_viewer, sizeof(fpe_state.light_model_local_viewer));
+    hash.add(&fpe_state.light_model_two_side, sizeof(fpe_state.light_model_two_side));
+
+    key |= (((uint64_t)hash.hash()) << 32);
+
     return key;
 }
 
 uint32_t glstate_t::vertex_attrib_hash() {
-    uint32_t ret = 0;
+    XXHash32 hash(s_hash_seed);
 
     auto& va = fpe_state.vertexpointer_array;
 
-    XXHash32 hash(s_hash_seed);
     hash.add(&va.starting_pointer, sizeof(va.starting_pointer));
     for (int i = 0; i < VERTEX_POINTER_COUNT; ++i) {
-        hash.add(&i, sizeof(i));
-        auto& attr = va.attributes[i];
-//        hash.add()
+        bool enabled = ((va.enabled_pointers >> i) & 1);
+        if (enabled || fpe_state.fpe_draw.current_data.sizes.data[i] > 0) {
+            hash.add(&i, sizeof(i));
+            hash.add(&enabled, sizeof(enabled));
+            auto &attr = va.attributes[i];
+
+            if (enabled)
+                hash.add(&attr.size, sizeof(attr.size));
+            else
+                hash.add(&fpe_state.fpe_draw.current_data.sizes.data[i], sizeof(fpe_state.fpe_draw.current_data.sizes.data[i]));
+
+            hash.add(&attr.usage, sizeof(attr.usage));
+
+            if (enabled) {
+                hash.add(&attr.type, sizeof(attr.type));
+                hash.add(&attr.normalized, sizeof(attr.normalized));
+//                hash.add(&attr.stride, sizeof(attr.stride));
+                hash.add(&attr.pointer, sizeof(attr.pointer));
+            }
+            else {
+                const GLenum t = GL_FLOAT;
+                hash.add(&t, sizeof(t));
+            }
+        }
     }
 
     uint32_t result = hash.hash();
-
+    return result;
 }
 
 program_t& glstate_t::get_or_generate_program(const uint64_t key) {
@@ -149,8 +181,8 @@ void glstate_t::send_vertex_attributes() {
         else {
             switch (vp.usage) {
                 case GL_COLOR_ARRAY:
-                    if (g_glstate.fpe_draw.current_data.sizes.color_size > 0) {
-                        const auto& v = g_glstate.fpe_draw.current_data.color;
+                    if (g_glstate.fpe_state.fpe_draw.current_data.sizes.color_size > 0) {
+                        const auto& v = g_glstate.fpe_state.fpe_draw.current_data.color;
                         LOG_D("attrib #%d: type = %s, usage = %s, value = (%.2f, %.2f, %.2f, %.2f) (disabled)",
                               i, glEnumToString(vp.type), glEnumToString(vp.usage),
                               v[0], v[1], v[2], v[3])
@@ -160,8 +192,8 @@ void glstate_t::send_vertex_attributes() {
                     }
                     break;
                 case GL_NORMAL_ARRAY:
-                    if (g_glstate.fpe_draw.current_data.sizes.normal_size > 0) {
-                        const auto& v = g_glstate.fpe_draw.current_data.normal;
+                    if (g_glstate.fpe_state.fpe_draw.current_data.sizes.normal_size > 0) {
+                        const auto& v = g_glstate.fpe_state.fpe_draw.current_data.normal;
                         LOG_D("attrib #%d: type = %s, usage = %s, value = (%.2f, %.2f, %.2f, %.2f) (disabled)",
                               i, glEnumToString(vp.type), glEnumToString(vp.usage),
                               v[0], v[1], v[2], v[3])

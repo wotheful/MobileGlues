@@ -134,10 +134,20 @@ struct light_t {
 
 // size = 0 means disabled
 struct fixed_function_draw_size_t {
-    GLint normal_size = 0;
-    GLint color_size = 0;
-    GLint vertex_size = 0;
-    GLint texcoord_size[MAX_TEX] = {0};
+    union {
+        struct {
+            GLint vertex_size = 0;
+            GLint normal_size = 0;
+            GLint color_size = 0;
+            GLint index_size = 0;
+            GLint edge_size = 0;
+            GLint fog_size = 0;
+            GLint secondary_color_size = 0;
+            GLint placeholder_8th = 0; // data[7]
+            GLint texcoord_size[MAX_TEX] = {0};
+        };
+        GLint data[VERTEX_POINTER_COUNT];
+    };
 };
 
 struct fixed_function_draw_data_t {
@@ -191,6 +201,7 @@ struct fixed_function_state_t {
 
     struct vertex_pointer_array_t vertexpointer_array;
     struct fixed_function_bool_t fpe_bools;
+    struct fixed_function_draw_state_t fpe_draw;
 };
 
 struct fixed_function_uniform_t {
@@ -232,8 +243,6 @@ struct glstate_t {
     // States that can led to layout change / shader recompile
     struct fixed_function_state_t fpe_state;
     struct fixed_function_uniform_t fpe_uniform;
-
-    struct fixed_function_draw_state_t fpe_draw;
 
 //    GLuint fpe_vtx_shader = 0;
 //    GLuint fpe_frag_shader = 0;

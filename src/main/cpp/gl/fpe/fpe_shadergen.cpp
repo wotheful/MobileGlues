@@ -149,14 +149,20 @@ void add_vs_inout(const fixed_function_state_t& state, scratch_t& scratch, std::
 
         // hack in color (static, disabled vertex array) here...
         // TODO: fix this using uniform
-        if (enabled || vpa.attributes[i].usage == GL_COLOR_ARRAY) {
+        if (enabled || state.fpe_draw.current_data.sizes.data[i] > 0) {
             auto &vp = vpa.attributes[i];
 
-            LOG_D("attrib #%d: type = %s, size = %d, stride = %d, usage = %s, ptr = %p",
-                  i, glEnumToString(vp.type), vp.size, vp.stride, glEnumToString(vp.usage), vp.pointer)
+            if (enabled)
+                LOG_D("attrib #%d: type = %s, size = %d, stride = %d, usage = %s, ptr = %p",
+                      i, glEnumToString(vp.type), vp.size, vp.stride, glEnumToString(vp.usage), vp.pointer)
+            else
+            {
+                LOG_D("attrib #%d: type = %s, usage = %s, size = %d (disabled)",
+                      i, glEnumToString(vp.type), glEnumToString(vp.usage), state.fpe_draw.current_data.sizes.data[i])
+            }
 
             std::string in_name = vp2in_name(vp.usage, i);
-            std::string type = type2str(vp.type, vp.size);
+            std::string type = enabled ? type2str(vp.type, vp.size) : type2str(GL_FLOAT, 4);
 
             vs += "layout (location = ";
             vs += std::to_string(i);
@@ -366,8 +372,10 @@ int program_t::compile_shader(GLenum shader_type, const char* src) {
     if (!success) {
         GLES.glGetShaderInfoLog(shader, 1024, NULL, compile_info);
         CHECK_GL_ERROR_NO_INIT
-        LOG_E("%s shader compile error: %s\nsrc:\n%s", compile_info,
+        LOG_E("%s: %s shader compile error: %s\nsrc:\n%s",
+              __func__,
               (shader_type == GL_VERTEX_SHADER) ? "vertex" : "fragment",
+              compile_info,
               src);
 #if DEBUG || GLOBAL_DEBUG
         abort();
