@@ -179,7 +179,7 @@ void glstate_t::send_vertex_attributes() {
                   i, glEnumToString(vp.type), vp.size, vp.stride, glEnumToString(vp.usage), vp.pointer)
         }
         else {
-            switch (vp.usage) {
+            switch (idx2vp(i)) {
                 case GL_COLOR_ARRAY:
                     if (fpe_state.fpe_draw.current_data.sizes.color_size > 0) {
                         const auto& v = fpe_state.fpe_draw.current_data.color;
