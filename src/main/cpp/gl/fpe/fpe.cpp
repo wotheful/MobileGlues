@@ -78,94 +78,7 @@ bool fpe_inited = false;
 int init_fpe() {
     LOG_I("Initializing fixed-function pipeline...")
 
-    char compile_info[1024];
-
     INIT_CHECK_GL_ERROR
-
-//    g_glstate.fpe_vtx_shader_src =
-//            "#version 320 es\n"
-//            "precision highp float;\n"
-//            "precision highp int;\n"
-//            "uniform mat4 ModelViewMat;\n"
-//            "uniform mat4 ProjMat;\n"
-//            "layout (location = 0) in vec3 Pos;\n"
-//            "layout (location = 1) in vec3 Normal;\n"
-//            "layout (location = 2) in vec4 Color;\n"
-//            "layout (location = 7) in vec2 UV0;\n"
-//            "out vec4 vertexColor;\n"
-//            "out vec2 texCoord0;\n"
-//            "void main() {\n"
-//            "   gl_Position = ProjMat * ModelViewMat * vec4(Pos, 1.0);\n"
-//            "   vertexColor = Color;\n"
-//            "   texCoord0 = UV0;\n"
-//            "}\n";
-//
-//    g_glstate.fpe_frag_shader_src =
-//            "#version 320 es\n"
-//            "precision highp float;\n"
-//            "precision highp int;\n"
-//            "uniform sampler2D Sampler0;\n"
-//            "in vec4 vertexColor;\n"
-//            "in vec2 texCoord0;\n"
-//            "out vec4 FragColor;\n"
-//            "\n"
-//            "void main() {\n"
-//            "   vec4 color = texture(Sampler0, texCoord0) * vertexColor;"
-//            "   if (color.a < 0.1) {\n"
-//            "       discard;\n"
-//            "   }\n"
-//            "   FragColor = color;\n"
-//            "}";
-//
-//    g_glstate.fpe_vtx_shader = GLES.glCreateShader(GL_VERTEX_SHADER);
-//    CHECK_GL_ERROR_NO_INIT
-//    GLES.glShaderSource(g_glstate.fpe_vtx_shader, 1, &g_glstate.fpe_vtx_shader_src, NULL);
-//    CHECK_GL_ERROR_NO_INIT
-//    GLES.glCompileShader(g_glstate.fpe_vtx_shader);
-//    CHECK_GL_ERROR_NO_INIT
-//    int success = 0;
-//    GLES.glGetShaderiv(g_glstate.fpe_vtx_shader, GL_COMPILE_STATUS, &success);
-//    CHECK_GL_ERROR_NO_INIT
-//    if (!success) {
-//        GLES.glGetShaderInfoLog(g_glstate.fpe_vtx_shader, 1024, NULL, compile_info);
-//        CHECK_GL_ERROR_NO_INIT
-//        LOG_E("fpe vertex shader compile error: %s", compile_info);
-//        return -1;
-//    }
-//
-//    g_glstate.fpe_frag_shader = GLES.glCreateShader(GL_FRAGMENT_SHADER);
-//    CHECK_GL_ERROR_NO_INIT
-//    GLES.glShaderSource(g_glstate.fpe_frag_shader, 1, &g_glstate.fpe_frag_shader_src, NULL);
-//    CHECK_GL_ERROR_NO_INIT
-//
-//    GLES.glCompileShader(g_glstate.fpe_frag_shader);
-//    CHECK_GL_ERROR_NO_INIT
-//    GLES.glGetShaderiv(g_glstate.fpe_frag_shader, GL_COMPILE_STATUS, &success);
-//    CHECK_GL_ERROR_NO_INIT
-//    if (!success) {
-//        GLES.glGetShaderInfoLog(g_glstate.fpe_frag_shader, 1024, NULL, compile_info);
-//        CHECK_GL_ERROR_NO_INIT
-//        LOG_E("fpe fragment shader compile error: %s", compile_info);
-//        return -1;
-//    }
-//
-//
-//    g_glstate.fpe_program = GLES.glCreateProgram();
-//    CHECK_GL_ERROR_NO_INIT
-//    GLES.glAttachShader(g_glstate.fpe_program, g_glstate.fpe_vtx_shader);
-//    CHECK_GL_ERROR_NO_INIT
-//    GLES.glAttachShader(g_glstate.fpe_program, g_glstate.fpe_frag_shader);
-//    CHECK_GL_ERROR_NO_INIT
-//    GLES.glLinkProgram(g_glstate.fpe_program);
-//    CHECK_GL_ERROR_NO_INIT
-//    GLES.glGetProgramiv(g_glstate.fpe_program, GL_LINK_STATUS, &success);
-//    CHECK_GL_ERROR_NO_INIT
-//    if(!success) {
-//        glGetProgramInfoLog(g_glstate.fpe_program, 1024, NULL, compile_info);
-//        CHECK_GL_ERROR_NO_INIT
-//        LOG_E("fpe program link error: %s", compile_info);
-//        return -1;
-//    }
 
     GLES.glGenVertexArrays(1, &g_glstate.fpe_state.fpe_vao);
     CHECK_GL_ERROR_NO_INIT
@@ -206,8 +119,6 @@ int commit_fpe_state_on_draw(GLenum* mode, GLint* first, GLsizei* count) {
         LOG_D("Error: FPE shader link failed!")
     GLES.glUseProgram(prog_id);
     CHECK_GL_ERROR_NO_INIT
-
-    bool is_first = true;
 
     // All assuming tightly packed here...
     auto& vpa = g_glstate.fpe_state.vertexpointer_array;
