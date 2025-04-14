@@ -31,8 +31,33 @@ android {
             version "3.22.1"
         }
     }
+
+    buildFeatures {
+        viewBinding true
+        prefab true
+    }
+
+    packagingOptions {
+        jniLibs {
+            // Gradle has no way of knowing which of the libraries in our
+            // CMakeLists.txt are for the app and which are for tests, so we
+            // have to tell it which libraries are test libraries. Without
+            // this, the test libraries will end up packaged in the real API
+            // and not just the test APK.
+
+            testOnly += ["**/libmobileglues_tests.so"]
+        }
+    }
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
+}
+
+dependencies {
+    implementation libs.androidx.junit.gtest
+    implementation libs.googletest
+    testImplementation libs.junit
+    androidTestImplementation libs.ext.junit
 }
