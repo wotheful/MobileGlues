@@ -88,32 +88,6 @@ void glEnd() {
 
         // Vertex Pointer to ES
         g_glstate.send_vertex_attributes();
-//        if (va.dirty) {
-//            va.dirty = false;
-//
-//            for (int i = 0; i < VERTEX_POINTER_COUNT; ++i) {
-//                bool enabled = ((va.enabled_pointers >> i) & 1);
-//
-//                if (enabled) {
-//                    auto &vp = va.attributes[i];
-//                    vp.stride = va.stride;
-//
-//                    GLES.glVertexAttribPointer(i, vp.size, vp.type, vp.normalized, vp.stride, vp.pointer);
-//                    CHECK_GL_ERROR_NO_INIT
-//
-//                    GLES.glEnableVertexAttribArray(i);
-//                    CHECK_GL_ERROR_NO_INIT
-//
-//                    LOG_D("attrib #%d: type = %s, size = %d, stride = %d, usage = %s, ptr = %p",
-//                          i, glEnumToString(vp.type), vp.size, vp.stride, glEnumToString(vp.usage), vp.pointer)
-//                }
-//                else {
-//                    LOG_D("attrib #%d: (disabled)", i)
-//                    GLES.glDisableVertexAttribArray(i);
-//                    CHECK_GL_ERROR_NO_INIT
-//                }
-//            }
-//        }
 
         // Uniform
         {
