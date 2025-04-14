@@ -117,44 +117,44 @@ uint32_t glstate_t::vertex_attrib_hash() {
 
 program_t& glstate_t::get_or_generate_program(const uint64_t key) {
     LOG()
-    if (g_glstate.fpe_programs.find(key)
-        == g_glstate.fpe_programs.end()) {
+    if (fpe_programs.find(key)
+        == fpe_programs.end()) {
         LOG_D("Generating new shader: 0x%x", key)
-        fpe_shader_generator gen(g_glstate.fpe_state);
+        fpe_shader_generator gen(fpe_state);
         program_t program = gen.generate_program();
         int prog_id = program.get_program();
         if (prog_id > 0)
-            g_glstate.fpe_programs[key] = program;
+            fpe_programs[key] = program;
         else {
             LOG_D("Error: FPE shader link failed!")
             // reserve key==0 as null program for failure
-            return g_glstate.fpe_programs[0];
+            return fpe_programs[0];
         }
     }
 
-    auto& prog = g_glstate.fpe_programs[key];
+    auto& prog = fpe_programs[key];
     return prog;
 }
 
 int glstate_t::get_vao(const uint64_t key) {
     LOG()
-    if (g_glstate.fpe_vaos.find(key)
-        == g_glstate.fpe_vaos.end()) {
+    if (fpe_vaos.find(key)
+        == fpe_vaos.end()) {
         return -1;
     }
 
-    return g_glstate.fpe_vaos[key];
+    return fpe_vaos[key];
 }
 
 void glstate_t::save_vao(const uint64_t key, const GLuint vao) {
     LOG()
-    g_glstate.fpe_vaos[key] = vao;
+    fpe_vaos[key] = vao;
 }
 
 void glstate_t::send_vertex_attributes() {
     LOG()
     INIT_CHECK_GL_ERROR
-    auto& va = g_glstate.fpe_state.vertexpointer_array;
+    auto& va = fpe_state.vertexpointer_array;
     if (!va.dirty) return;
 
     va.dirty = false;
@@ -181,8 +181,8 @@ void glstate_t::send_vertex_attributes() {
         else {
             switch (vp.usage) {
                 case GL_COLOR_ARRAY:
-                    if (g_glstate.fpe_state.fpe_draw.current_data.sizes.color_size > 0) {
-                        const auto& v = g_glstate.fpe_state.fpe_draw.current_data.color;
+                    if (fpe_state.fpe_draw.current_data.sizes.color_size > 0) {
+                        const auto& v = fpe_state.fpe_draw.current_data.color;
                         LOG_D("attrib #%d: type = %s, usage = %s, value = (%.2f, %.2f, %.2f, %.2f) (disabled)",
                               i, glEnumToString(vp.type), glEnumToString(vp.usage),
                               v[0], v[1], v[2], v[3])
@@ -192,8 +192,8 @@ void glstate_t::send_vertex_attributes() {
                     }
                     break;
                 case GL_NORMAL_ARRAY:
-                    if (g_glstate.fpe_state.fpe_draw.current_data.sizes.normal_size > 0) {
-                        const auto& v = g_glstate.fpe_state.fpe_draw.current_data.normal;
+                    if (fpe_state.fpe_draw.current_data.sizes.normal_size > 0) {
+                        const auto& v = fpe_state.fpe_draw.current_data.normal;
                         LOG_D("attrib #%d: type = %s, usage = %s, value = (%.2f, %.2f, %.2f, %.2f) (disabled)",
                               i, glEnumToString(vp.type), glEnumToString(vp.usage),
                               v[0], v[1], v[2], v[3])

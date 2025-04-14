@@ -70,7 +70,7 @@ std::string vp2in_name(GLenum vp, int index) {
             else break;
         }
     }
-    LOG_E("ERROR: 1280")
+    LOG_E("ERROR: 1280 %s(%s, %d)", __func__, glEnumToString(vp), index)
     return "ERROR";
 }
 
@@ -97,7 +97,7 @@ std::string vp2out_name(GLenum vp, int index) {
             else break;
         }
     }
-    LOG_E("ERROR: 1280")
+    LOG_E("ERROR: 1280 %s(%s, %d)", __func__, glEnumToString(vp), index)
     return "ERROR";
 }
 
@@ -161,7 +161,7 @@ void add_vs_inout(const fixed_function_state_t& state, scratch_t& scratch, std::
                       i, glEnumToString(vp.type), glEnumToString(vp.usage), state.fpe_draw.current_data.sizes.data[i])
             }
 
-            std::string in_name = vp2in_name(vp.usage, i);
+            std::string in_name = enabled ? vp2in_name(vp.usage, i) : vp2in_name(idx2vp(i), i);
             std::string type = enabled ? type2str(vp.type, vp.size) : type2str(GL_FLOAT, 4);
 
             vs += "layout (location = ";
@@ -172,26 +172,28 @@ void add_vs_inout(const fixed_function_state_t& state, scratch_t& scratch, std::
             vs += in_name;
             vs += ";\n";
 
-            if (vp.usage != GL_VERTEX_ARRAY) { // GL_VERTEX_ARRAY will be written into gl_Position
-                std::string out_name = vp2out_name(vp.usage, i);
-                std::string linkage;
-
-                linkage += type;
-                linkage += ' ';
-                linkage += out_name;
-                linkage += ";\n";
-
-                vs += "out ";
-                vs += linkage;
-
-                scratch.last_stage_linkage += "in " + linkage;
-
-                // TODO: if not this simple? Fog / Vertex light?
-                scratch.vs_body += out_name;
-                scratch.vs_body += " = ";
-                scratch.vs_body += in_name;
-                scratch.vs_body += ";\n";
+            if (vp.usage == GL_VERTEX_ARRAY) { // GL_VERTEX_ARRAY will be written into gl_Position
+                continue;
             }
+
+            std::string out_name = enabled ? vp2out_name(vp.usage, i) : vp2out_name(idx2vp(i), i);
+            std::string linkage;
+
+            linkage += type;
+            linkage += ' ';
+            linkage += out_name;
+            linkage += ";\n";
+
+            vs += "out ";
+            vs += linkage;
+
+            scratch.last_stage_linkage += "in " + linkage;
+
+            // TODO: if not this simple? Fog / Vertex light?
+            scratch.vs_body += out_name;
+            scratch.vs_body += " = ";
+            scratch.vs_body += in_name;
+            scratch.vs_body += ";\n";
 
             if (vp.usage == GL_COLOR_ARRAY)
                 scratch.has_vertex_color = true;

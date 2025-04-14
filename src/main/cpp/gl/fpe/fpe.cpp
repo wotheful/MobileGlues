@@ -138,6 +138,7 @@ int commit_fpe_state_on_draw(GLenum* mode, GLint* first, GLsizei* count) {
         CHECK_GL_ERROR_NO_INIT
     }
 
+    vpa.normalize();
     g_glstate.send_vertex_attributes();
 
     int ret = 0;
@@ -193,5 +194,6 @@ int commit_fpe_state_on_draw(GLenum* mode, GLint* first, GLsizei* count) {
     }
 
     g_glstate.send_uniforms(prog_id);
+    vpa.reset();
     return ret;
 }

@@ -45,12 +45,14 @@ struct vertex_pointer_array_t {
     struct vertexattribute_t attributes[VERTEX_POINTER_COUNT];
     uint32_t enabled_pointers = 0;
     bool dirty = false;
+    bool normalized = false;
     bool buffer_based = false;
 
     void reset() {
         starting_pointer = NULL;
         stride = 0;
         enabled_pointers = 0;
+        normalized = false;
         dirty = false;
         buffer_based = false;
         memset(&attributes, 0, sizeof(attributes));
@@ -58,6 +60,11 @@ struct vertex_pointer_array_t {
 
     // Split into starting pointer & offset into buffer per pointer
     void normalize() {
+        if (normalized)
+            return;
+
+        normalized = true;
+
         int first_va_idx = -1;
 
         // Find starting pointer
