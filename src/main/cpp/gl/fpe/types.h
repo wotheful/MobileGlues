@@ -69,28 +69,15 @@ struct vertex_pointer_array_t {
                 first_va_idx = i;
                 break;
             }
-
-//            auto &vp = attributes[i];
-//            // attribPointer == 0 must be starting pointer?
-//            if (vp.pointer == nullptr) {
-//                starting_pointer = nullptr;
-//                break;
-//            }
-//
-//            // starting_pointer == 0
-//            //     => never encountered valid pointer before
-//            if (starting_pointer == nullptr) {
-//                starting_pointer = vp.pointer;
-//                continue;
-//            }
-//
-//            // Save smallest pointer value as starting pointer
-//            starting_pointer =
-//                    std::min(starting_pointer, vp.pointer);
         }
 
-        stride = attributes[first_va_idx].stride;
-        starting_pointer = attributes[first_va_idx].pointer;
+        if (stride == 0)
+            stride = attributes[first_va_idx].stride;
+
+        // if not valid starting pointer
+        if (!(stride != 0 && starting_pointer != 0 && starting_pointer > (void*)stride)) {
+            starting_pointer = attributes[first_va_idx].pointer;
+        }
 
         // stride==0 && stride in pointer == 0
         // => tightly packed, infer stride from offset below
@@ -104,8 +91,10 @@ struct vertex_pointer_array_t {
 
             auto &vp = attributes[i];
 
-            vp.pointer =
-                    (const void*)((const uint64_t)vp.pointer - (const uint64_t)starting_pointer);
+            // check if pointer is a pointer rather than an offset
+            if (stride > 0 && (uint64_t)vp.pointer > (uint64_t)stride)
+                vp.pointer =
+                        (const void*)((const uint64_t)vp.pointer - (const uint64_t)starting_pointer);
 
             if (do_calc_stride)
                 stride = std::max((uint64_t)stride, (uint64_t)vp.pointer + vp.size * type_size(vp.type));
