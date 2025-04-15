@@ -395,6 +395,11 @@ void glDrawArrays(GLenum mode, GLint first, GLsizei count) {
             return;
     }
 
+    // TODO: deal with draw in list later
+    if (DisplayListManager::isCalling()) {
+        return;
+    }
+
     INIT_CHECK_GL_ERROR
 
     CHECK_GL_ERROR_NO_INIT
