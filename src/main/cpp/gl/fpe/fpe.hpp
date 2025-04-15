@@ -5,7 +5,7 @@
 #ifndef MOBILEGLUES_FPE_HPP
 #define MOBILEGLUES_FPE_HPP
 
-#include "../gl.h"
+#include "GL/gl.h"
 #include "../log.h"
 #include "transformation.h"
 #include "state.h"

@@ -3,4 +3,4 @@
 //
 #include "gtest/gtest.h"
 
-TEST(sanity, sanity) { EXPECT_EQ(1 + 1, 2); }
+TEST(Sanity, SanityCheck) { EXPECT_EQ(1 + 1, 2); }
