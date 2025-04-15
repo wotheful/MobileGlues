@@ -5,7 +5,7 @@
 #ifndef MOBILEGLUES_VERTEXPOINTER_UTILS_H
 #define MOBILEGLUES_VERTEXPOINTER_UTILS_H
 
-#include "../gl.h"
+#include "GL/gl.h"
 #include "../gl/log.h"
 
 int vp2idx(GLenum vp);

@@ -78,94 +78,7 @@ bool fpe_inited = false;
 int init_fpe() {
     LOG_I("Initializing fixed-function pipeline...")
 
-    char compile_info[1024];
-
     INIT_CHECK_GL_ERROR
-
-//    g_glstate.fpe_vtx_shader_src =
-//            "#version 320 es\n"
-//            "precision highp float;\n"
-//            "precision highp int;\n"
-//            "uniform mat4 ModelViewMat;\n"
-//            "uniform mat4 ProjMat;\n"
-//            "layout (location = 0) in vec3 Pos;\n"
-//            "layout (location = 1) in vec3 Normal;\n"
-//            "layout (location = 2) in vec4 Color;\n"
-//            "layout (location = 7) in vec2 UV0;\n"
-//            "out vec4 vertexColor;\n"
-//            "out vec2 texCoord0;\n"
-//            "void main() {\n"
-//            "   gl_Position = ProjMat * ModelViewMat * vec4(Pos, 1.0);\n"
-//            "   vertexColor = Color;\n"
-//            "   texCoord0 = UV0;\n"
-//            "}\n";
-//
-//    g_glstate.fpe_frag_shader_src =
-//            "#version 320 es\n"
-//            "precision highp float;\n"
-//            "precision highp int;\n"
-//            "uniform sampler2D Sampler0;\n"
-//            "in vec4 vertexColor;\n"
-//            "in vec2 texCoord0;\n"
-//            "out vec4 FragColor;\n"
-//            "\n"
-//            "void main() {\n"
-//            "   vec4 color = texture(Sampler0, texCoord0) * vertexColor;"
-//            "   if (color.a < 0.1) {\n"
-//            "       discard;\n"
-//            "   }\n"
-//            "   FragColor = color;\n"
-//            "}";
-//
-//    g_glstate.fpe_vtx_shader = GLES.glCreateShader(GL_VERTEX_SHADER);
-//    CHECK_GL_ERROR_NO_INIT
-//    GLES.glShaderSource(g_glstate.fpe_vtx_shader, 1, &g_glstate.fpe_vtx_shader_src, NULL);
-//    CHECK_GL_ERROR_NO_INIT
-//    GLES.glCompileShader(g_glstate.fpe_vtx_shader);
-//    CHECK_GL_ERROR_NO_INIT
-//    int success = 0;
-//    GLES.glGetShaderiv(g_glstate.fpe_vtx_shader, GL_COMPILE_STATUS, &success);
-//    CHECK_GL_ERROR_NO_INIT
-//    if (!success) {
-//        GLES.glGetShaderInfoLog(g_glstate.fpe_vtx_shader, 1024, NULL, compile_info);
-//        CHECK_GL_ERROR_NO_INIT
-//        LOG_E("fpe vertex shader compile error: %s", compile_info);
-//        return -1;
-//    }
-//
-//    g_glstate.fpe_frag_shader = GLES.glCreateShader(GL_FRAGMENT_SHADER);
-//    CHECK_GL_ERROR_NO_INIT
-//    GLES.glShaderSource(g_glstate.fpe_frag_shader, 1, &g_glstate.fpe_frag_shader_src, NULL);
-//    CHECK_GL_ERROR_NO_INIT
-//
-//    GLES.glCompileShader(g_glstate.fpe_frag_shader);
-//    CHECK_GL_ERROR_NO_INIT
-//    GLES.glGetShaderiv(g_glstate.fpe_frag_shader, GL_COMPILE_STATUS, &success);
-//    CHECK_GL_ERROR_NO_INIT
-//    if (!success) {
-//        GLES.glGetShaderInfoLog(g_glstate.fpe_frag_shader, 1024, NULL, compile_info);
-//        CHECK_GL_ERROR_NO_INIT
-//        LOG_E("fpe fragment shader compile error: %s", compile_info);
-//        return -1;
-//    }
-//
-//
-//    g_glstate.fpe_program = GLES.glCreateProgram();
-//    CHECK_GL_ERROR_NO_INIT
-//    GLES.glAttachShader(g_glstate.fpe_program, g_glstate.fpe_vtx_shader);
-//    CHECK_GL_ERROR_NO_INIT
-//    GLES.glAttachShader(g_glstate.fpe_program, g_glstate.fpe_frag_shader);
-//    CHECK_GL_ERROR_NO_INIT
-//    GLES.glLinkProgram(g_glstate.fpe_program);
-//    CHECK_GL_ERROR_NO_INIT
-//    GLES.glGetProgramiv(g_glstate.fpe_program, GL_LINK_STATUS, &success);
-//    CHECK_GL_ERROR_NO_INIT
-//    if(!success) {
-//        glGetProgramInfoLog(g_glstate.fpe_program, 1024, NULL, compile_info);
-//        CHECK_GL_ERROR_NO_INIT
-//        LOG_E("fpe program link error: %s", compile_info);
-//        return -1;
-//    }
 
     GLES.glGenVertexArrays(1, &g_glstate.fpe_state.fpe_vao);
     CHECK_GL_ERROR_NO_INIT
@@ -198,14 +111,14 @@ int commit_fpe_state_on_draw(GLenum* mode, GLint* first, GLsizei* count) {
             fpe_inited = true;
     }
 
-    auto& prog = g_glstate.get_or_generate_program();
+    auto key = g_glstate.program_hash();
+    LOG_D("%s: key=0x%x", __func__, key)
+    auto& prog = g_glstate.get_or_generate_program(key);
     int prog_id = prog.get_program();
     if (prog_id < 0)
         LOG_D("Error: FPE shader link failed!")
     GLES.glUseProgram(prog_id);
     CHECK_GL_ERROR_NO_INIT
-
-    bool is_first = true;
 
     // All assuming tightly packed here...
     auto& vpa = g_glstate.fpe_state.vertexpointer_array;
@@ -225,56 +138,10 @@ int commit_fpe_state_on_draw(GLenum* mode, GLint* first, GLsizei* count) {
         CHECK_GL_ERROR_NO_INIT
     }
 
+    LOG_D("starting_ptr = %p", vpa.starting_pointer)
+    LOG_D("stride = %d", vpa.stride)
+//    vpa.normalize();
     g_glstate.send_vertex_attributes();
-//    if (vpa.dirty) {
-//        vpa.dirty = false;
-//
-//        for (int i = 0; i < VERTEX_POINTER_COUNT; ++i) {
-//            bool enabled = ((vpa.enabled_pointers >> i) & 1);
-//
-//            if (enabled) {
-//                auto &vp = vpa.attributes[i];
-//
-//                if (is_first) {
-//                    vpa.starting_pointer = vp.pointer;
-//                    vpa.stride = vp.stride; // TODO: stride == 0?
-//                }
-//
-//                const void* offset = (const void*)((const char*)vp.pointer - (const char*)vpa.starting_pointer);
-//                GLES.glVertexAttribPointer(i, vp.size, vp.type, vp.normalized, vp.stride, offset);
-//                CHECK_GL_ERROR_NO_INIT
-//
-//                GLES.glEnableVertexAttribArray(i);
-//                CHECK_GL_ERROR_NO_INIT
-//
-//                LOG_D("attrib #%d: type = %s, size = %d, stride = %d, usage = %s, ptr = %p",
-//                      i, glEnumToString(vp.type), vp.size, vp.stride, glEnumToString(vp.usage), vp.pointer)
-//
-//                is_first = false;
-//            }
-//            else if (vpa.attributes[i].usage == GL_COLOR_ARRAY) {
-//                auto &vp = vpa.attributes[i];
-//
-//                if (g_glstate.fpe_draw.current_data.sizes.color_size > 0) {
-//                    const auto& color = g_glstate.fpe_draw.current_data.color;
-//                    LOG_D("attrib #%d: type = %s, usage = %s, value = (%.2f, %.2f, %.2f, %.2f)",
-//                          i, glEnumToString(vp.type), glEnumToString(vp.usage),
-//                          color[0], color[1], color[2], color[3])
-//
-//                    GLES.glVertexAttrib4fv(i, glm::value_ptr(color));
-//                    CHECK_GL_ERROR_NO_INIT
-//                }
-//
-//                GLES.glDisableVertexAttribArray(i);
-//                CHECK_GL_ERROR_NO_INIT
-//            }
-//            else {
-//                GLES.glDisableVertexAttribArray(i);
-//                CLEAR_GL_ERROR_NO_INIT
-//                //CHECK_GL_ERROR_NO_INIT
-//            }
-//        }
-//    }
 
     int ret = 0;
 
@@ -329,5 +196,8 @@ int commit_fpe_state_on_draw(GLenum* mode, GLint* first, GLsizei* count) {
     }
 
     g_glstate.send_uniforms(prog_id);
+    vpa.reset();
+//    vpa.starting_pointer = 0;
+//    vpa.stride = 0;
     return ret;
 }

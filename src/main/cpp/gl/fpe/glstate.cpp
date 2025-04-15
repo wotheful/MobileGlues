@@ -3,10 +3,12 @@
 //
 #include "types.h"
 #include "transformation.h"
+#include "xxhash32.h"
 
 #define DEBUG 0
 
 void glstate_t::send_uniforms(int program) {
+    LOG()
     INIT_CHECK_GL_ERROR
     const auto& mv = fpe_uniform.transformation.matrices[matrix_idx(GL_MODELVIEW)];
     const auto& proj = fpe_uniform.transformation.matrices[matrix_idx(GL_PROJECTION)];
@@ -56,33 +58,105 @@ void glstate_t::send_uniforms(int program) {
     }
 }
 
-program_t& glstate_t::get_or_generate_program() {
-    // TODO: Make a proper hash
-    uint32_t key = g_glstate.fpe_state.vertexpointer_array.enabled_pointers;
-    key |= ((g_glstate.fpe_state.fpe_bools.fog_enable & 1) << 31);
-    assert(key != 0);
-    if (g_glstate.fpe_programs.find(key)
-        == g_glstate.fpe_programs.end()) {
-        LOG_D("Generating new shader: 0x%x", key)
-        fpe_shader_generator gen(g_glstate.fpe_state);
-        program_t program = gen.generate_program();
-        int prog_id = program.get_program();
-        if (prog_id > 0)
-            g_glstate.fpe_programs[key] = program;
-        else {
-            LOG_D("Error: FPE shader link failed!")
-            // reserve key==0 as null program for failure
-            return g_glstate.fpe_programs[0];
+uint32_t glstate_t::program_hash() {
+    uint64_t key = 0;
+    key |= vertex_attrib_hash();
+
+    XXHash32 hash(s_hash_seed);
+    hash.add(&fpe_state.client_active_texture, sizeof(fpe_state.client_active_texture));
+    hash.add(&fpe_state.alpha_func, sizeof(fpe_state.alpha_func));
+    hash.add(&fpe_state.fog_mode, sizeof(fpe_state.fog_mode));
+    hash.add(&fpe_state.fog_index, sizeof(fpe_state.fog_index));
+    hash.add(&fpe_state.fog_coord_src, sizeof(fpe_state.fog_coord_src));
+    hash.add(&fpe_state.shade_model, sizeof(fpe_state.shade_model));
+    hash.add(&fpe_state.light_model_color_ctrl, sizeof(fpe_state.light_model_color_ctrl));
+    hash.add(&fpe_state.light_model_local_viewer, sizeof(fpe_state.light_model_local_viewer));
+    hash.add(&fpe_state.light_model_two_side, sizeof(fpe_state.light_model_two_side));
+
+    key |= (((uint64_t)hash.hash()) << 32);
+
+    return key;
+}
+
+uint32_t glstate_t::vertex_attrib_hash() {
+    XXHash32 hash(s_hash_seed);
+
+    auto& va = fpe_state.vertexpointer_array;
+
+    hash.add(&va.starting_pointer, sizeof(va.starting_pointer));
+    for (int i = 0; i < VERTEX_POINTER_COUNT; ++i) {
+        bool enabled = ((va.enabled_pointers >> i) & 1);
+        if (enabled || fpe_state.fpe_draw.current_data.sizes.data[i] > 0) {
+            hash.add(&i, sizeof(i));
+            hash.add(&enabled, sizeof(enabled));
+            auto &attr = va.attributes[i];
+
+            if (enabled)
+                hash.add(&attr.size, sizeof(attr.size));
+            else
+                hash.add(&fpe_state.fpe_draw.current_data.sizes.data[i], sizeof(fpe_state.fpe_draw.current_data.sizes.data[i]));
+
+            hash.add(&attr.usage, sizeof(attr.usage));
+
+            if (enabled) {
+                hash.add(&attr.type, sizeof(attr.type));
+                hash.add(&attr.normalized, sizeof(attr.normalized));
+//                hash.add(&attr.stride, sizeof(attr.stride));
+                hash.add(&attr.pointer, sizeof(attr.pointer));
+            }
+            else {
+                const GLenum t = GL_FLOAT;
+                hash.add(&t, sizeof(t));
+            }
         }
     }
 
-    auto& prog = g_glstate.fpe_programs[key];
+    uint32_t result = hash.hash();
+    return result;
+}
+
+program_t& glstate_t::get_or_generate_program(const uint64_t key) {
+    LOG()
+    if (fpe_programs.find(key)
+        == fpe_programs.end()) {
+        LOG_D("Generating new shader: 0x%x", key)
+        fpe_shader_generator gen(fpe_state);
+        program_t program = gen.generate_program();
+        int prog_id = program.get_program();
+        if (prog_id > 0)
+            fpe_programs[key] = program;
+        else {
+            LOG_D("Error: FPE shader link failed!")
+            // reserve key==0 as null program for failure
+            return fpe_programs[0];
+        }
+    }
+
+    auto& prog = fpe_programs[key];
     return prog;
 }
 
+bool glstate_t::get_vao(const uint64_t key, GLuint* vao) {
+    LOG()
+    if (fpe_vaos.find(key)
+        == fpe_vaos.end()) {
+        return false;
+    }
+
+    if (vao)
+        *vao = fpe_vaos[key];
+    return true;
+}
+
+void glstate_t::save_vao(const uint64_t key, const GLuint vao) {
+    LOG()
+    fpe_vaos[key] = vao;
+}
+
 void glstate_t::send_vertex_attributes() {
+    LOG()
     INIT_CHECK_GL_ERROR
-    auto& va = g_glstate.fpe_state.vertexpointer_array;
+    auto& va = fpe_state.vertexpointer_array;
     if (!va.dirty) return;
 
     va.dirty = false;
@@ -107,10 +181,10 @@ void glstate_t::send_vertex_attributes() {
                   i, glEnumToString(vp.type), vp.size, vp.stride, glEnumToString(vp.usage), vp.pointer)
         }
         else {
-            switch (vp.usage) {
+            switch (idx2vp(i)) {
                 case GL_COLOR_ARRAY:
-                    if (g_glstate.fpe_draw.current_data.sizes.color_size > 0) {
-                        const auto& v = g_glstate.fpe_draw.current_data.color;
+                    if (fpe_state.fpe_draw.current_data.sizes.color_size > 0) {
+                        const auto& v = fpe_state.fpe_draw.current_data.color;
                         LOG_D("attrib #%d: type = %s, usage = %s, value = (%.2f, %.2f, %.2f, %.2f) (disabled)",
                               i, glEnumToString(vp.type), glEnumToString(vp.usage),
                               v[0], v[1], v[2], v[3])
@@ -120,8 +194,8 @@ void glstate_t::send_vertex_attributes() {
                     }
                     break;
                 case GL_NORMAL_ARRAY:
-                    if (g_glstate.fpe_draw.current_data.sizes.normal_size > 0) {
-                        const auto& v = g_glstate.fpe_draw.current_data.normal;
+                    if (fpe_state.fpe_draw.current_data.sizes.normal_size > 0) {
+                        const auto& v = fpe_state.fpe_draw.current_data.normal;
                         LOG_D("attrib #%d: type = %s, usage = %s, value = (%.2f, %.2f, %.2f, %.2f) (disabled)",
                               i, glEnumToString(vp.type), glEnumToString(vp.usage),
                               v[0], v[1], v[2], v[3])

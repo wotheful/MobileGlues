@@ -5,7 +5,7 @@
 #ifndef MOBILEGLUES_VERTEXPOINTER_H
 #define MOBILEGLUES_VERTEXPOINTER_H
 
-#include "../gl.h"
+#include "GL/gl.h"
 #include "../gles/loader.h"
 #include "../gl/log.h"
 #include "types.h"

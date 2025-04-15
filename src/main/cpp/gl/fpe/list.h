@@ -5,7 +5,7 @@
 #ifndef MOBILEGLUES_PLUGIN_LIST_H
 #define MOBILEGLUES_PLUGIN_LIST_H
 
-#include "../gl.h"
+#include "GL/gl.h"
 #include "../log.h"
 
 #include <vector>

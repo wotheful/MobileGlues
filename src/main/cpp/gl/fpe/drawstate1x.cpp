@@ -74,7 +74,7 @@ void fixed_function_draw_state_t::compile_vertexattrib(vertex_pointer_array_t& v
                 .normalized = GL_FALSE,
                 .stride = 0,
                 .pointer = (const void*)offset,
-                .varying = true
+//                .varying = true
         };
         offset += sizes.vertex_size * sizeof(GLfloat);
     }
@@ -90,7 +90,7 @@ void fixed_function_draw_state_t::compile_vertexattrib(vertex_pointer_array_t& v
                 .normalized = GL_FALSE,
                 .stride = 0,
                 .pointer = (const void*)offset,
-                .varying = true
+//                .varying = true
         };
         offset += sizes.normal_size * sizeof(GLfloat);
     }
@@ -106,7 +106,7 @@ void fixed_function_draw_state_t::compile_vertexattrib(vertex_pointer_array_t& v
                 .normalized = GL_FALSE,
                 .stride = 0,
                 .pointer = (const void*)offset,
-                .varying = true
+//                .varying = true
         };
         offset += sizes.color_size * sizeof(GLfloat);
     }
@@ -115,7 +115,6 @@ void fixed_function_draw_state_t::compile_vertexattrib(vertex_pointer_array_t& v
     for (GLint i = 0; i < MAX_TEX; ++i)
     {
         if (sizes.texcoord_size[i] > 0) {
-            LOG_D("texcoord_size[%d] = %d", i, sizes.texcoord_size[i])
             // TODO: fix vp_mask()/vp2idx(), make it adapt to here
             va.enabled_pointers |= (1 << (7 + i));
             va.attributes[7 + i] = {
@@ -125,7 +124,6 @@ void fixed_function_draw_state_t::compile_vertexattrib(vertex_pointer_array_t& v
                     .normalized = GL_FALSE,
                     .stride = 0,
                     .pointer = (const void*)offset,
-                    .varying = true
             };
             offset += sizes.texcoord_size[i] * sizeof(GLfloat);
         }

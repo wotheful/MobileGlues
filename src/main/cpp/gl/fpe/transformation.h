@@ -5,7 +5,7 @@
 #ifndef FOLD_CRAFT_LAUNCHER_TRANSFORMATION_H
 #define FOLD_CRAFT_LAUNCHER_TRANSFORMATION_H
 
-#include "../gl.h"
+#include "GL/gl.h"
 #include "../gles/loader.h"
 #include "../gl/log.h"
 #include "fpe.hpp"

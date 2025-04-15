@@ -5,7 +5,7 @@
 #ifndef MOBILEGLUES_TYPES_H
 #define MOBILEGLUES_TYPES_H
 
-#include "../gl.h"
+#include "GL/gl.h"
 #include "../gles/loader.h"
 #include "../gl/log.h"
 #include "defines.h"
@@ -16,6 +16,7 @@
 #include <sstream>
 #include "fpe_shadergen.h"
 #include "vertexpointer_utils.h"
+#include "../version.h"
 
 GLsizei type_size(GLenum type);
 
@@ -32,8 +33,8 @@ struct vertexattribute_t {
     GLenum normalized;
     GLsizei stride;
     const void *pointer;
-    glm::vec4 value;
-    bool varying = true;
+//    glm::vec4 value;
+//    bool varying = true;
 };
 
 #define VERTEX_POINTER_COUNT (8 + MAX_TEX)
@@ -68,28 +69,15 @@ struct vertex_pointer_array_t {
                 first_va_idx = i;
                 break;
             }
-
-//            auto &vp = attributes[i];
-//            // attribPointer == 0 must be starting pointer?
-//            if (vp.pointer == nullptr) {
-//                starting_pointer = nullptr;
-//                break;
-//            }
-//
-//            // starting_pointer == 0
-//            //     => never encountered valid pointer before
-//            if (starting_pointer == nullptr) {
-//                starting_pointer = vp.pointer;
-//                continue;
-//            }
-//
-//            // Save smallest pointer value as starting pointer
-//            starting_pointer =
-//                    std::min(starting_pointer, vp.pointer);
         }
 
-        stride = attributes[first_va_idx].stride;
-        starting_pointer = attributes[first_va_idx].pointer;
+        if (stride == 0)
+            stride = attributes[first_va_idx].stride;
+
+        // if not valid starting pointer
+        if (!(stride != 0 && starting_pointer != 0 && starting_pointer > (void*)stride)) {
+            starting_pointer = attributes[first_va_idx].pointer;
+        }
 
         // stride==0 && stride in pointer == 0
         // => tightly packed, infer stride from offset below
@@ -103,8 +91,10 @@ struct vertex_pointer_array_t {
 
             auto &vp = attributes[i];
 
-            vp.pointer =
-                    (const void*)((const uint64_t)vp.pointer - (const uint64_t)starting_pointer);
+            // check if pointer is a pointer rather than an offset
+            if (stride > 0 && (uint64_t)vp.pointer > (uint64_t)stride)
+                vp.pointer =
+                        (const void*)((const uint64_t)vp.pointer - (const uint64_t)starting_pointer);
 
             if (do_calc_stride)
                 stride = std::max((uint64_t)stride, (uint64_t)vp.pointer + vp.size * type_size(vp.type));
@@ -133,10 +123,20 @@ struct light_t {
 
 // size = 0 means disabled
 struct fixed_function_draw_size_t {
-    GLint normal_size = 0;
-    GLint color_size = 0;
-    GLint vertex_size = 0;
-    GLint texcoord_size[MAX_TEX] = {0};
+    union {
+        struct {
+            GLint vertex_size = 0;
+            GLint normal_size = 0;
+            GLint color_size = 0;
+            GLint index_size = 0;
+            GLint edge_size = 0;
+            GLint fog_size = 0;
+            GLint secondary_color_size = 0;
+            GLint placeholder_8th = 0; // data[7]
+            GLint texcoord_size[MAX_TEX] = {0};
+        };
+        GLint data[VERTEX_POINTER_COUNT];
+    };
 };
 
 struct fixed_function_draw_data_t {
@@ -189,6 +189,7 @@ struct fixed_function_state_t {
 
     struct vertex_pointer_array_t vertexpointer_array;
     struct fixed_function_bool_t fpe_bools;
+    struct fixed_function_draw_state_t fpe_draw;
 };
 
 struct fixed_function_uniform_t {
@@ -224,18 +225,23 @@ private:
 };
 
 struct glstate_t {
+    template <typename K, typename V>
+    using unordered_map = std::unordered_map<K, V>;
+
+    // States that can led to layout change / shader recompile
     struct fixed_function_state_t fpe_state;
     struct fixed_function_uniform_t fpe_uniform;
 
-    struct fixed_function_draw_state_t fpe_draw;
-
-    GLuint fpe_vtx_shader = 0;
-    GLuint fpe_frag_shader = 0;
+//    GLuint fpe_vtx_shader = 0;
+//    GLuint fpe_frag_shader = 0;
 //    GLuint fpe_program = 0;
 
     // enabled_vertexpointers - program
     // TODO: using vp as key is bad! Try to hash the whole fpe_state
-    std::unordered_map<uint32_t, program_t> fpe_programs;
+    unordered_map<uint64_t, program_t> fpe_programs;
+    unordered_map<uint64_t, GLuint> fpe_vaos;
+
+    static constexpr uint32_t s_hash_seed = VERSION_NUM;
 
     const char* fpe_vtx_shader_src;
     const char* fpe_frag_shader_src;
@@ -244,7 +250,15 @@ struct glstate_t {
 
     void send_uniforms(int program);
 
-    program_t& get_or_generate_program();
+    uint32_t program_hash();
+
+    uint32_t vertex_attrib_hash();
+
+    program_t& get_or_generate_program(const uint64_t key);
+
+    bool get_vao(const uint64_t key, GLuint* vao);
+
+    void save_vao(const uint64_t key, const GLuint vao);
 
     void send_vertex_attributes();
 };

@@ -5,9 +5,9 @@ project("mobileglues")
 enable_language(C)
 enable_language(CXX)
 
-set(CAMKE_C_STANDARD 17)
-
 set(CMAKE_CXX_STANDARD 20)
+
+set(CAMKE_C_STANDARD 17)
 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -21,6 +21,7 @@ set(CMAKE_ANDROID_LD "lld")
 #set(CMAKE_BUILD_TYPE Release)
 
 set(PROFILING OFF)
+
 
 find_library(GLSLANG_LIB glslang PATHS ${CMAKE_SOURCE_DIR}/libraries/${ANDROID_ABI}/)
 
@@ -68,7 +69,10 @@ add_library(${CMAKE_PROJECT_NAME} SHARED
         gl/fpe/glstate.cpp
 )
 
-target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE ./includes ./glm)
+target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
+        ./includes
+        ./glm
+        ./3rdparty/xxhash)
 
 target_link_libraries(${CMAKE_PROJECT_NAME}
         ${CMAKE_SOURCE_DIR}/libraries/${ANDROID_ABI}/libglslang.a
@@ -104,49 +108,44 @@ if (PROFILING)
         target_compile_definitions(mobileglues PUBLIC PROFILING=1)
 endif()
 
-#find_package(Vulkan COMPONENTS glslc Vulkan::SPIRV-Tools)
-#find_program(glslc_executable NAMES glslc HINTS Vulkan::glslc)
-#find_program(spirv-cross_executable NAMES glslc HINTS Vulkan::SPIRV-Tools)
-#
-#add_custom_target(mobileglues_shader)
-#
-#set(VERT_SHADER_FILES
-#        ${CMAKE_SOURCE_DIR}/shader/shader.vert)
-#set(FRAG_SHADER_FILES
-#        ${CMAKE_SOURCE_DIR}/shader/shader.frag)
-#set(GLSL_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/shader/include)
-#
-#
-##glslc -o out/simple.spv src/simple.vert --target-env=opengl -Iinclude
-#
-#function(compile_shader target)
-#        cmake_parse_arguments(PARSE_ARGV 1 arg "" "ENV;INCLUDE" "SOURCES")
-#        file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/spv)
-#                foreach(source ${arg_SOURCES})
-#                get_filename_component(SRC_NAME ${source} NAME)
-#                add_custom_command(
-#                        TARGET ${target}
-#                        PRE_BUILD
-##                        OUTPUT ${CMAKE_BINARY_DIR}/spv/${source}.spv
-#                        DEPENDS ${source}
-#                        COMMAND
-#                        ${glslc_executable}
-#                        $<$<BOOL:${arg_ENV}>:--target-env=${arg_ENV}>
-#                        $<$<BOOL:${arg_INCLUDE}>:-I${arg_INCLUDE}>
-#                        -o ${CMAKE_BINARY_DIR}/spv/${SRC_NAME}.spv
-#                        ${source}
-#                )
-##                target_sources(${target} PRIVATE ${source})
-#        endforeach()
-#endfunction()
-#
-#
-#compile_shader(mobileglues_shader
-#        ENV opengl
-#        INCLUDE ${GLSL_INCLUDE_DIR}
-#        SOURCES ${VERT_SHADER_FILES} ${FRAG_SHADER_FILES}
-#)
-#
-##message(FATAL_ERROR ${CMAKE_BINARY_DIR}/spv)
-#
-#add_dependencies(mobileglues mobileglues_shader)
+if (MOBILEGLUES_TEST)
+        # Tests
+        find_package(googletest REQUIRED CONFIG)
+        find_package(junit-gtest REQUIRED CONFIG)
+
+        add_library(${CMAKE_PROJECT_NAME}_tests SHARED
+                        tests/sanitycheck_test.cpp
+                        tests/fpe/vertexpointer_test.cpp
+        )
+
+        target_include_directories(${CMAKE_PROJECT_NAME}_tests PUBLIC
+                ${CMAKE_SOURCE_DIR}/include
+        )
+
+        target_link_libraries(${CMAKE_PROJECT_NAME}_tests
+                PRIVATE
+                googletest::gtest
+                junit-gtest::junit-gtest
+                $<TARGET_OBJECTS:${CMAKE_PROJECT_NAME}>
+        )
+        target_link_libraries(${CMAKE_PROJECT_NAME}_tests PRIVATE
+                ${CMAKE_SOURCE_DIR}/libraries/${ANDROID_ABI}/libglslang.a
+                ${CMAKE_SOURCE_DIR}/libraries/${ANDROID_ABI}/libspirv-cross-c-shared.so
+#                ${CMAKE_SOURCE_DIR}/libraries/${ANDROID_ABI}/libshaderconv.so
+                ${CMAKE_SOURCE_DIR}/libraries/${ANDROID_ABI}/libGenericCodeGen.a
+                ${CMAKE_SOURCE_DIR}/libraries/${ANDROID_ABI}/libglslang-default-resource-limits.a
+                ${CMAKE_SOURCE_DIR}/libraries/${ANDROID_ABI}/libMachineIndependent.a
+                ${CMAKE_SOURCE_DIR}/libraries/${ANDROID_ABI}/libOSDependent.a
+                ${CMAKE_SOURCE_DIR}/libraries/${ANDROID_ABI}/libSPIRV-Tools-diff.a
+                ${CMAKE_SOURCE_DIR}/libraries/${ANDROID_ABI}/libSPIRV-Tools-link.a
+                ${CMAKE_SOURCE_DIR}/libraries/${ANDROID_ABI}/libSPIRV-Tools-lint.a
+                ${CMAKE_SOURCE_DIR}/libraries/${ANDROID_ABI}/libSPIRV-Tools-opt.a
+                ${CMAKE_SOURCE_DIR}/libraries/${ANDROID_ABI}/libSPIRV-Tools-reduce.a
+                ${CMAKE_SOURCE_DIR}/libraries/${ANDROID_ABI}/libSPIRV-Tools.a
+                ${CMAKE_SOURCE_DIR}/libraries/${ANDROID_ABI}/libSPIRV.a
+                ${CMAKE_SOURCE_DIR}/libraries/${ANDROID_ABI}/libSPVRemapper.a
+                android
+                log
+                EGL
+        )
+endif()

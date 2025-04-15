@@ -26,7 +26,7 @@ void glBegin( GLenum mode ) {
             fpe_inited = true;
     }
 
-    auto& s = g_glstate.fpe_draw;
+    auto& s = g_glstate.fpe_state.fpe_draw;
 
     if (s.primitive != GL_NONE) {
         LOG_D("glBegin() nested! \nLast mode: %s", glEnumToString(s.primitive))
@@ -48,10 +48,10 @@ void glEnd() {
 
     INIT_CHECK_GL_ERROR
 
-    auto& s = g_glstate.fpe_draw;
+    auto& s = g_glstate.fpe_state.fpe_draw;
     auto& va = g_glstate.fpe_state.vertexpointer_array;
 //    auto& vb = g_glstate.fpe_state.fpe_vb;
-    auto& vb = g_glstate.fpe_draw.vb;
+    auto& vb = g_glstate.fpe_state.fpe_draw.vb;
 
     if (s.primitive == GL_NONE) {
         LOG_E("glEnd() without effect: already ended");
@@ -63,10 +63,12 @@ void glEnd() {
     // actual assembly work, and draw!
     {
         // Vertex Pointer State Machine Update
-        g_glstate.fpe_draw.compile_vertexattrib(va);
+        g_glstate.fpe_state.fpe_draw.compile_vertexattrib(va);
+
+        auto key = g_glstate.program_hash();
 
         // Program
-        auto& prog = g_glstate.get_or_generate_program();
+        auto& prog = g_glstate.get_or_generate_program(key);
 
         int prog_id = prog.get_program();
         if (prog_id < 0) {
@@ -86,32 +88,6 @@ void glEnd() {
 
         // Vertex Pointer to ES
         g_glstate.send_vertex_attributes();
-//        if (va.dirty) {
-//            va.dirty = false;
-//
-//            for (int i = 0; i < VERTEX_POINTER_COUNT; ++i) {
-//                bool enabled = ((va.enabled_pointers >> i) & 1);
-//
-//                if (enabled) {
-//                    auto &vp = va.attributes[i];
-//                    vp.stride = va.stride;
-//
-//                    GLES.glVertexAttribPointer(i, vp.size, vp.type, vp.normalized, vp.stride, vp.pointer);
-//                    CHECK_GL_ERROR_NO_INIT
-//
-//                    GLES.glEnableVertexAttribArray(i);
-//                    CHECK_GL_ERROR_NO_INIT
-//
-//                    LOG_D("attrib #%d: type = %s, size = %d, stride = %d, usage = %s, ptr = %p",
-//                          i, glEnumToString(vp.type), vp.size, vp.stride, glEnumToString(vp.usage), vp.pointer)
-//                }
-//                else {
-//                    LOG_D("attrib #%d: (disabled)", i)
-//                    GLES.glDisableVertexAttribArray(i);
-//                    CHECK_GL_ERROR_NO_INIT
-//                }
-//            }
-//        }
 
         // Uniform
         {
@@ -128,7 +104,7 @@ void glEnd() {
     
     // resetting draw state
     s.reset();
-    va.enabled_pointers = 0;
+    va.reset();
 }
 
 void glNormal3f( GLfloat nx, GLfloat ny, GLfloat nz ) {
@@ -255,17 +231,18 @@ void glColor4f( GLfloat red, GLfloat green,
             return;
     }
 
-    auto& attr = g_glstate.fpe_state.vertexpointer_array.attributes[vp2idx(GL_COLOR_ARRAY)];
-    auto& vpa = g_glstate.fpe_state.vertexpointer_array;
-    if (vpa.buffer_based) {
-        attr.size = 4;
-        attr.usage = GL_COLOR_ARRAY;
-        attr.type = GL_FLOAT;
-        attr.normalized = GL_FALSE;
-        attr.stride = 0;
-        attr.pointer = 0;
-        attr.value = glm::vec4(red, green, blue, alpha);
-        attr.varying = false;
-    }
+//    auto& attr = g_glstate.fpe_state.vertexpointer_array.attributes[vp2idx(GL_COLOR_ARRAY)];
+//    auto& vpa = g_glstate.fpe_state.vertexpointer_array;
+//    if (vpa.buffer_based) {
+//        attr.size = 4;
+//        attr.usage = GL_COLOR_ARRAY;
+//        attr.type = GL_FLOAT;
+//        attr.normalized = GL_FALSE;
+//        attr.stride = 0;
+//        attr.pointer = 0;
+//        attr.value = glm::vec4(red, green, blue, alpha);
+//        attr.varying = false;
+//    }
+
     mglColor<GLfloat, 4>({red, green, blue, alpha});
 }

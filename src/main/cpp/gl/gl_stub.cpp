@@ -2,9 +2,9 @@
 // Created by BZLZHH on 2025/1/29.
 //
 #include "../includes.h"
-#include "gl.h"
-#include "glext.h"
-#include "glcorearb.h"
+#include "GL/gl.h"
+#include "GL/glext.h"
+#include "GL/glcorearb.h"
 #include "log.h"
 #include "../gles/loader.h"
 #include "mg.h"

@@ -5,7 +5,7 @@
 #ifndef MOBILEGLUES_PLUGIN_POINTER_UTILS_H
 #define MOBILEGLUES_PLUGIN_POINTER_UTILS_H
 
-#include "../gl.h"
+#include "GL/gl.h"
 #include "../log.h"
 
 #define DEBUG 0
