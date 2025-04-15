@@ -49,7 +49,7 @@ void glEnd() {
     INIT_CHECK_GL_ERROR
 
     auto& s = g_glstate.fpe_state.fpe_draw;
-    auto& va = g_glstate.fpe_state.vertexpointer_array;
+    auto& raw_va = g_glstate.fpe_state.vertexpointer_array;
 //    auto& vb = g_glstate.fpe_state.fpe_vb;
     auto& vb = g_glstate.fpe_state.fpe_draw.vb;
 
@@ -63,7 +63,9 @@ void glEnd() {
     // actual assembly work, and draw!
     {
         // Vertex Pointer State Machine Update
-        g_glstate.fpe_state.fpe_draw.compile_vertexattrib(va);
+        g_glstate.fpe_state.fpe_draw.compile_vertexattrib(raw_va);
+
+        auto va = raw_va.normalize();
 
         auto key = g_glstate.program_hash();
 
@@ -87,7 +89,7 @@ void glEnd() {
         CHECK_GL_ERROR_NO_INIT
 
         // Vertex Pointer to ES
-        g_glstate.send_vertex_attributes();
+        g_glstate.send_vertex_attributes(va);
 
         // Uniform
         {
@@ -104,7 +106,7 @@ void glEnd() {
     
     // resetting draw state
     s.reset();
-    va.reset();
+    raw_va.reset();
 }
 
 void glNormal3f( GLfloat nx, GLfloat ny, GLfloat nz ) {
@@ -246,3 +248,4 @@ void glColor4f( GLfloat red, GLfloat green,
 
     mglColor<GLfloat, 4>({red, green, blue, alpha});
 }
+

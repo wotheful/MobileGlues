@@ -76,7 +76,6 @@ void glIndexPointer(GLenum type, GLsizei stride, const GLvoid *pointer ) {
             .stride = stride,
             .pointer = pointer,
 //            .varying = true
-            .varying = true
     };
     g_glstate.fpe_state.vertexpointer_array.dirty = true;
 }
