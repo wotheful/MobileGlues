@@ -57,7 +57,8 @@ struct vertex_pointer_array_t {
     }
 
     // Split into starting pointer & offset into buffer per pointer
-    void normalize() {
+    vertex_pointer_array_t normalize() {
+        vertex_pointer_array_t that = *this;
         int first_va_idx = -1;
 
         // Find starting pointer
@@ -65,23 +66,21 @@ struct vertex_pointer_array_t {
             bool enabled = ((enabled_pointers >> i) & 1);
             if (!enabled) continue;
 
-            if (first_va_idx == -1) {
-                first_va_idx = i;
-                break;
-            }
+            first_va_idx = i;
+            break;
         }
 
         if (stride == 0)
-            stride = attributes[first_va_idx].stride;
+            that.stride = attributes[first_va_idx].stride;
 
         // if not valid starting pointer
-        if (!(stride != 0 && starting_pointer != 0 && starting_pointer > (void*)stride)) {
-            starting_pointer = attributes[first_va_idx].pointer;
+        if (!(that.stride != 0 && that.starting_pointer != 0 && that.starting_pointer > (void*)that.stride)) {
+            that.starting_pointer = attributes[first_va_idx].pointer;
         }
 
         // stride==0 && stride in pointer == 0
         // => tightly packed, infer stride from offset below
-        bool do_calc_stride = (stride == 0);
+        bool do_calc_stride = (that.stride == 0);
 
         // Adjust pointer offsets according to starting pointer
         // Getting actual stride if stride==0
@@ -89,16 +88,18 @@ struct vertex_pointer_array_t {
             bool enabled = ((enabled_pointers >> i) & 1);
             if (!enabled) continue;
 
-            auto &vp = attributes[i];
+            auto &vp = that.attributes[i];
 
             // check if pointer is a pointer rather than an offset
-            if (stride > 0 && (uint64_t)vp.pointer > (uint64_t)stride)
+            if (that.stride > 0 && (uint64_t)vp.pointer > (uint64_t)that.stride)
                 vp.pointer =
-                        (const void*)((const uint64_t)vp.pointer - (const uint64_t)starting_pointer);
+                        (const void*)((const uint64_t)vp.pointer - (const uint64_t)that.starting_pointer);
 
             if (do_calc_stride)
-                stride = std::max((uint64_t)stride, (uint64_t)vp.pointer + vp.size * type_size(vp.type));
+                that.stride = std::max((uint64_t)stride, (uint64_t)vp.pointer + vp.size * type_size(vp.type));
         }
+
+        return that;
     }
 };
 
