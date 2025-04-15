@@ -45,14 +45,12 @@ struct vertex_pointer_array_t {
     struct vertexattribute_t attributes[VERTEX_POINTER_COUNT];
     uint32_t enabled_pointers = 0;
     bool dirty = false;
-    bool normalized = false;
     bool buffer_based = false;
 
     void reset() {
         starting_pointer = NULL;
         stride = 0;
         enabled_pointers = 0;
-        normalized = false;
         dirty = false;
         buffer_based = false;
         memset(&attributes, 0, sizeof(attributes));
@@ -60,11 +58,6 @@ struct vertex_pointer_array_t {
 
     // Split into starting pointer & offset into buffer per pointer
     void normalize() {
-        if (normalized)
-            return;
-
-        normalized = true;
-
         int first_va_idx = -1;
 
         // Find starting pointer
@@ -96,8 +89,17 @@ struct vertex_pointer_array_t {
 //                    std::min(starting_pointer, vp.pointer);
         }
 
-        stride = attributes[first_va_idx].stride;
-        starting_pointer = attributes[first_va_idx].pointer;
+        if (stride == 0)
+            stride = attributes[first_va_idx].stride;
+
+        bool do_calc_pointer = false;
+        if (starting_pointer != 0 && starting_pointer > (void*)stride) {
+            // starting_pointer is valid, assuming vertex pointers as offsets
+            do_calc_pointer = false;
+        } else {
+            starting_pointer = attributes[first_va_idx].pointer;
+            do_calc_pointer = true;
+        }
 
         // stride==0 && stride in pointer == 0
         // => tightly packed, infer stride from offset below
@@ -111,8 +113,9 @@ struct vertex_pointer_array_t {
 
             auto &vp = attributes[i];
 
-            vp.pointer =
-                    (const void*)((const uint64_t)vp.pointer - (const uint64_t)starting_pointer);
+            if (do_calc_pointer)
+                vp.pointer =
+                        (const void*)((const uint64_t)vp.pointer - (const uint64_t)starting_pointer);
 
             if (do_calc_stride)
                 stride = std::max((uint64_t)stride, (uint64_t)vp.pointer + vp.size * type_size(vp.type));
