@@ -8,7 +8,7 @@
 #include "log.h"
 #include "../gles/loader.h"
 #include "mg.h"
-#include "gl_mg.h"
+#include "gl.h"
 
 #define DEBUG 0
 
