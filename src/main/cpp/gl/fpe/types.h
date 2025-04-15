@@ -99,6 +99,15 @@ struct vertex_pointer_array_t {
                 that.stride = std::max((uint64_t)stride, (uint64_t)vp.pointer + vp.size * type_size(vp.type));
         }
 
+        // Overwrite `stride` in pointers
+        for (int i = 0; i < VERTEX_POINTER_COUNT; ++i) {
+            bool enabled = ((enabled_pointers >> i) & 1);
+            if (!enabled) continue;
+
+            auto &vp = that.attributes[i];
+            vp.stride = that.stride;
+        }
+
         return that;
     }
 };
