@@ -11,12 +11,15 @@
 #include "defines.h"
 #include <glm/glm/glm.hpp>
 #include <glm/glm/gtc/type_ptr.hpp>
-#include <unordered_map>
+#include "ankerl/unordered_dense.h"
 #include <vector>
 #include <sstream>
 #include "fpe_shadergen.h"
 #include "vertexpointer_utils.h"
 #include "../version.h"
+
+template <typename K, typename V>
+using unordered_map = ankerl::unordered_dense::map<K, V>;
 
 GLsizei type_size(GLenum type);
 
@@ -237,7 +240,7 @@ private:
 
 struct glstate_t {
     template <typename K, typename V>
-    using unordered_map = std::unordered_map<K, V>;
+    using unordered_map = unordered_map<K, V>;
 
     // States that can led to layout change / shader recompile
     struct fixed_function_state_t fpe_state;
