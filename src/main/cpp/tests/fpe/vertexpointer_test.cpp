@@ -92,3 +92,73 @@ TEST(VertexPointer, PointerNormalize) {
         EXPECT_EQ(tex_va.pointer, (const void*) offsetof(test_struct_t, uv));
     }
 }
+
+TEST(VertexPointer, PointerNormalizeColor) {
+    struct test_struct_t {
+        float pos[4];
+        uint8_t color[4];
+    } ts;
+
+    auto& vpa = g_glstate.fpe_state.vertexpointer_array;
+
+    vpa.reset();
+
+    glVertexPointer(4, GL_FLOAT, sizeof(test_struct_t), ts.pos);
+    glColorPointer(4, GL_UNSIGNED_BYTE, sizeof(test_struct_t), ts.color);
+
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glEnableClientState(GL_COLOR_ARRAY);
+
+    vpa.normalize();
+
+    EXPECT_EQ((uint64_t) &ts,
+              (uint64_t) vpa.starting_pointer);
+
+    EXPECT_EQ((uint64_t) 0x5,
+              (uint64_t) vpa.enabled_pointers);
+
+    EXPECT_EQ((uint64_t) sizeof(test_struct_t),
+              (uint64_t) vpa.stride);
+
+    auto& vertex_va = vpa.attributes[vp2idx(GL_VERTEX_ARRAY)];
+    EXPECT_EQ(vertex_va.size, 4);
+    EXPECT_EQ(vertex_va.usage, GL_VERTEX_ARRAY);
+    EXPECT_EQ(vertex_va.type, GL_FLOAT);
+    EXPECT_EQ(vertex_va.stride, sizeof(test_struct_t));
+    EXPECT_EQ(vertex_va.pointer, (const void*)0);
+
+    auto& color_va = vpa.attributes[vp2idx(GL_COLOR_ARRAY)];
+    EXPECT_EQ(color_va.size, 4);
+    EXPECT_EQ(color_va.usage, GL_COLOR_ARRAY);
+    EXPECT_EQ(color_va.type, GL_UNSIGNED_BYTE);
+    EXPECT_EQ(color_va.stride, sizeof(test_struct_t));
+    EXPECT_EQ(color_va.pointer, (const void*) offsetof(test_struct_t, color));
+
+    // Check for idempotence
+    for (int i = 0; i < 5; ++i) {
+        vpa.normalize();
+
+        EXPECT_EQ((uint64_t) &ts,
+                  (uint64_t) vpa.starting_pointer);
+
+        EXPECT_EQ((uint64_t) 0x5,
+                  (uint64_t) vpa.enabled_pointers);
+
+        EXPECT_EQ((uint64_t) sizeof(test_struct_t),
+                  (uint64_t) vpa.stride);
+
+        auto& vertex_va = vpa.attributes[vp2idx(GL_VERTEX_ARRAY)];
+        EXPECT_EQ(vertex_va.size, 4);
+        EXPECT_EQ(vertex_va.usage, GL_VERTEX_ARRAY);
+        EXPECT_EQ(vertex_va.type, GL_FLOAT);
+        EXPECT_EQ(vertex_va.stride, sizeof(test_struct_t));
+        EXPECT_EQ(vertex_va.pointer, (const void*)0);
+
+        auto& color_va = vpa.attributes[vp2idx(GL_COLOR_ARRAY)];
+        EXPECT_EQ(color_va.size, 4);
+        EXPECT_EQ(color_va.usage, GL_COLOR_ARRAY);
+        EXPECT_EQ(color_va.type, GL_UNSIGNED_BYTE);
+        EXPECT_EQ(color_va.stride, sizeof(test_struct_t));
+        EXPECT_EQ(color_va.pointer, (const void*) offsetof(test_struct_t, color));
+    }
+}
