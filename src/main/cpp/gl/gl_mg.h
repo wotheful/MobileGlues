@@ -5,7 +5,7 @@
 #ifndef MOBILEGLUES_GL_MG_H
 #define MOBILEGLUES_GL_MG_H
 
-#include "gl.h"
+#include <GL/gl.h>
 
 #ifdef __cplusplus
 extern "C" {
