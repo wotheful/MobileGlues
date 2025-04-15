@@ -10,10 +10,13 @@
 #include "../../config/settings.h"
 
 #include <list>
-#include <unordered_map>
+#include "ankerl/unordered_dense.h"
 #include <array>
 #include <string>
 #include <cstdint>
+
+template <typename K, typename V>
+using unordered_map = ankerl::unordered_dense::map<K, V>;
 
 class Cache {
 public:
@@ -37,7 +40,7 @@ private:
 
     std::list<CacheEntry> cacheList;
     using ListIterator = std::list<CacheEntry>::iterator;
-    std::unordered_map<std::array<uint8_t, 32>, ListIterator, SHA256Hash> cacheMap;
+    unordered_map<std::array<uint8_t, 32>, ListIterator, SHA256Hash> cacheMap;
     size_t cacheSize = 0;
 
     static std::array<uint8_t, 32> computeSHA256(const char* data);
