@@ -237,7 +237,7 @@ private:
 
 struct glstate_t {
     template <typename K, typename V>
-    using unordered_map = ankerl::unordered_map<K, V>;
+    using unordered_map = ankerl::unordered_dense::map<K, V>;
 
     // States that can led to layout change / shader recompile
     struct fixed_function_state_t fpe_state;
