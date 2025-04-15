@@ -104,7 +104,7 @@ void glEnd() {
     
     // resetting draw state
     s.reset();
-    va.enabled_pointers = 0;
+    va.reset();
 }
 
 void glNormal3f( GLfloat nx, GLfloat ny, GLfloat nz ) {
