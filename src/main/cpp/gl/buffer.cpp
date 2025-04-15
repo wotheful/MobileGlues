@@ -3,7 +3,6 @@
 //
 
 #include "buffer.h"
-#include <unordered_map>
 #include "ankerl/unordered_dense.h"
 
 template <typename K, typename V>
