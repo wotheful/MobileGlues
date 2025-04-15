@@ -18,9 +18,6 @@
 #include "vertexpointer_utils.h"
 #include "../version.h"
 
-template <typename K, typename V>
-using unordered_map = ankerl::unordered_dense::map<K, V>;
-
 GLsizei type_size(GLenum type);
 
 struct transformation_t {
@@ -240,7 +237,7 @@ private:
 
 struct glstate_t {
     template <typename K, typename V>
-    using unordered_map = unordered_map<K, V>;
+    using unordered_map = ankerl::unordered_map<K, V>;
 
     // States that can led to layout change / shader recompile
     struct fixed_function_state_t fpe_state;
