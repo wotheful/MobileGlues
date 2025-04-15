@@ -136,14 +136,16 @@ program_t& glstate_t::get_or_generate_program(const uint64_t key) {
     return prog;
 }
 
-int glstate_t::get_vao(const uint64_t key) {
+bool glstate_t::get_vao(const uint64_t key, GLuint* vao) {
     LOG()
     if (fpe_vaos.find(key)
         == fpe_vaos.end()) {
-        return -1;
+        return false;
     }
 
-    return fpe_vaos[key];
+    if (vao)
+        *vao = fpe_vaos[key];
+    return true;
 }
 
 void glstate_t::save_vao(const uint64_t key, const GLuint vao) {

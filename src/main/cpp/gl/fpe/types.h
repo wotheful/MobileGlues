@@ -278,7 +278,7 @@ struct glstate_t {
 
     program_t& get_or_generate_program(const uint64_t key);
 
-    int get_vao(const uint64_t key);
+    bool get_vao(const uint64_t key, GLuint* vao);
 
     void save_vao(const uint64_t key, const GLuint vao);
 
