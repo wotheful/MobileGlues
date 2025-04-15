@@ -153,23 +153,17 @@ void glstate_t::save_vao(const uint64_t key, const GLuint vao) {
     fpe_vaos[key] = vao;
 }
 
-void glstate_t::send_vertex_attributes() {
+bool glstate_t::send_vertex_attributes(const vertex_pointer_array_t& va) const {
     LOG()
     INIT_CHECK_GL_ERROR
-    auto& va = fpe_state.vertexpointer_array;
-    if (!va.dirty) return;
-
-    va.dirty = false;
-
-    va.normalize();
+//    auto& va = fpe_state.vertexpointer_array;
+    if (!va.dirty) return false;
 
     for (int i = 0; i < VERTEX_POINTER_COUNT; ++i) {
         bool enabled = ((va.enabled_pointers >> i) & 1);
 
         auto &vp = va.attributes[i];
         if (enabled) {
-            vp.stride = va.stride;
-
             GLES.glVertexAttribPointer(
                     i, vp.size, vp.type, vp.normalized, vp.stride, vp.pointer);
             CHECK_GL_ERROR_NO_INIT
@@ -213,4 +207,6 @@ void glstate_t::send_vertex_attributes() {
             CHECK_GL_ERROR_NO_INIT
         }
     }
+
+    return true;
 }

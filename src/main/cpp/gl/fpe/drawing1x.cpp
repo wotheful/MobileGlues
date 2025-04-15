@@ -87,7 +87,7 @@ void glEnd() {
         CHECK_GL_ERROR_NO_INIT
 
         // Vertex Pointer to ES
-        g_glstate.send_vertex_attributes();
+        g_glstate.send_vertex_attributes(va);
 
         // Uniform
         {

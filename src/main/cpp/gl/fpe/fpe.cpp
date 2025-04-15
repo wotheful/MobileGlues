@@ -121,7 +121,8 @@ int commit_fpe_state_on_draw(GLenum* mode, GLint* first, GLsizei* count) {
     CHECK_GL_ERROR_NO_INIT
 
     // All assuming tightly packed here...
-    auto& vpa = g_glstate.fpe_state.vertexpointer_array;
+    auto& raw_vpa = g_glstate.fpe_state.vertexpointer_array;
+    auto vpa = raw_vpa.normalize();
 //    GLES.glGenVertexArrays(1, &vpa.fpe_vao);
     LOG_D("fpe_vao: %d", g_glstate.fpe_state.fpe_vao)
     GLES.glBindVertexArray(g_glstate.fpe_state.fpe_vao);
@@ -140,8 +141,9 @@ int commit_fpe_state_on_draw(GLenum* mode, GLint* first, GLsizei* count) {
 
     LOG_D("starting_ptr = %p", vpa.starting_pointer)
     LOG_D("stride = %d", vpa.stride)
-//    vpa.normalize();
-    g_glstate.send_vertex_attributes();
+
+    g_glstate.send_vertex_attributes(vpa);
+    vpa.dirty = false;
 
     int ret = 0;
 

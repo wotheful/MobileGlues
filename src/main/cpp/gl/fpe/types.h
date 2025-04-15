@@ -271,7 +271,7 @@ struct glstate_t {
 
     void save_vao(const uint64_t key, const GLuint vao);
 
-    void send_vertex_attributes();
+    bool send_vertex_attributes(const vertex_pointer_array_t& va) const;
 };
 
 #endif //MOBILEGLUES_TYPES_H
