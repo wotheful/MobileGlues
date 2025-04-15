@@ -138,6 +138,8 @@ int commit_fpe_state_on_draw(GLenum* mode, GLint* first, GLsizei* count) {
         CHECK_GL_ERROR_NO_INIT
     }
 
+    LOG_D("starting_ptr = %p", vpa.starting_pointer)
+    LOG_D("stride = %d", vpa.stride)
 //    vpa.normalize();
     g_glstate.send_vertex_attributes();
 
@@ -194,6 +196,8 @@ int commit_fpe_state_on_draw(GLenum* mode, GLint* first, GLsizei* count) {
     }
 
     g_glstate.send_uniforms(prog_id);
-//    vpa.reset();
+    vpa.reset();
+//    vpa.starting_pointer = 0;
+//    vpa.stride = 0;
     return ret;
 }
