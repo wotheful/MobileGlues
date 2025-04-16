@@ -56,6 +56,13 @@ void glstate_t::send_uniforms(int program) {
         GLES.glUniform1f(fogend_id, fpe_uniform.fog_end);
         CHECK_GL_ERROR_NO_INIT
     }
+
+    if (fpe_state.fpe_bools.alpha_test_enable) {
+        GLint alpharef_id = GLES.glGetUniformLocation(program, "alpharef");
+        CHECK_GL_ERROR_NO_INIT
+        GLES.glUniform1f(alpharef_id, fpe_uniform.alpha_ref);
+        CHECK_GL_ERROR_NO_INIT
+    }
 }
 
 uint32_t glstate_t::program_hash() {
@@ -72,6 +79,8 @@ uint32_t glstate_t::program_hash() {
     hash.add(&fpe_state.light_model_color_ctrl, sizeof(fpe_state.light_model_color_ctrl));
     hash.add(&fpe_state.light_model_local_viewer, sizeof(fpe_state.light_model_local_viewer));
     hash.add(&fpe_state.light_model_two_side, sizeof(fpe_state.light_model_two_side));
+
+    hash.add(&fpe_state.fpe_bools, sizeof(fixed_function_bool_t));
 
     key |= (((uint64_t)hash.hash()) << 32);
 

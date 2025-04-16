@@ -115,6 +115,7 @@ struct vertex_pointer_array_t {
 struct fixed_function_bool_t { // glEnable/glDisable
     bool fog_enable = false; // GL_FOG
     bool lighting_enable = false; // GL_LIGHTING
+    bool alpha_test_enable = false; // GL_ALPHA_TEST
     bool light_enable[MAX_LIGHTS] = {false};
 };
 
