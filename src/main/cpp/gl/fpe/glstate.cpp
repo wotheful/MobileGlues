@@ -80,7 +80,7 @@ uint32_t glstate_t::program_hash() {
     hash.add(&fpe_state.light_model_local_viewer, sizeof(fpe_state.light_model_local_viewer));
     hash.add(&fpe_state.light_model_two_side, sizeof(fpe_state.light_model_two_side));
 
-    hash.add(&fpe_state.fpe_bools, sizeof(fixed_function_bool_t));
+    hash.add(&fpe_state.fpe_bools, sizeof(fpe_state.fpe_bools));
 
     key |= (((uint64_t)hash.hash()) << 32);
 
@@ -139,6 +139,8 @@ program_t& glstate_t::get_or_generate_program(const uint64_t key) {
             // reserve key==0 as null program for failure
             return fpe_programs[0];
         }
+    } else {
+        LOG_D("Using existing shader: 0x%x", key)
     }
 
     auto& prog = fpe_programs[key];

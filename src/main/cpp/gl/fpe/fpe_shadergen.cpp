@@ -35,7 +35,7 @@ constexpr std::string_view mg_fog_exp2_func =
         "    return clamp(exp(-scaled * scaled), 0., 1.);\n"
         "}\n";
 constexpr std::string_view mg_fog_apply_fog_func =
-        "vec4 apply_fog(vec4 objColor, vec4 fogColor, float fogFactor) {\n"
+        "vec3 apply_fog(vec3 objColor, vec3 fogColor, float fogFactor) {\n"
         "    return mix(fogColor, objColor, fogFactor);\n"
         "}\n";
 constexpr std::string_view mg_fog_struct =
@@ -334,6 +334,14 @@ void add_fs_body(const fixed_function_state_t& state, scratch_t& scratch, std::s
         fs += "    color *= texcolor0;\n";
     }
 
+    // Alpha test
+    if (state.fpe_bools.alpha_test_enable)
+        fs += alpha_test(state.alpha_func, "color", "alpharef");
+    else
+        fs += "    // Alpha Test\n"
+              "    // (Disabled)\n";
+
+
     // Fog calculation
     if (state.fpe_bools.fog_enable) {
         fs += "    float distance = length(vViewPosition);\n";
@@ -348,14 +356,9 @@ void add_fs_body(const fixed_function_state_t& state, scratch_t& scratch, std::s
                 fs += "    float fogFactor = fog_exp2(distance, fogParam.density);\n";
                 break;
         }
-        fs += "    color = apply_fog(color, fogParam.color, fogFactor);\n";
+        fs += "    color.rgb = apply_fog(color.rgb, fogParam.color.rgb, fogFactor);\n";
+//        fs += "    color = vec4(fogFactor, fogFactor, fogFactor, 1.);\n";
     }
-
-    if (state.fpe_bools.alpha_test_enable)
-        fs += alpha_test(state.alpha_func, "color", "alpharef");
-    else
-        fs += "    // Alpha Test\n"
-              "    // (Disabled)\n";
 
     fs += "   FragColor = color;\n"
           "}";
