@@ -51,11 +51,7 @@ void glMatrixMode( GLenum mode ) {
     LOG()
     LOG_D("glMatrixMode(%s)", glEnumToString(mode))
 
-    if (!disableRecording && DisplayListManager::shouldRecord()) {
-        displayListManager.record<glMatrixMode>({}, mode);
-        if (DisplayListManager::shouldFinish())
-            return;
-    }
+    LIST_RECORD(glMatrixMode, {}, mode)
 
     auto& transformation = g_glstate.fpe_uniform.transformation;
 
@@ -74,11 +70,7 @@ void glLoadIdentity() {
     LOG()
     LOG_D("glLoadIdentity")
 
-    if (!disableRecording && DisplayListManager::shouldRecord()) {
-        displayListManager.record<glLoadIdentity>({});
-        if (DisplayListManager::shouldFinish())
-            return;
-    }
+    LIST_RECORD(glLoadIdentity, {})
 
     auto& transformation = g_glstate.fpe_uniform.transformation;
 
@@ -92,11 +84,7 @@ void glOrtho(GLdouble left, GLdouble right, GLdouble bottom, GLdouble top, GLdou
     LOG()
     LOG_D("glOrtho(%f, %f, %f, %f, %f, %f)", left, right, bottom, top, near_val, far_val)
 
-    if (!disableRecording && DisplayListManager::shouldRecord()) {
-        displayListManager.record<glOrtho>({}, left, right, bottom, top, near_val, far_val);
-        if (DisplayListManager::shouldFinish())
-            return;
-    }
+    LIST_RECORD(glOrtho, {}, left, right, bottom, top, near_val, far_val)
 
     // TODO: precision loss?
     SELF_CALL(glOrthof, left, right, bottom, top, near_val, far_val)
@@ -106,11 +94,7 @@ void glOrthof(GLfloat left, GLfloat right, GLfloat bottom, GLfloat top, GLfloat 
     LOG()
     LOG_D("glOrthof(%f, %f, %f, %f, %f, %f)", left, right, bottom, top, zNear, zFar)
 
-    if (!disableRecording && DisplayListManager::shouldRecord()) {
-        displayListManager.record<glOrthof>({}, left, right, bottom, top, zNear, zFar);
-        if (DisplayListManager::shouldFinish())
-            return;
-    }
+    LIST_RECORD(glOrthof, {}, left, right, bottom, top, zNear, zFar)
 
     auto& transformation = g_glstate.fpe_uniform.transformation;
 
@@ -123,11 +107,7 @@ void glScalef( GLfloat x, GLfloat y, GLfloat z ) {
     LOG()
     LOG_D("glScalef(%f, %f, %f)", x, y, z)
 
-    if (!disableRecording && DisplayListManager::shouldRecord()) {
-        displayListManager.record<glScalef>({}, x, y, z);
-        if (DisplayListManager::shouldFinish())
-            return;
-    }
+    LIST_RECORD(glScalef, {}, x, y, z)
 
     auto& transformation = g_glstate.fpe_uniform.transformation;
 
@@ -141,11 +121,7 @@ void glTranslatef( GLfloat x, GLfloat y, GLfloat z ) {
     LOG()
     LOG_D("glTranslatef(%f, %f, %f)", x, y, z)
 
-    if (!disableRecording && DisplayListManager::shouldRecord()) {
-        displayListManager.record<glTranslatef>({}, x, y, z);
-        if (DisplayListManager::shouldFinish())
-            return;
-    }
+    LIST_RECORD(glTranslatef, {}, x, y, z)
 
     auto& transformation = g_glstate.fpe_uniform.transformation;
 
@@ -159,11 +135,7 @@ void glRotatef( GLfloat angle, GLfloat x, GLfloat y, GLfloat z ) {
     LOG()
     LOG_D("glRotatef, angle = %.2f, x = %.2f, y = %.2f, z = %.2f", angle, x, y, z)
 
-    if (!disableRecording && DisplayListManager::shouldRecord()) {
-        displayListManager.record<glRotatef>({}, angle, x, y, z);
-        if (DisplayListManager::shouldFinish())
-            return;
-    }
+    LIST_RECORD(glRotatef, {}, angle, x, y, z)
 
     auto& transformation = g_glstate.fpe_uniform.transformation;
 
@@ -177,11 +149,7 @@ void glRotated(GLdouble angle, GLdouble x, GLdouble y, GLdouble z ) {
     LOG()
     LOG_D("glRotated(%f, %f, %f, %f)", angle, x, y, z)
 
-    if (!disableRecording && DisplayListManager::shouldRecord()) {
-        displayListManager.record<glRotated>({}, angle, x, y, z);
-        if (DisplayListManager::shouldFinish())
-            return;
-    }
+    LIST_RECORD(glRotated, {}, angle, x, y, z)
 
     // TODO: precision loss?
     SELF_CALL(glRotatef, angle, x, y, z)
@@ -191,11 +159,7 @@ void glScaled(GLdouble x, GLdouble y, GLdouble z ) {
     LOG()
     LOG_D("glScaled(%f, %f, %f)", x, y, z)
 
-    if (!disableRecording && DisplayListManager::shouldRecord()) {
-        displayListManager.record<glScaled>({}, x, y, z);
-        if (DisplayListManager::shouldFinish())
-            return;
-    }
+    LIST_RECORD(glScaled, {}, x, y, z)
 
     // TODO: precision loss?
     SELF_CALL(glScalef, x, y, z)
@@ -205,11 +169,7 @@ void glTranslated(GLdouble x, GLdouble y, GLdouble z ) {
     LOG()
     LOG_D("glTranslated(%f, %f, %f)", x, y, z)
 
-    if (!disableRecording && DisplayListManager::shouldRecord()) {
-        displayListManager.record<glTranslated>({}, x, y, z);
-        if (DisplayListManager::shouldFinish())
-            return;
-    }
+    LIST_RECORD(glTranslated, {}, x, y, z)
 
     // TODO: precision loss?
     SELF_CALL(glTranslatef, x, y, z);
@@ -219,11 +179,7 @@ void glMultMatrixf(const GLfloat *m) {
     LOG()
     LOG_D("glMultMatrixf(%p)", m)
 
-    if (!disableRecording && DisplayListManager::shouldRecord()) {
-        displayListManager.record<glMultMatrixf>({{0, sizeof(GLfloat) * 16}}, m);
-        if (DisplayListManager::shouldFinish())
-            return;
-    }
+    LIST_RECORD(glMultMatrixf, {{0, sizeof(GLfloat) * 16}}, m)
 
     auto& transformation = g_glstate.fpe_uniform.transformation;
 
@@ -243,11 +199,7 @@ void glPushMatrix( void ) {
     LOG()
     LOG_D("glPushMatrix()")
 
-    if (!disableRecording && DisplayListManager::shouldRecord()) {
-        displayListManager.record<glPushMatrix>({});
-        if (DisplayListManager::shouldFinish())
-            return;
-    }
+    LIST_RECORD(glPushMatrix, {})
 
     auto& transformation = g_glstate.fpe_uniform.transformation;
 
@@ -263,11 +215,7 @@ void glPopMatrix( void ) {
     LOG()
     LOG_D("glPopMatrix()")
 
-    if (!disableRecording && DisplayListManager::shouldRecord()) {
-        displayListManager.record<glPopMatrix>({});
-        if (DisplayListManager::shouldFinish())
-            return;
-    }
+    LIST_RECORD(glPopMatrix, {})
 
     auto& transformation = g_glstate.fpe_uniform.transformation;
 

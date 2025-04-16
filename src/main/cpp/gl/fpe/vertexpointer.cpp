@@ -83,11 +83,7 @@ void glIndexPointer(GLenum type, GLsizei stride, const GLvoid *pointer ) {
 void glEnableClientState(GLenum cap) {
     LOG_D("glEnableClientState, cap = %s", glEnumToString(cap))
 
-    if (!disableRecording && DisplayListManager::shouldRecord()) {
-        displayListManager.record<glEnableClientState>({}, cap);
-        if (DisplayListManager::shouldFinish())
-            return;
-    }
+    LIST_RECORD(glEnableClientState, {}, cap)
 
     auto mask = vp_mask(cap);
     g_glstate.fpe_state.vertexpointer_array.enabled_pointers |= mask;
@@ -99,11 +95,7 @@ void glDisableClientState(GLenum cap) {
     LOG_D("glDisableClientState, cap = %s", glEnumToString(cap))
     auto mask = vp_mask(cap);
 
-    if (!disableRecording && DisplayListManager::shouldRecord()) {
-        displayListManager.record<glDisableClientState>({}, cap);
-        if (DisplayListManager::shouldFinish())
-            return;
-    }
+    LIST_RECORD(glDisableClientState, {}, cap)
 
     g_glstate.fpe_state.vertexpointer_array.enabled_pointers &= (~mask);
     LOG_D("Enabled Ptr: 0x%x", g_glstate.fpe_state.vertexpointer_array.enabled_pointers)

@@ -47,11 +47,7 @@ void glEnable(GLenum cap) {
     LOG()
     LOG_D("glEnable, cap = %s", glEnumToString(cap));
 
-    if (!disableRecording && DisplayListManager::shouldRecord()) {
-        displayListManager.record<glEnable>({}, cap);
-        if (DisplayListManager::shouldFinish())
-            return;
-    }
+    LIST_RECORD(glEnable, {}, cap)
 
     if (hijack_fpe_states(cap, true, &g_glstate.fpe_state.fpe_bools))
         return;
@@ -64,11 +60,7 @@ void glDisable(GLenum cap) {
     LOG()
     LOG_D("glDisable, cap = %s", glEnumToString(cap))
 
-    if (!disableRecording && DisplayListManager::shouldRecord()) {
-        displayListManager.record<glDisable>({}, cap);
-        if (DisplayListManager::shouldFinish())
-            return;
-    }
+    LIST_RECORD(glDisable, {}, cap)
 
     if (hijack_fpe_states(cap, false, &g_glstate.fpe_state.fpe_bools))
         return;
@@ -90,11 +82,7 @@ void glAlphaFunc( GLenum func, GLclampf ref ) {
     LOG()
     LOG_D("glAlphaFunc(%s, %f)", glEnumToString(func), ref)
 
-    if (!disableRecording && DisplayListManager::shouldRecord()) {
-        displayListManager.record<glAlphaFunc>({}, func, ref);
-        if (DisplayListManager::shouldFinish())
-            return;
-    }
+    LIST_RECORD(glAlphaFunc, {}, func, ref)
 
     g_glstate.fpe_state.alpha_func = func;
     g_glstate.fpe_uniform.alpha_ref = ref;
@@ -104,11 +92,7 @@ void glFogf( GLenum pname, GLfloat param ) {
     LOG()
     LOG_D("glFogf(%s, %f)", glEnumToString(pname), param)
 
-    if (!disableRecording && DisplayListManager::shouldRecord()) {
-        displayListManager.record<glFogf>({}, pname, param);
-        if (DisplayListManager::shouldFinish())
-            return;
-    }
+    LIST_RECORD(glFogf, {}, pname, param)
 
     switch (pname) {
         case GL_FOG_DENSITY:
@@ -137,11 +121,7 @@ void glFogi( GLenum pname, GLint param ) {
     LOG()
     LOG_D("glFogi(%s, %s)", glEnumToString(pname), glEnumToString(param))
 
-    if (!disableRecording && DisplayListManager::shouldRecord()) {
-        displayListManager.record<glFogi>({}, pname, param);
-        if (DisplayListManager::shouldFinish())
-            return;
-    }
+    LIST_RECORD(glFogi, {}, pname, param)
 
     switch (pname) {
         case GL_FOG_MODE:
@@ -169,11 +149,7 @@ void glFogfv( GLenum pname, const GLfloat *params ) {
     LOG()
     LOG_D("glFogfv(%s, [...])", glEnumToString(pname))
 
-    if (!disableRecording && DisplayListManager::shouldRecord()) {
-        displayListManager.record<glFogfv>({{1, PointerUtils::pname_to_count(pname) * sizeof(GLfloat)}}, pname, params);
-        if (DisplayListManager::shouldFinish())
-            return;
-    }
+    LIST_RECORD(glFogfv, {{1, PointerUtils::pname_to_count(pname) * sizeof(GLfloat)}}, pname, params)
 
     switch (pname) {
         case GL_FOG_MODE:
@@ -202,11 +178,7 @@ void glFogiv( GLenum pname, const GLint *params ) {
     LOG()
     LOG_D("glFogiv(%s, [...])", glEnumToString(pname))
 
-    if (!disableRecording && DisplayListManager::shouldRecord()) {
-        displayListManager.record<glFogiv>({{1, PointerUtils::pname_to_count(pname) * sizeof(GLint)}}, pname, params);
-        if (DisplayListManager::shouldFinish())
-            return;
-    }
+    LIST_RECORD(glFogiv, {{1, PointerUtils::pname_to_count(pname) * sizeof(GLint)}}, pname, params)
 
     switch (pname) {
         case GL_FOG_COLOR: {
@@ -237,11 +209,7 @@ void glShadeModel( GLenum mode ) {
     LOG()
     LOG_D("glShadeModel(%s)", glEnumToString(mode))
 
-    if (!disableRecording && DisplayListManager::shouldRecord()) {
-        displayListManager.record<glShadeModel>({}, mode);
-        if (DisplayListManager::shouldFinish())
-            return;
-    }
+    LIST_RECORD(glShadeModel, {}, mode)
 
     g_glstate.fpe_state.shade_model = mode;
 }
@@ -250,11 +218,7 @@ void glLightf( GLenum light, GLenum pname, GLfloat param ) {
     LOG()
     LOG_D("glLightf(%s, %s, %f)", glEnumToString(light), glEnumToString(pname), param)
 
-    if (!disableRecording && DisplayListManager::shouldRecord()) {
-        displayListManager.record<glLightf>({}, light, pname, param);
-        if (DisplayListManager::shouldFinish())
-            return;
-    }
+    LIST_RECORD(glLightf, {}, light, pname, param)
 
     auto& lightref = g_glstate.fpe_uniform.lights[light - GL_LIGHT0];
 
@@ -283,11 +247,7 @@ void glLighti( GLenum light, GLenum pname, GLint param ) {
     LOG()
     LOG_D("glLighti(%s, %s, %d)", glEnumToString(light), glEnumToString(pname), param)
 
-    if (!disableRecording && DisplayListManager::shouldRecord()) {
-        displayListManager.record<glLighti>({}, light, pname, param);
-        if (DisplayListManager::shouldFinish())
-            return;
-    }
+    LIST_RECORD(glLighti, {}, light, pname, param)
 
     SELF_CALL(glLightf, light, pname, (GLfloat)param)
 }
@@ -297,11 +257,7 @@ void glLightfv( GLenum light, GLenum pname,
     LOG()
     LOG_D("glLightfv(%s, %s, [...])", glEnumToString(light), glEnumToString(pname))
 
-    if (!disableRecording && DisplayListManager::shouldRecord()) {
-        displayListManager.record<glLightfv>({{2, PointerUtils::pname_to_count(pname) * sizeof(GLfloat)}}, light, pname, params);
-        if (DisplayListManager::shouldFinish())
-            return;
-    }
+    LIST_RECORD(glLightfv, {{2, PointerUtils::pname_to_count(pname) * sizeof(GLfloat)}}, light, pname, params)
 
     switch (pname) {
         case GL_SPOT_CUTOFF:
@@ -347,11 +303,7 @@ void glLightiv( GLenum light, GLenum pname,
     LOG()
     LOG_D("glLightiv(%s, %s, [...])", glEnumToString(light), glEnumToString(pname))
 
-    if (!disableRecording && DisplayListManager::shouldRecord()) {
-        displayListManager.record<glLightiv>({{2, PointerUtils::pname_to_count(pname) * sizeof(GLint)}}, light, pname, params);
-        if (DisplayListManager::shouldFinish())
-            return;
-    }
+    LIST_RECORD(glLightiv, {{2, PointerUtils::pname_to_count(pname) * sizeof(GLint)}}, light, pname, params)
 
     switch (pname) {
         case GL_SPOT_CUTOFF:
@@ -382,11 +334,7 @@ void glLightModelf( GLenum pname, GLfloat param ) {
     LOG()
     LOG_D("glLightModelf(%s, %f)", glEnumToString(pname), param)
 
-    if (!disableRecording && DisplayListManager::shouldRecord()) {
-        displayListManager.record<glLightModelf>({}, pname, param);
-        if (DisplayListManager::shouldFinish())
-            return;
-    }
+    LIST_RECORD(glLightModelf, {}, pname, param)
 
     switch (pname) {
         case GL_LIGHT_MODEL_LOCAL_VIEWER:
@@ -402,11 +350,7 @@ void glLightModeli( GLenum pname, GLint param ) {
     LOG()
     LOG_D("glLightModelf(%s, %d)", glEnumToString(pname), param)
 
-    if (!disableRecording && DisplayListManager::shouldRecord()) {
-        displayListManager.record<glLightModeli>({}, pname, param);
-        if (DisplayListManager::shouldFinish())
-            return;
-    }
+    LIST_RECORD(glLightModeli, {}, pname, param)
 
     switch (pname) {
         case GL_LIGHT_MODEL_COLOR_CONTROL:
@@ -427,11 +371,7 @@ void glLightModelfv( GLenum pname, const GLfloat *params ) {
     LOG()
     LOG_D("glLightModelfv(%s, [...])", glEnumToString(pname))
 
-    if (!disableRecording && DisplayListManager::shouldRecord()) {
-        displayListManager.record<glLightModelfv>({{1, PointerUtils::pname_to_count(pname) * sizeof(GLfloat)}}, pname, params);
-        if (DisplayListManager::shouldFinish())
-            return;
-    }
+    LIST_RECORD(glLightModelfv, {{1, PointerUtils::pname_to_count(pname) * sizeof(GLfloat)}}, pname, params)
 
     switch (pname) {
         case GL_LIGHT_MODEL_AMBIENT:
@@ -451,11 +391,7 @@ void glLightModeliv( GLenum pname, const GLint *params ) {
     LOG()
     LOG_D("glLightModeliv(%s, [...])", glEnumToString(pname))
 
-    if (!disableRecording && DisplayListManager::shouldRecord()) {
-        displayListManager.record<glLightModeliv>({{1, PointerUtils::pname_to_count(pname) * sizeof(GLint)}}, pname, params);
-        if (DisplayListManager::shouldFinish())
-            return;
-    }
+    LIST_RECORD(glLightModeliv, {{1, PointerUtils::pname_to_count(pname) * sizeof(GLint)}}, pname, params)
 
     switch (pname) {
         case GL_LIGHT_MODEL_AMBIENT: {

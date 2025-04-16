@@ -13,11 +13,7 @@ void glBegin( GLenum mode ) {
     LOG()
     LOG_D("glBegin(%s)", glEnumToString(mode))
 
-    if (!disableRecording && DisplayListManager::shouldRecord()) {
-        displayListManager.record<glBegin>({}, mode);
-        if (DisplayListManager::shouldFinish())
-            return;
-    }
+    LIST_RECORD(glBegin, {}, mode)
 
     if (!fpe_inited) {
         if (init_fpe() != 0)
@@ -40,11 +36,7 @@ void glEnd() {
     LOG()
     LOG_D("glEnd()")
 
-    if (!disableRecording && DisplayListManager::shouldRecord()) {
-        displayListManager.record<glEnd>({});
-        if (DisplayListManager::shouldFinish())
-            return;
-    }
+    LIST_RECORD(glEnd, {})
 
     INIT_CHECK_GL_ERROR
 
@@ -113,11 +105,7 @@ void glNormal3f( GLfloat nx, GLfloat ny, GLfloat nz ) {
     LOG()
     LOG_D("glNormal3f(%.2f, %.2f, %.2f)", nx, ny, nz)
 
-    if (!disableRecording && DisplayListManager::shouldRecord()) {
-        displayListManager.record<glNormal3f>({}, nx, ny, nz);
-        if (DisplayListManager::shouldFinish())
-            return;
-    }
+    LIST_RECORD(glNormal3f, {}, nx, ny, nz)
 
     mglNormal<GLfloat, 3>({nx, ny, nz});
 }
@@ -126,11 +114,7 @@ void glTexCoord2f( GLfloat s, GLfloat t ) {
     LOG()
     LOG_D("glTexCoord2f(%.2f, %.2f)", s, t)
 
-    if (!disableRecording && DisplayListManager::shouldRecord()) {
-        displayListManager.record<glTexCoord2f>({}, s, t);
-        if (DisplayListManager::shouldFinish())
-            return;
-    }
+    LIST_RECORD(glTexCoord2f, {}, s, t)
 
     mglTexCoord<GLfloat, 2>({s, t}, 0);
 }
@@ -139,11 +123,7 @@ void glTexCoord4f( GLfloat s, GLfloat t, GLfloat r, GLfloat q ) {
     LOG()
     LOG_D("glTexCoord4f(%.2f, %.2f, %.2f, %.2f)", s, t, r, q)
 
-    if (!disableRecording && DisplayListManager::shouldRecord()) {
-        displayListManager.record<glTexCoord4f>({}, s, t, r, q);
-        if (DisplayListManager::shouldFinish())
-            return;
-    }
+    LIST_RECORD(glTexCoord4f, {}, s, t, r, q)
 
     mglTexCoord<GLfloat, 4>({s, t, r, q}, 0);
 }
@@ -152,26 +132,17 @@ void glMultiTexCoord2f( GLenum target, GLfloat s, GLfloat t ) {
     LOG()
     LOG_D("glMultiTexCoord2f(%s, %.2f, %.2f)", glEnumToString(target), s, t)
 
-    if (!disableRecording && DisplayListManager::shouldRecord()) {
-        displayListManager.record<glMultiTexCoord2f>({}, target, s, t);
-        if (DisplayListManager::shouldFinish())
-            return;
-    }
+    LIST_RECORD(glMultiTexCoord2f, {}, target, s, t)
 
     assert(target - GL_TEXTURE0 < MAX_TEX);
     mglTexCoord<GLfloat, 2>({s, t}, target - GL_TEXTURE0);
 }
 
-// Todo: target - GL_TEXTURE0
 void glMultiTexCoord4f( GLenum target, GLfloat s, GLfloat t, GLfloat r, GLfloat q ) {
     LOG()
     LOG_D("glMultiTexCoord4f(%s, %.2f, %.2f, %.2f, %.2f)", glEnumToString(target), s, t, r, q)
 
-    if (!disableRecording && DisplayListManager::shouldRecord()) {
-        displayListManager.record<glMultiTexCoord4f>({}, target, s, t, r, q);
-        if (DisplayListManager::shouldFinish())
-            return;
-    }
+    LIST_RECORD(glMultiTexCoord4f, {}, target, s, t, r, q)
 
     assert(target - GL_TEXTURE0 < MAX_TEX);
     mglTexCoord<GLfloat, 4>({s, t, r, q}, target - GL_TEXTURE0);
@@ -181,11 +152,7 @@ void glVertex3f( GLfloat x, GLfloat y, GLfloat z ) {
     LOG()
     LOG_D("glVertex3f(%.2f, %.2f, %.2f)", x, y, z)
 
-    if (!disableRecording && DisplayListManager::shouldRecord()) {
-        displayListManager.record<glVertex3f>({}, x, y, z);
-        if (DisplayListManager::shouldFinish())
-            return;
-    }
+    LIST_RECORD(glVertex3f, {}, x, y, z)
 
     mglVertex<GLfloat, 3>({x, y, z});
 }
@@ -194,11 +161,7 @@ void glVertex4f( GLfloat x, GLfloat y, GLfloat z, GLfloat w ) {
     LOG()
     LOG_D("glVertex4f(%.2f, %.2f, %.2f, %.2f)", x, y, z, w)
 
-    if (!disableRecording && DisplayListManager::shouldRecord()) {
-        displayListManager.record<glVertex4f>({}, x, y, z, w);
-        if (DisplayListManager::shouldFinish())
-            return;
-    }
+    LIST_RECORD(glVertex4f, {}, x, y, z, w)
 
     mglVertex<GLfloat, 4>({x, y, z, w});
 }
@@ -207,11 +170,7 @@ void glColor3f( GLfloat red, GLfloat green, GLfloat blue ) {
     LOG()
     LOG_D("glColor3f(%f, %f, %f)", red, green, blue)
 
-    if (!disableRecording && DisplayListManager::shouldRecord()) {
-        displayListManager.record<glColor3f>({}, red, green, blue);
-        if (DisplayListManager::shouldFinish())
-            return;
-    }
+    LIST_RECORD(glColor3f, {}, red, green, blue)
 
     mglColor<GLfloat, 3>({red, green, blue});
 }
@@ -227,11 +186,7 @@ void glColor4f( GLfloat red, GLfloat green,
     */
     LOG_D("glColor4f(%f, %f, %f, %f)", red, green, blue, alpha)
 
-    if (!disableRecording && DisplayListManager::shouldRecord()) {
-        displayListManager.record<glColor4f>({}, red, green, blue, alpha);
-        if (DisplayListManager::shouldFinish())
-            return;
-    }
+    LIST_RECORD(glColor4f, {}, red, green, blue, alpha)
 
 //    auto& attr = g_glstate.fpe_state.vertexpointer_array.attributes[vp2idx(GL_COLOR_ARRAY)];
 //    auto& vpa = g_glstate.fpe_state.vertexpointer_array;
