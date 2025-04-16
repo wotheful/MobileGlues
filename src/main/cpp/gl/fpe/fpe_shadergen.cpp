@@ -324,13 +324,23 @@ void add_fs_body(const fixed_function_state_t& state, scratch_t& scratch, std::s
     // TODO: Replace this hardcode with something better...
     fs += "void main() {\n";
 
-    if (scratch.has_texcoord)
-        fs += "   vec4 color = texture(Sampler0, texCoord0);\n";
-    else
-        fs += "   vec4 color = vec4(1., 1., 1., 1.);\n";
+//    if (scratch.has_texcoord)
+//        fs += "   vec4 color = texture(Sampler0, texCoord0);\n";
+//    else
+//        fs += "   vec4 color = vec4(1., 1., 1., 1.);\n";
+//
+//    if (scratch.has_vertex_color)
+//        fs += "    color *= vertexColor;\n";
 
     if (scratch.has_vertex_color)
-        fs += "    color *= vertexColor;\n";
+        fs += "    vec4 color = vertexColor;\n";
+    else
+        fs += "    vec4 color = vec4(1., 1., 1., 1.);\n";
+
+    if (scratch.has_texcoord) {
+        fs += "    vec4 texcolor0 = texture(Sampler0, texCoord0);\n";
+        fs += "    color *= texcolor0;\n";
+    }
 
     // Fog calculation
     if (state.fpe_bools.fog_enable) {
