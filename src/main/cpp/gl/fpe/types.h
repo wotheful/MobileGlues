@@ -253,7 +253,7 @@ struct glstate_t {
     unordered_map<uint64_t, program_t> fpe_programs;
     unordered_map<uint64_t, GLuint> fpe_vaos;
 
-    static constexpr uint32_t s_hash_seed = VERSION_NUM;
+    static constexpr uint64_t s_hash_seed = VERSION_NUM;
 
     const char* fpe_vtx_shader_src;
     const char* fpe_frag_shader_src;
@@ -262,9 +262,9 @@ struct glstate_t {
 
     void send_uniforms(int program);
 
-    uint32_t program_hash();
+    uint64_t program_hash();
 
-    uint32_t vertex_attrib_hash();
+    uint64_t vertex_attrib_hash();
 
     program_t& get_or_generate_program(const uint64_t key);
 

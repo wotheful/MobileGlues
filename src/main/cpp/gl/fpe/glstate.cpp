@@ -3,7 +3,7 @@
 //
 #include "types.h"
 #include "transformation.h"
-#include "xxhash32.h"
+#include "xxhash64.h"
 
 #define DEBUG 0
 
@@ -65,11 +65,11 @@ void glstate_t::send_uniforms(int program) {
     }
 }
 
-uint32_t glstate_t::program_hash() {
+uint64_t glstate_t::program_hash() {
     uint64_t key = 0;
     key |= vertex_attrib_hash();
 
-    XXHash32 hash(s_hash_seed);
+    XXHash64 hash(s_hash_seed);
     hash.add(&fpe_state.client_active_texture, sizeof(fpe_state.client_active_texture));
     hash.add(&fpe_state.alpha_func, sizeof(fpe_state.alpha_func));
     hash.add(&fpe_state.fog_mode, sizeof(fpe_state.fog_mode));
@@ -82,13 +82,13 @@ uint32_t glstate_t::program_hash() {
 
     hash.add(&fpe_state.fpe_bools, sizeof(fpe_state.fpe_bools));
 
-    key |= (((uint64_t)hash.hash()) << 32);
+    key |= hash.hash();
 
     return key;
 }
 
-uint32_t glstate_t::vertex_attrib_hash() {
-    XXHash32 hash(s_hash_seed);
+uint64_t glstate_t::vertex_attrib_hash() {
+    XXHash64 hash(s_hash_seed);
 
     auto& va = fpe_state.vertexpointer_array;
 
@@ -120,7 +120,7 @@ uint32_t glstate_t::vertex_attrib_hash() {
         }
     }
 
-    uint32_t result = hash.hash();
+    uint64_t result = hash.hash();
     return result;
 }
 
