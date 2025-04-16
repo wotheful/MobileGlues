@@ -324,14 +324,6 @@ void add_fs_body(const fixed_function_state_t& state, scratch_t& scratch, std::s
     // TODO: Replace this hardcode with something better...
     fs += "void main() {\n";
 
-//    if (scratch.has_texcoord)
-//        fs += "   vec4 color = texture(Sampler0, texCoord0);\n";
-//    else
-//        fs += "   vec4 color = vec4(1., 1., 1., 1.);\n";
-//
-//    if (scratch.has_vertex_color)
-//        fs += "    color *= vertexColor;\n";
-
     if (scratch.has_vertex_color)
         fs += "    vec4 color = vertexColor;\n";
     else
@@ -359,9 +351,6 @@ void add_fs_body(const fixed_function_state_t& state, scratch_t& scratch, std::s
         fs += "    color = apply_fog(color, fogParam.color, fogFactor);\n";
     }
 
-//    fs += "   if (color.a < 0.1) {\n"
-//          "       discard;\n"
-//          "   }\n";
     if (state.fpe_bools.alpha_test_enable)
         fs += alpha_test(state.alpha_func, "color", "alpharef");
     else
