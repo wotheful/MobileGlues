@@ -3,7 +3,6 @@
 //
 #include "types.h"
 #include "transformation.h"
-#include "xxhash64.h"
 
 #define DEBUG 0
 
@@ -65,11 +64,16 @@ void glstate_t::send_uniforms(int program) {
     }
 }
 
-uint64_t glstate_t::program_hash() {
-    uint64_t key = 0;
-    key |= vertex_attrib_hash();
+uint64_t glstate_t::program_hash(bool reset) {
+    if (reset) {
+        p_hash.reset();
+        p_hash = std::make_unique<XXHash64>(s_hash_seed);
+    }
 
-    XXHash64 hash(s_hash_seed);
+    vertex_attrib_hash(true);
+
+    auto& hash = *p_hash;
+
     hash.add(&fpe_state.client_active_texture, sizeof(fpe_state.client_active_texture));
     hash.add(&fpe_state.alpha_func, sizeof(fpe_state.alpha_func));
     hash.add(&fpe_state.fog_mode, sizeof(fpe_state.fog_mode));
@@ -82,13 +86,18 @@ uint64_t glstate_t::program_hash() {
 
     hash.add(&fpe_state.fpe_bools, sizeof(fpe_state.fpe_bools));
 
-    key |= hash.hash();
+    uint64_t key = hash.hash();
 
     return key;
 }
 
-uint64_t glstate_t::vertex_attrib_hash() {
-    XXHash64 hash(s_hash_seed);
+uint64_t glstate_t::vertex_attrib_hash(bool reset) {
+    if (reset) {
+        p_hash.reset();
+        p_hash = std::make_unique<XXHash64>(s_hash_seed);
+    }
+
+    auto& hash = *p_hash;
 
     auto& va = fpe_state.vertexpointer_array;
 

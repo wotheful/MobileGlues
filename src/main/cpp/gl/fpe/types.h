@@ -14,9 +14,11 @@
 #include <unordered_map>
 #include <vector>
 #include <sstream>
+#include <memory>
 #include "fpe_shadergen.h"
 #include "vertexpointer_utils.h"
 #include "../version.h"
+#include "xxhash64.h"
 
 GLsizei type_size(GLenum type);
 
@@ -262,9 +264,11 @@ struct glstate_t {
 
     void send_uniforms(int program);
 
-    uint64_t program_hash();
+    std::unique_ptr<XXHash64> p_hash = std::make_unique<XXHash64>(s_hash_seed);
 
-    uint64_t vertex_attrib_hash();
+    uint64_t program_hash(bool reset = true);
+
+    uint64_t vertex_attrib_hash(bool reset = true);
 
     program_t& get_or_generate_program(const uint64_t key);
 
