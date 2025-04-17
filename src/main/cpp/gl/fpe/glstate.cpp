@@ -185,36 +185,36 @@ bool glstate_t::send_vertex_attributes(const vertex_pointer_array_t& va) const {
         auto &vp = va.attributes[i];
         if (enabled) {
             GLES.glVertexAttribPointer(
-                    i, vp.size, vp.type, vp.normalized, vp.stride, vp.pointer);
+                    va.cidx(i), vp.size, vp.type, vp.normalized, vp.stride, vp.pointer);
             CHECK_GL_ERROR_NO_INIT
 
-            GLES.glEnableVertexAttribArray(i);
+            GLES.glEnableVertexAttribArray(va.cidx(i));
             CHECK_GL_ERROR_NO_INIT
 
-            LOG_D("attrib #%d: type = %s, size = %d, stride = %d, usage = %s, ptr = %p",
-                  i, glEnumToString(vp.type), vp.size, vp.stride, glEnumToString(vp.usage), vp.pointer)
+            LOG_D("attrib #%d, cidx #%u: type = %s, size = %d, stride = %d, usage = %s, ptr = %p",
+                  i, va.cidx(i), glEnumToString(vp.type), vp.size, vp.stride, glEnumToString(vp.usage), vp.pointer)
         }
         else {
             switch (idx2vp(i)) {
                 case GL_COLOR_ARRAY:
                     if (fpe_state.fpe_draw.current_data.sizes.color_size > 0) {
                         const auto& v = fpe_state.fpe_draw.current_data.color;
-                        LOG_D("attrib #%d: type = %s, usage = %s, value = (%.2f, %.2f, %.2f, %.2f) (disabled)",
-                              i, glEnumToString(vp.type), glEnumToString(vp.usage),
+                        LOG_D("attrib #%d, cidx #%u: type = %s, usage = %s, value = (%.2f, %.2f, %.2f, %.2f) (disabled)",
+                              i, va.cidx(i), glEnumToString(vp.type), glEnumToString(vp.usage),
                               v[0], v[1], v[2], v[3])
 
-                        GLES.glVertexAttrib4fv(i, glm::value_ptr(v));
+                        GLES.glVertexAttrib4fv(va.cidx(i), glm::value_ptr(v));
                         CHECK_GL_ERROR_NO_INIT
                     }
                     break;
                 case GL_NORMAL_ARRAY:
                     if (fpe_state.fpe_draw.current_data.sizes.normal_size > 0) {
                         const auto& v = fpe_state.fpe_draw.current_data.normal;
-                        LOG_D("attrib #%d: type = %s, usage = %s, value = (%.2f, %.2f, %.2f, %.2f) (disabled)",
-                              i, glEnumToString(vp.type), glEnumToString(vp.usage),
+                        LOG_D("attrib #%d, cidx #%u: type = %s, usage = %s, value = (%.2f, %.2f, %.2f, %.2f) (disabled)",
+                              i, va.cidx(i), glEnumToString(vp.type), glEnumToString(vp.usage),
                               v[0], v[1], v[2], v[3])
 
-                        GLES.glVertexAttrib4fv(i, glm::value_ptr(v));
+                        GLES.glVertexAttrib4fv(va.cidx(i), glm::value_ptr(v));
                         CHECK_GL_ERROR_NO_INIT
                     }
                     break;
@@ -223,7 +223,8 @@ bool glstate_t::send_vertex_attributes(const vertex_pointer_array_t& va) const {
                     break;
             }
 
-            GLES.glDisableVertexAttribArray(i);
+            if (va.cidx(i) != ~0u)
+                GLES.glDisableVertexAttribArray(va.cidx(i));
             CHECK_GL_ERROR_NO_INIT
         }
     }
