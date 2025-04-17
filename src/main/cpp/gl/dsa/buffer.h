@@ -7,7 +7,7 @@
 
 #include <vector>
 
-#include "../gl.h"
+#include "GL/gl.h"
 #include "../buffer.h"
 #include "../log.h"
 
