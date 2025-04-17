@@ -57,7 +57,10 @@ void glEnd() {
         // Vertex Pointer State Machine Update
         g_glstate.fpe_state.fpe_draw.compile_vertexattrib(raw_va);
 
-        auto va = raw_va.normalize();
+        auto& va = g_glstate.fpe_state.normalized_vpa;
+        va = raw_va.normalize();
+        // Need to generate_compressed_index first (shadergen will use that)
+        va.generate_compressed_index(g_glstate.fpe_state.fpe_draw.current_data.sizes.data);
 
         auto key = g_glstate.program_hash();
 

@@ -111,6 +111,19 @@ int commit_fpe_state_on_draw(GLenum* mode, GLint* first, GLsizei* count) {
             fpe_inited = true;
     }
 
+    // Need to generate_compressed_index first (shadergen will use that)
+    auto& raw_vpa = g_glstate.fpe_state.vertexpointer_array;
+    auto& vpa = g_glstate.fpe_state.normalized_vpa;
+    vpa = raw_vpa.normalize();
+    vpa.generate_compressed_index(g_glstate.fpe_state.fpe_draw.current_data.sizes.data);
+    // kinda cursed...
+    raw_vpa.generate_compressed_index(g_glstate.fpe_state.fpe_draw.current_data.sizes.data);
+//    GLES.glGenVertexArrays(1, &vpa.fpe_vao);
+    LOG_D("fpe_vao: %d", g_glstate.fpe_state.fpe_vao)
+    GLES.glBindVertexArray(g_glstate.fpe_state.fpe_vao);
+    CHECK_GL_ERROR_NO_INIT
+
+
     auto key = g_glstate.program_hash();
     LOG_D("%s: key=0x%x", __func__, key)
     auto& prog = g_glstate.get_or_generate_program(key);
@@ -120,13 +133,6 @@ int commit_fpe_state_on_draw(GLenum* mode, GLint* first, GLsizei* count) {
     GLES.glUseProgram(prog_id);
     CHECK_GL_ERROR_NO_INIT
 
-    // All assuming tightly packed here...
-    auto& raw_vpa = g_glstate.fpe_state.vertexpointer_array;
-    auto vpa = raw_vpa.normalize();
-//    GLES.glGenVertexArrays(1, &vpa.fpe_vao);
-    LOG_D("fpe_vao: %d", g_glstate.fpe_state.fpe_vao)
-    GLES.glBindVertexArray(g_glstate.fpe_state.fpe_vao);
-    CHECK_GL_ERROR_NO_INIT
 
 
     GLint prev_vbo = 0;

@@ -188,7 +188,7 @@ std::string type2str(GLenum type, int size) {
 }
 
 void add_vs_inout(const fixed_function_state_t& state, scratch_t& scratch, std::string& vs) {
-    auto& vpa = state.vertexpointer_array;
+    auto& vpa = state.normalized_vpa;
     LOG_D("[shadergen] enabled_ptr: 0x%x", vpa.enabled_pointers)
 #if DEBUG || GLOBAL_DEBUG
     vs += std::format("// enabled_ptr: 0x{:x}\n", vpa.enabled_pointers);
@@ -196,30 +196,31 @@ void add_vs_inout(const fixed_function_state_t& state, scratch_t& scratch, std::
     for (int i = 0; i < VERTEX_POINTER_COUNT; ++i) {
         bool enabled = ((vpa.enabled_pointers >> i) & 1);
 
-        // hack in color (static, disabled vertex array) here...
-        // TODO: fix this using uniform
         if (enabled || state.fpe_draw.current_data.sizes.data[i] > 0) {
             auto &vp = vpa.attributes[i];
 
             if (enabled)
-                LOG_D("attrib #%d: type = %s, size = %d, stride = %d, usage = %s, ptr = %p",
-                      i, glEnumToString(vp.type), vp.size, vp.stride, glEnumToString(vp.usage), vp.pointer)
+                LOG_D("attrib #%d, cidx #%u: type = %s, size = %d, stride = %d, usage = %s, ptr = %p",
+                      i, vpa.cidx(i), glEnumToString(vp.type), vp.size, vp.stride, glEnumToString(vp.usage), vp.pointer)
             else
             {
-                LOG_D("attrib #%d: type = %s, usage = %s, size = %d (disabled)",
-                      i, glEnumToString(vp.type), glEnumToString(vp.usage), state.fpe_draw.current_data.sizes.data[i])
+                LOG_D("attrib #%d, cidx #%u: type = %s, usage = %s, size = %d (disabled)",
+                      i, vpa.cidx(i), glEnumToString(vp.type), glEnumToString(vp.usage), state.fpe_draw.current_data.sizes.data[i])
             }
 
             std::string in_name = enabled ? vp2in_name(vp.usage, i) : vp2in_name(idx2vp(i), i);
             std::string type = enabled ? type2str(vp.type, vp.size) : type2str(GL_FLOAT, 4);
 
-            vs += "layout (location = ";
-            vs += std::to_string(i);
-            vs += ") in ";
-            vs += type;
-            vs += ' ';
-            vs += in_name;
-            vs += ";\n";
+//            vs += "layout (location = ";
+//            vs += std::to_string(vpa.cidx(i));
+//            vs += ") in ";
+//            vs += type;
+//            vs += ' ';
+//            vs += in_name;
+//            vs += ";\n";
+
+            vs += std::format("layout (location = {}) in {} {};\n",
+                                        vpa.cidx(i), type, in_name);
 
             if (vp.usage == GL_VERTEX_ARRAY) { // GL_VERTEX_ARRAY will be written into gl_Position
                 continue;

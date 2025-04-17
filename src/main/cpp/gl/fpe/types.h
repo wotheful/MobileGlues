@@ -44,73 +44,20 @@ struct vertex_pointer_array_t {
     GLsizei stride = 0;
 
     struct vertexattribute_t attributes[VERTEX_POINTER_COUNT];
+    GLuint compressed_index[VERTEX_POINTER_COUNT];
     uint32_t enabled_pointers = 0;
     bool dirty = false;
     bool buffer_based = false;
 
-    void reset() {
-        starting_pointer = NULL;
-        stride = 0;
-        enabled_pointers = 0;
-        dirty = false;
-        buffer_based = false;
-        memset(&attributes, 0, sizeof(attributes));
-    }
+    void reset();
 
     // Split into starting pointer & offset into buffer per pointer
-    vertex_pointer_array_t normalize() {
-        vertex_pointer_array_t that = *this;
-        int first_va_idx = -1;
+    vertex_pointer_array_t normalize();
 
-        // Find starting pointer
-        for (int i = 0; i < VERTEX_POINTER_COUNT; ++i) {
-            bool enabled = ((enabled_pointers >> i) & 1);
-            if (!enabled) continue;
+    void generate_compressed_index(GLint constant_sizes[VERTEX_POINTER_COUNT]);
 
-            first_va_idx = i;
-            break;
-        }
-
-        if (stride == 0)
-            that.stride = attributes[first_va_idx].stride;
-
-        // if not valid starting pointer
-        if (!(that.stride != 0 && that.starting_pointer != 0 && that.starting_pointer > (void*)that.stride)) {
-            that.starting_pointer = attributes[first_va_idx].pointer;
-        }
-
-        // stride==0 && stride in pointer == 0
-        // => tightly packed, infer stride from offset below
-        bool do_calc_stride = (that.stride == 0);
-
-        // Adjust pointer offsets according to starting pointer
-        // Getting actual stride if stride==0
-        for (int i = 0; i < VERTEX_POINTER_COUNT; ++i) {
-            bool enabled = ((enabled_pointers >> i) & 1);
-            if (!enabled) continue;
-
-            auto &vp = that.attributes[i];
-
-            // check if pointer is a pointer rather than an offset
-            if (that.stride > 0 && (uint64_t)vp.pointer > (uint64_t)that.stride)
-                vp.pointer =
-                        (const void*)((const uint64_t)vp.pointer - (const uint64_t)that.starting_pointer);
-
-            if (do_calc_stride)
-                that.stride = std::max((uint64_t)stride, (uint64_t)vp.pointer + vp.size * type_size(vp.type));
-        }
-
-        // Overwrite `stride` in pointers
-        for (int i = 0; i < VERTEX_POINTER_COUNT; ++i) {
-            bool enabled = ((enabled_pointers >> i) & 1);
-            if (!enabled) continue;
-
-            auto &vp = that.attributes[i];
-            vp.stride = that.stride;
-        }
-
-        return that;
-    }
+    // Get compressed index
+    inline GLuint cidx(int i) const { return compressed_index[i]; }
 };
 
 struct fixed_function_bool_t { // glEnable/glDisable
@@ -201,6 +148,7 @@ struct fixed_function_state_t {
     std::vector<uint32_t> fpe_ib;
 
     struct vertex_pointer_array_t vertexpointer_array;
+    struct vertex_pointer_array_t normalized_vpa;
     struct fixed_function_bool_t fpe_bools;
     struct fixed_function_draw_state_t fpe_draw;
 };
