@@ -99,9 +99,9 @@ uint64_t glstate_t::vertex_attrib_hash(bool reset) {
 
     auto& hash = *p_hash;
 
-    auto& va = fpe_state.vertexpointer_array;
+    auto va = fpe_state.vertexpointer_array.normalize();
 
-    hash.add(&va.starting_pointer, sizeof(va.starting_pointer));
+//    hash.add(&va.starting_pointer, sizeof(va.starting_pointer));
     for (int i = 0; i < VERTEX_POINTER_COUNT; ++i) {
         bool enabled = ((va.enabled_pointers >> i) & 1);
         if (enabled || fpe_state.fpe_draw.current_data.sizes.data[i] > 0) {
