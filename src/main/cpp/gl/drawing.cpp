@@ -389,11 +389,7 @@ void glDrawArrays(GLenum mode, GLint first, GLsizei count) {
     LOG()
     LOG_D("glDrawArrays(), mode = %s, first = %d, count = %u", glEnumToString(mode), first, count)
 
-    if (!disableRecording && DisplayListManager::shouldRecord()) {
-        displayListManager.record<glDrawArrays>({}, mode, first, count);
-        if (DisplayListManager::shouldFinish())
-            return;
-    }
+    LIST_RECORD(glDrawArrays, {}, mode, first, count)
 
     // TODO: deal with draw in list later
     if (DisplayListManager::isCalling()) {

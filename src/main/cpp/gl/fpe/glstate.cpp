@@ -3,7 +3,6 @@
 //
 #include "types.h"
 #include "transformation.h"
-#include "xxhash32.h"
 
 #define DEBUG 0
 
@@ -56,13 +55,25 @@ void glstate_t::send_uniforms(int program) {
         GLES.glUniform1f(fogend_id, fpe_uniform.fog_end);
         CHECK_GL_ERROR_NO_INIT
     }
+
+    if (fpe_state.fpe_bools.alpha_test_enable) {
+        GLint alpharef_id = GLES.glGetUniformLocation(program, "alpharef");
+        CHECK_GL_ERROR_NO_INIT
+        GLES.glUniform1f(alpharef_id, fpe_uniform.alpha_ref);
+        CHECK_GL_ERROR_NO_INIT
+    }
 }
 
-uint32_t glstate_t::program_hash() {
-    uint64_t key = 0;
-    key |= vertex_attrib_hash();
+uint64_t glstate_t::program_hash(bool reset) {
+    if (reset) {
+        p_hash.reset();
+        p_hash = std::make_unique<XXHash64>(s_hash_seed);
+    }
 
-    XXHash32 hash(s_hash_seed);
+    vertex_attrib_hash(true);
+
+    auto& hash = *p_hash;
+
     hash.add(&fpe_state.client_active_texture, sizeof(fpe_state.client_active_texture));
     hash.add(&fpe_state.alpha_func, sizeof(fpe_state.alpha_func));
     hash.add(&fpe_state.fog_mode, sizeof(fpe_state.fog_mode));
@@ -73,17 +84,24 @@ uint32_t glstate_t::program_hash() {
     hash.add(&fpe_state.light_model_local_viewer, sizeof(fpe_state.light_model_local_viewer));
     hash.add(&fpe_state.light_model_two_side, sizeof(fpe_state.light_model_two_side));
 
-    key |= (((uint64_t)hash.hash()) << 32);
+    hash.add(&fpe_state.fpe_bools, sizeof(fpe_state.fpe_bools));
+
+    uint64_t key = hash.hash();
 
     return key;
 }
 
-uint32_t glstate_t::vertex_attrib_hash() {
-    XXHash32 hash(s_hash_seed);
+uint64_t glstate_t::vertex_attrib_hash(bool reset) {
+    if (reset) {
+        p_hash.reset();
+        p_hash = std::make_unique<XXHash64>(s_hash_seed);
+    }
 
-    auto& va = fpe_state.vertexpointer_array;
+    auto& hash = *p_hash;
 
-    hash.add(&va.starting_pointer, sizeof(va.starting_pointer));
+    auto va = fpe_state.vertexpointer_array.normalize();
+
+//    hash.add(&va.starting_pointer, sizeof(va.starting_pointer));
     for (int i = 0; i < VERTEX_POINTER_COUNT; ++i) {
         bool enabled = ((va.enabled_pointers >> i) & 1);
         if (enabled || fpe_state.fpe_draw.current_data.sizes.data[i] > 0) {
@@ -111,7 +129,7 @@ uint32_t glstate_t::vertex_attrib_hash() {
         }
     }
 
-    uint32_t result = hash.hash();
+    uint64_t result = hash.hash();
     return result;
 }
 

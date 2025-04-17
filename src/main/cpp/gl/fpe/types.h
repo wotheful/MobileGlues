@@ -14,6 +14,7 @@
 #include "ankerl/unordered_dense.h"
 #include <vector>
 #include <sstream>
+#include <memory>
 #include "fpe_shadergen.h"
 #include "vertexpointer_utils.h"
 #include "../version.h"
@@ -115,6 +116,7 @@ struct vertex_pointer_array_t {
 struct fixed_function_bool_t { // glEnable/glDisable
     bool fog_enable = false; // GL_FOG
     bool lighting_enable = false; // GL_LIGHTING
+    bool alpha_test_enable = false; // GL_ALPHA_TEST
     bool light_enable[MAX_LIGHTS] = {false};
 };
 
@@ -252,7 +254,7 @@ struct glstate_t {
     unordered_map<uint64_t, program_t> fpe_programs;
     unordered_map<uint64_t, GLuint> fpe_vaos;
 
-    static constexpr uint32_t s_hash_seed = VERSION_NUM;
+    static constexpr uint64_t s_hash_seed = VERSION_NUM;
 
     const char* fpe_vtx_shader_src;
     const char* fpe_frag_shader_src;
@@ -261,9 +263,11 @@ struct glstate_t {
 
     void send_uniforms(int program);
 
-    uint32_t program_hash();
+    std::unique_ptr<XXHash64> p_hash = std::make_unique<XXHash64>(s_hash_seed);
 
-    uint32_t vertex_attrib_hash();
+    uint64_t program_hash(bool reset = true);
+
+    uint64_t vertex_attrib_hash(bool reset = true);
 
     program_t& get_or_generate_program(const uint64_t key);
 

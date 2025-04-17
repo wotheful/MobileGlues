@@ -4,6 +4,7 @@
 
 #include "fpe_shadergen.h"
 #include <format>
+#include <string_view>
 
 #define DEBUG 0
 
@@ -11,41 +12,89 @@
 #pragma clang optimize off
 #endif
 
-const static std::string mg_shader_header =
+constexpr std::string_view mg_shader_header =
         "#version 300 es\n"
         "// MobileGlues FPE Shader\n"
         "precision highp float;\n"
         "precision highp int;\n";
-const static std::string mg_vs_header =
+constexpr std::string_view mg_vs_header =
         "// ** Vertex Shader **\n";
-const static std::string mg_fs_header =
+constexpr std::string_view mg_fs_header =
         "// ** Fragment Shader **\n";
-const static std::string mg_fog_linear_func =
+constexpr std::string_view mg_fog_linear_func =
         "float fog_linear(float distance, float start, float end) {\n"
         "    return clamp((end - distance) / (end - start), 0., 1.);\n"
         "}\n";
-const static std::string mg_fog_exp_func =
+constexpr std::string_view mg_fog_exp_func =
         "float fog_exp(float distance, float density) {\n"
         "    return clamp(exp(-density * distance), 0., 1.);\n"
         "}\n";
-const static std::string mg_fog_exp2_func =
+constexpr std::string_view mg_fog_exp2_func =
         "float fog_exp2(float distance, float density) {\n"
         "    float scaled = density * distance;\n"
         "    return clamp(exp(-scaled * scaled), 0., 1.);\n"
         "}\n";
-const static std::string mg_fog_apply_fog_func =
-        "vec4 apply_fog(vec4 objColor, vec4 fogColor, float fogFactor) {\n"
+constexpr std::string_view mg_fog_apply_fog_func =
+        "vec3 apply_fog(vec3 objColor, vec3 fogColor, float fogFactor) {\n"
         "    return mix(fogColor, objColor, fogFactor);\n"
         "}\n";
-const static std::string mg_fog_struct =
+constexpr std::string_view mg_fog_struct =
         "struct fog_param_t {\n"
         "    vec4  color;\n"
         "    float density;\n"
         "    float start;\n"
         "    float end;\n"
         "};\n";
-const static std::string mg_fog_uniform =
+constexpr std::string_view mg_fog_uniform =
         "uniform fog_param_t fogParam;\n";
+
+constexpr std::string_view mg_alpharef_uniform =
+        "uniform float alpharef;\n";
+
+const std::string alpha_test(GLenum func, const std::string_view varname, const std::string_view alpharef) {
+    constexpr std::string_view fmt = R"(
+    // Alpha Test, func = {}
+    if (!({}.a {} {})) {{
+        discard;
+    }}
+)";
+
+    constexpr std::string_view fmt_eq = R"(
+    // Alpha Test, func = GL_EQUAL
+    if (!({0}.a - 0.00001 < {1} && {1} < {0}.a - 0.00001)) {{
+        discard;
+    }}
+)";
+
+    constexpr std::string_view fmt_neq = R"(
+    // Alpha Test, func = GL_NOTEQUAL
+    if ({0}.a - 0.00001 < {1} && {1} < {0}.a - 0.00001) {{
+        discard;
+    }}
+)";
+
+    switch (func) {
+        case GL_NEVER:
+            return "    // Alpha Test\n"
+                   "    discard;\n";
+        case GL_LESS:
+            return std::format(fmt, glEnumToString(func), varname, "<", alpharef);
+        case GL_EQUAL:
+            return std::format(fmt_eq, varname, alpharef);
+        case GL_LEQUAL:
+            return std::format(fmt, glEnumToString(func), varname, "<=", alpharef);
+        case GL_GREATER:
+            return std::format(fmt, glEnumToString(func), varname, ">", alpharef);
+        case GL_NOTEQUAL:
+            return std::format(fmt_neq, varname, alpharef);
+        case GL_GEQUAL:
+            return std::format(fmt, glEnumToString(func), varname, ">=", alpharef);
+        case GL_ALWAYS:
+            return "    // Alpha Test\n"
+                   "    // GL_ALWAYS\n";
+    }
+    return std::string("    ALPHA TEST ERROR: unknown func: ") + glEnumToString(func);
+}
 
 std::string vp2in_name(GLenum vp, int index) {
     switch (vp) {
@@ -239,6 +288,10 @@ void add_fs_uniforms(const fixed_function_state_t& state, scratch_t& scratch, st
         fs += mg_fog_struct;
         fs += mg_fog_uniform;
     }
+
+    if (state.fpe_bools.alpha_test_enable) {
+        fs += mg_alpharef_uniform;
+    }
 }
 
 void add_fs_inout(const fixed_function_state_t& state, scratch_t& scratch, std::string& fs) {
@@ -271,13 +324,23 @@ void add_fs_body(const fixed_function_state_t& state, scratch_t& scratch, std::s
     // TODO: Replace this hardcode with something better...
     fs += "void main() {\n";
 
-    if (scratch.has_texcoord)
-        fs += "   vec4 color = texture(Sampler0, texCoord0);\n";
-    else
-        fs += "   vec4 color = vec4(1., 1., 1., 1.);\n";
-
     if (scratch.has_vertex_color)
-        fs += "    color *= vertexColor;\n";
+        fs += "    vec4 color = vertexColor;\n";
+    else
+        fs += "    vec4 color = vec4(1., 1., 1., 1.);\n";
+
+    if (scratch.has_texcoord) {
+        fs += "    vec4 texcolor0 = texture(Sampler0, texCoord0);\n";
+        fs += "    color *= texcolor0;\n";
+    }
+
+    // Alpha test
+    if (state.fpe_bools.alpha_test_enable)
+        fs += alpha_test(state.alpha_func, "color", "alpharef");
+    else
+        fs += "    // Alpha Test\n"
+              "    // (Disabled)\n";
+
 
     // Fog calculation
     if (state.fpe_bools.fog_enable) {
@@ -293,13 +356,11 @@ void add_fs_body(const fixed_function_state_t& state, scratch_t& scratch, std::s
                 fs += "    float fogFactor = fog_exp2(distance, fogParam.density);\n";
                 break;
         }
-        fs += "    color = apply_fog(color, fogParam.color, fogFactor);\n";
+        fs += "    color.rgb = apply_fog(color.rgb, fogParam.color.rgb, fogFactor);\n";
+//        fs += "    color = vec4(fogFactor, fogFactor, fogFactor, 1.);\n";
     }
 
-    fs += "   if (color.a < 0.1) {\n"
-          "       discard;\n"
-          "   }\n"
-          "   FragColor = color;\n"
+    fs += "   FragColor = color;\n"
           "}";
 }
 

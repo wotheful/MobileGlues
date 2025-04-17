@@ -186,6 +186,13 @@ inline GLboolean disableRecording = GL_FALSE;
     disableRecording = alreadyDisabled;           \
 }
 
+#define LIST_RECORD(func, pointers, ...)                        \
+if (!disableRecording && DisplayListManager::shouldRecord()) {  \
+    displayListManager.record<func>(pointers, ##__VA_ARGS__);   \
+    if (DisplayListManager::shouldFinish())                     \
+        return;                                                 \
+}
+
 GLAPI GLAPIENTRY GLuint glGenLists(GLsizei range);
 GLAPI GLAPIENTRY void glDeleteLists(GLuint list, GLsizei range);
 GLAPI GLAPIENTRY GLboolean glIsList(GLuint list);
