@@ -18,6 +18,7 @@
 #include "fpe_shadergen.h"
 #include "vertexpointer_utils.h"
 #include "../version.h"
+#include "xxhash64.h"
 
 GLsizei type_size(GLenum type);
 
