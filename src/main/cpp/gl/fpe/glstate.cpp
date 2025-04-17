@@ -210,11 +210,11 @@ bool glstate_t::send_vertex_attributes(const vertex_pointer_array_t& va) const {
                 case GL_NORMAL_ARRAY:
                     if (fpe_state.fpe_draw.current_data.sizes.normal_size > 0) {
                         const auto& v = fpe_state.fpe_draw.current_data.normal;
-                        LOG_D("attrib #%d, cidx #%u: type = %s, usage = %s, value = (%.2f, %.2f, %.2f, %.2f) (disabled)",
+                        LOG_D("attrib #%d, cidx #%u: type = %s, usage = %s, value = (%.2f, %.2f, %.2f) (disabled)",
                               i, va.cidx(i), glEnumToString(vp.type), glEnumToString(vp.usage),
-                              v[0], v[1], v[2], v[3])
+                              v[0], v[1], v[2])
 
-                        GLES.glVertexAttrib4fv(va.cidx(i), glm::value_ptr(v));
+                        GLES.glVertexAttrib3fv(va.cidx(i), glm::value_ptr(v));
                         CHECK_GL_ERROR_NO_INIT
                     }
                     break;
