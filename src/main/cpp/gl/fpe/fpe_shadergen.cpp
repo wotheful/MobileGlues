@@ -211,14 +211,6 @@ void add_vs_inout(const fixed_function_state_t& state, scratch_t& scratch, std::
             std::string in_name = enabled ? vp2in_name(vp.usage, i) : vp2in_name(idx2vp(i), i);
             std::string type = enabled ? type2str(vp.type, vp.size) : type2str(GL_FLOAT, 4);
 
-//            vs += "layout (location = ";
-//            vs += std::to_string(vpa.cidx(i));
-//            vs += ") in ";
-//            vs += type;
-//            vs += ' ';
-//            vs += in_name;
-//            vs += ";\n";
-
             vs += std::format("layout (location = {}) in {} {};\n",
                                         vpa.cidx(i), type, in_name);
 
@@ -283,7 +275,8 @@ void add_fs_uniforms(const fixed_function_state_t& state, scratch_t& scratch, st
     // Hardcode a sampler here...
     // TODO: Fix this on multitexture
     if (scratch.has_texcoord)
-        fs += "uniform sampler2D Sampler0;\n";
+        fs += std::format(
+                "uniform sampler2D Sampler{};\n", 0);
 
     if (state.fpe_bools.fog_enable) {
         fs += mg_fog_struct;
@@ -331,8 +324,9 @@ void add_fs_body(const fixed_function_state_t& state, scratch_t& scratch, std::s
         fs += "    vec4 color = vec4(1., 1., 1., 1.);\n";
 
     if (scratch.has_texcoord) {
-        fs += "    vec4 texcolor0 = texture(Sampler0, texCoord0);\n";
-        fs += "    color *= texcolor0;\n";
+        fs += std::format(
+                "    vec4 texcolor{0} = texture(Sampler{0}, texCoord{0});\n"
+                "    color *= texcolor{0};\n", 0);
     }
 
     // Alpha test
