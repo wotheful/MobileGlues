@@ -106,8 +106,8 @@ std::string vp2in_name(GLenum vp, int index) {
             return "Color";
         case GL_INDEX_ARRAY:
             return "Index";
-        case GL_EDGE_FLAG_ARRAY:
-            return "EdgeFlag";
+//        case GL_EDGE_FLAG_ARRAY:
+//            return "EdgeFlag";
         case GL_FOG_COORD_ARRAY:
             return "FogCoord";
         case GL_SECONDARY_COLOR_ARRAY:
@@ -133,8 +133,8 @@ std::string vp2out_name(GLenum vp, int index) {
             return "vertexColor";
         case GL_INDEX_ARRAY:
             return "vertexIndex";
-        case GL_EDGE_FLAG_ARRAY:
-            return "vertexEdgeFlag";
+//        case GL_EDGE_FLAG_ARRAY:
+//            return "vertexEdgeFlag";
         case GL_FOG_COORD_ARRAY:
             return "vertexFogCoord";
         case GL_SECONDARY_COLOR_ARRAY:
@@ -240,8 +240,11 @@ void add_vs_inout(const fixed_function_state_t& state, scratch_t& scratch, std::
             if (vp.usage == GL_COLOR_ARRAY)
                 scratch.has_vertex_color = true;
 
-            if (vp.usage == GL_TEXTURE_COORD_ARRAY)
-                scratch.has_texcoord = true;
+            int texid = vp.usage - GL_TEXTURE_COORD_ARRAY;
+            if (0 <= texid && texid < MAX_TEX) {
+                LOG_D("has_texcoord[%d] = true", texid)
+                scratch.has_texcoord[texid] = true;
+            }
         }
     }
 
@@ -274,9 +277,15 @@ void add_vs_body(const fixed_function_state_t& state, scratch_t& scratch, std::s
 void add_fs_uniforms(const fixed_function_state_t& state, scratch_t& scratch, std::string& fs) {
     // Hardcode a sampler here...
     // TODO: Fix this on multitexture
-    if (scratch.has_texcoord)
-        fs += std::format(
-                "uniform sampler2D Sampler{};\n", 0);
+//    if (scratch.has_texcoord)
+//        fs += std::format(
+//                "uniform sampler2D Sampler{};\n", 0);
+    for (int i = 0; i < MAX_TEX; ++i) {
+        if (scratch.has_texcoord[i]) {
+            fs += std::format(
+                    "uniform sampler2D Sampler{};\n", i);
+        }
+    }
 
     if (state.fpe_bools.fog_enable) {
         fs += mg_fog_struct;
@@ -323,10 +332,22 @@ void add_fs_body(const fixed_function_state_t& state, scratch_t& scratch, std::s
     else
         fs += "    vec4 color = vec4(1., 1., 1., 1.);\n";
 
-    if (scratch.has_texcoord) {
-        fs += std::format(
+//    if (scratch.has_texcoord) {
+//        fs += std::format(
+//                "    vec4 texcolor{0} = texture(Sampler{0}, texCoord{0});\n"
+//                "    color *= texcolor{0};\n", 0);
+//    }
+
+    for (int i = 0; i < MAX_TEX; ++i) {
+        if (i > 0)
+            break;
+        if (scratch.has_texcoord[i]) {
+            fs += std::format(
+                "\n"
+                "    // Texturing #{0}\n"
                 "    vec4 texcolor{0} = texture(Sampler{0}, texCoord{0});\n"
-                "    color *= texcolor{0};\n", 0);
+                "    color *= texcolor{0};\n", i);
+        }
     }
 
     // Alpha test
