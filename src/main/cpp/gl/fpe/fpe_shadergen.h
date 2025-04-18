@@ -14,7 +14,7 @@ struct scratch_t {
     std::string vs_body;
 
     bool has_vertex_color = false;
-    bool has_texcoord = false;
+    bool has_texcoord[MAX_TEX] = {false};
 };
 
 class fpe_shader_generator {
