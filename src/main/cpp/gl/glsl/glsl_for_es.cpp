@@ -16,7 +16,7 @@
 #include "cache.h"
 #include "../../version.h"
 
-#define FEATURE_PRE_CONVERTED_GLSL
+// #define FEATURE_PRE_CONVERTED_GLSL
 
 #define DEBUG 1
 
