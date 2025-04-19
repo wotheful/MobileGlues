@@ -46,6 +46,7 @@ add_library(${CMAKE_PROJECT_NAME} SHARED
         gl/glsl/cache.cpp
         gl/glsl/preConvertedGlsl.cpp
         gl/vertexattrib.cpp
+        gl/wrap/legacy_extensions.cpp
         glx/lookup.cpp
         egl/egl.c
         egl/loader.cpp
