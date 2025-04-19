@@ -16,7 +16,7 @@
 #include "cache.h"
 #include "../../version.h"
 
-// #define FEATURE_PRE_CONVERTED_GLSL
+#define FEATURE_PRE_CONVERTED_GLSL
 
 #define DEBUG 1
 
@@ -932,7 +932,7 @@ int get_or_add_glsl_version(std::string& glsl) {
     if (glsl_version == -1) {
         glsl_version = 330;
         glsl.insert(0, "#version 330\n");
-    } else if (glsl_version < 140) {
+    } else if (glsl_version < 160) {
         // force upgrade glsl version
         glsl = replace_line_starting_with(glsl, "#version", "#version 330 compatibility\n");
         glsl_version = 330;
