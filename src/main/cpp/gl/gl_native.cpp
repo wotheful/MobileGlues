@@ -28,7 +28,7 @@ NATIVE_FUNCTION_HEAD(void, glBlendFuncSeparate, GLenum sfactorRGB, GLenum dfacto
 NATIVE_FUNCTION_HEAD(void, glBufferSubData, GLenum target, GLintptr offset, GLsizeiptr size, const void *data) NATIVE_FUNCTION_END_NO_RETURN(void, glBufferSubData, target,offset,size,data)
 //NATIVE_FUNCTION_HEAD(GLenum, glCheckFramebufferStatus, GLenum target) NATIVE_FUNCTION_END(GLenum, glCheckFramebufferStatus, target)
 NATIVE_FUNCTION_HEAD(void, glClear, GLbitfield mask) NATIVE_FUNCTION_END_NO_RETURN(void, glClear, mask)
-//NATIVE_FUNCTION_HEAD(void, glClearColor, GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha) NATIVE_FUNCTION_END_NO_RETURN(void, glClearColor, red,green,blue,alpha)
+NATIVE_FUNCTION_HEAD(void, glClearColor, GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha) NATIVE_FUNCTION_END_NO_RETURN(void, glClearColor, red,green,blue,alpha)
 NATIVE_FUNCTION_HEAD(void, glClearDepthf, GLfloat d) NATIVE_FUNCTION_END_NO_RETURN(void, glClearDepthf, d)
 NATIVE_FUNCTION_HEAD(void, glClearStencil, GLint s) NATIVE_FUNCTION_END_NO_RETURN(void, glClearStencil, s)
 NATIVE_FUNCTION_HEAD(void, glColorMask, GLboolean red, GLboolean green, GLboolean blue, GLboolean alpha) NATIVE_FUNCTION_END_NO_RETURN(void, glColorMask, red,green,blue,alpha)

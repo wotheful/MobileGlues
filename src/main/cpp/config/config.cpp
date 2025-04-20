@@ -16,7 +16,7 @@ char* config_file_path;
 char* log_file_path;
 char* glsl_cache_file_path;
 
-static cJSON *config_json = nullptr;
+static cJSON *config_json = NULL;
 
 int initialized = 0;
 
@@ -25,32 +25,6 @@ char* concatenate(char* str1, char* str2) {
     char* result = new char[str.size() + 1];
     strcpy(result, str.c_str());
     return result;
-}
-
-float* config_get_float_array(char* name, int* size) {
-    if (config_json == nullptr) {
-        *size = 0;
-        return nullptr;
-    }
-
-    cJSON *item = cJSON_GetObjectItem(config_json, name);
-    if (item == nullptr || !cJSON_IsArray(item)) {
-        LOG_D("Config item '%s' not found or not an array.\n", name);
-        *size = 0;
-        return nullptr;
-    }
-
-    int array_size = cJSON_GetArraySize(item);
-    auto *float_array = (float*)malloc(sizeof(float) * array_size);
-    *size = array_size;
-
-    for (int i = 0; i < array_size; i++) {
-        cJSON *element = cJSON_GetArrayItem(item, i);
-        if (element != nullptr && cJSON_IsNumber(element)) {
-            float_array[i] = (float)element->valuedouble;
-        }
-    }
-    return float_array;
 }
 
 int check_path() {
@@ -74,7 +48,7 @@ int config_refresh() {
     LOG_D("GLSL_CACHE_FILE_PATH=%s", glsl_cache_file_path)
 
     FILE *file = fopen(config_file_path, "r");
-    if (file == nullptr) {
+    if (file == NULL) {
         LOG_E("Unable to open config file %s", config_file_path);
         return 0;
     }
@@ -84,7 +58,7 @@ int config_refresh() {
     fseek(file, 0, SEEK_SET);
 
     char *file_content = (char *)malloc(file_size + 1);
-    if (file_content == nullptr) {
+    if (file_content == NULL) {
         LOG_E("Unable to allocate memory for file content");
         fclose(file);
         return 0;
@@ -97,7 +71,7 @@ int config_refresh() {
     config_json = cJSON_Parse(file_content);
     free(file_content);
 
-    if (config_json == nullptr) {
+    if (config_json == NULL) {
         LOG_E("Error parsing config JSON: %s\n", cJSON_GetErrorPtr());
         return 0;
     }
@@ -107,12 +81,12 @@ int config_refresh() {
 }
 
 int config_get_int(char* name) {
-    if (config_json == nullptr) {
+    if (config_json == NULL) {
         return -1;
     }
 
     cJSON *item = cJSON_GetObjectItem(config_json, name);
-    if (item == nullptr || !cJSON_IsNumber(item)) {
+    if (item == NULL || !cJSON_IsNumber(item)) {
         LOG_D("Config item '%s' not found or not an integer.\n", name);
         return -1;
     }
@@ -121,12 +95,12 @@ int config_get_int(char* name) {
 }
 
 char* config_get_string(char* name) {
-    if (config_json == nullptr) {
-        return nullptr;
+    if (config_json == NULL) {
+        return NULL;
     }
 
     cJSON *item = cJSON_GetObjectItem(config_json, name);
-    if (item == nullptr || !cJSON_IsString(item)) {
+    if (item == NULL || !cJSON_IsString(item)) {
         LOG_D("Config item '%s' not found or not a string.\n", name);
         return ""; 
     }
@@ -135,8 +109,8 @@ char* config_get_string(char* name) {
 }
 
 void config_cleanup() {
-    if (config_json != nullptr) {
+    if (config_json != NULL) {
         cJSON_Delete(config_json);
-        config_json = nullptr;
+        config_json = NULL;
     }
 }
