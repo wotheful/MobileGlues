@@ -81,3 +81,16 @@ GLenum map_tex_target(GLenum target) {
             return target;
     }
 }
+
+std::string printFloatArray(float* arr, int size) {
+    std::string result = "[";
+    for (int i = 0; i < size; ++i) {
+        result += std::to_string(arr[i]);
+        if (i < size - 1) {
+            result += ", ";
+        }
+    }
+    result += "]";
+    return result;
+}
+

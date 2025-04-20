@@ -27,6 +27,7 @@ struct global_settings_t {
     size_t max_glsl_cache_size; // 0~
     int enable_compatible_mode; // 0, 1
     multidraw_mode_t multidraw_mode; // 0, 1, 2, 3, 4
+    float mojang_interface_color[4]; // 0~1, [4]
 };
 
 extern struct global_settings_t global_settings;

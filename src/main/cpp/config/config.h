@@ -19,6 +19,7 @@ int check_path();
 int config_refresh();
 int config_get_int(char* name);
 char* config_get_string(char* name);
+float* config_get_float_array(char* name, int* size);
 void config_cleanup();
 
 #ifdef __cplusplus

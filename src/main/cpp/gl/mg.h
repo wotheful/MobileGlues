@@ -5,6 +5,7 @@
 #ifndef MOBILEGLUES_MG_H
 #define MOBILEGLUES_MG_H
 
+#include <string>
 #include <cstring>
 #include <malloc.h>
 #include <cstdlib>
@@ -70,5 +71,7 @@ void clear_log();
 #ifdef __cplusplus
 }
 #endif
+
+std::string printFloatArray(float* arr, int size);
 
 #endif //MOBILEGLUES_MG_H

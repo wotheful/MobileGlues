@@ -90,6 +90,7 @@ void glGetIntegerv(GLenum pname, GLint *params) {
         case GL_TRANSFORM_FEEDBACK_BUFFER_BINDING:
         case GL_UNIFORM_BUFFER_BINDING:
             (*params) = (int) find_bound_buffer(pname);
+            LOG_D("  -> %d",*params)
             break;
         case GL_VERTEX_ARRAY_BINDING:
             (*params) = (int) find_bound_array();

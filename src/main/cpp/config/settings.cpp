@@ -27,7 +27,9 @@ void init_settings() {
     int enableExtComputeShader = success ? config_get_int("enableExtComputeShader") : 0;
     int enableCompatibleMode = success ? config_get_int("enableCompatibleMode") : 0;
     multidraw_mode_t multidrawMode = success ? (multidraw_mode_t)config_get_int("multidrawMode") : multidraw_mode_t::Auto;
-//    multidraw_mode_t multidrawMode = multidraw_mode_t::PreferUnroll;
+    int size = 0;
+    float* mojangInterfaceColor = success ? config_get_float_array("mojangInterfaceColor", &size) : nullptr;
+    
     size_t maxGlslCacheSize = 0;
     if (config_get_int("maxGlslCacheSize") > 0)
         maxGlslCacheSize = success ? config_get_int("maxGlslCacheSize") * 1024 * 1024 : 0;
@@ -44,7 +46,14 @@ void init_settings() {
         enableCompatibleMode = 0;
     if ((int)multidrawMode < 0 || (int)multidrawMode > 4)
         multidrawMode = multidraw_mode_t::Auto;
-
+    if (mojangInterfaceColor == nullptr || size != 4) {
+        mojangInterfaceColor = new float[4];
+        mojangInterfaceColor[0] == 0.937255;
+        mojangInterfaceColor[1] == 0.196078;
+        mojangInterfaceColor[2] == 0.239216;
+        mojangInterfaceColor[3] == 1.000000;
+    }
+    
     // 1205
     int fclVersion = 0;
     GetEnvVarInt("FCL_VERSION_CODE", &fclVersion, 0);
@@ -65,6 +74,12 @@ void init_settings() {
         enableExtComputeShader = 0;
         maxGlslCacheSize = 0;
         enableCompatibleMode = 0;
+        multidrawMode = multidraw_mode_t::Auto;
+        mojangInterfaceColor = new float[4];
+        mojangInterfaceColor[0] == 0.937255;
+        mojangInterfaceColor[1] == 0.196078;
+        mojangInterfaceColor[2] == 0.239216;
+        mojangInterfaceColor[3] == 1.000000;
     }
 
     // Determining actual ANGLE mode
@@ -77,16 +92,12 @@ void init_settings() {
     } else {
         int isQcom = isAdreno(gpuString);
         int is740 = isAdreno740(gpuString);
-        //int is830 = isAdreno830(gpuString);
         int hasVk13 = hasVulkan13();
 
         LOG_D("Is Adreno? = %s", isQcom ? "true" : "false")
-        //LOG_D("Is Adreno 830? = %s", is830 ? "true" : "false")
         LOG_D("Is Adreno 740? = %s", is740 ? "true" : "false")
         LOG_D("Has Vulkan 1.3? = %s", hasVk13 ? "true" : "false")
 
-        //if (is830)
-        //    global_settings.angle = 1;
         if (is740)
             global_settings.angle = 0;
         else
@@ -94,17 +105,6 @@ void init_settings() {
     }
     LOG_D("enableANGLE = %d", enableANGLE)
     LOG_D("global_settings.angle = %d", global_settings.angle)
-
-//    if (enableANGLE == 1) {
-//        global_settings.angle = (isAdreno740(gpuString) || !hasVulkan13()) ? 0 : 1;
-//    } else if (enableANGLE == 2 || enableANGLE == 3) {
-//        global_settings.angle = enableANGLE - 2;
-//    } else {
-//        int is830 = isAdreno830(gpuString);
-//        LOG_D("Is Adreno 830? = %s", is830 ? "true" : "false")
-//        global_settings.angle = is830 ? 1 : 0;
-//    }
-
 
     if (global_settings.angle) {
         setenv("LIBGL_GLES", "libGLESv2_angle.so", 1);
@@ -149,6 +149,9 @@ void init_settings() {
             global_settings.multidraw_mode = multidraw_mode_t::Auto;
             break;
     }
+    
+    for (int i = 0; i < 4; i++)
+        global_settings.mojang_interface_color[i] = mojangInterfaceColor[i];
 
     LOG_V("[MobileGlues] Setting: enableAngle            = %s", global_settings.angle ? "true" : "false")
     LOG_V("[MobileGlues] Setting: ignoreError            = %i", global_settings.ignore_error)
@@ -157,6 +160,7 @@ void init_settings() {
     LOG_V("[MobileGlues] Setting: maxGlslCacheSize       = %i", global_settings.max_glsl_cache_size / 1024 / 1024)
     LOG_V("[MobileGlues] Setting: enableCompatibleMode   = %s", global_settings.enable_compatible_mode ? "true" : "false")
     LOG_V("[MobileGlues] Setting: multidrawMode          = %s", draw_mode_str.c_str())
+    LOG_V("[MobileGlues] Setting: mojangInterfaceColor   = %s", printFloatArray(global_settings.mojang_interface_color, 4).c_str())
 }
 
 void init_settings_post() {
