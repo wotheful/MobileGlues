@@ -7,11 +7,11 @@
 
 #include "GL/gl.h"
 #include "../log.h"
+#include "ankerl/unordered_dense.h"
 
 #include <vector>
 #include <memory>
 #include <tuple>
-#include <unordered_map>
 #include <cstring>
 #include <utility>
 #include <type_traits>
@@ -19,6 +19,9 @@
 #define DEBUG 0
 
 // Todo: record more functions
+
+template <typename K, typename V>
+using unordered_map = ankerl::unordered_dense::map<K, V>;
 
 class GLCmd {
 public:
@@ -57,7 +60,7 @@ class DisplayListManager {
     inline static GLenum listMode = GL_COMPILE;
     inline static GLboolean calling = GL_FALSE;
 
-    inline static std::unordered_map<GLuint, DisplayList> lists;
+    inline static unordered_map<GLuint, DisplayList> lists;
     inline static GLuint currentListID = 0;
 
     template<auto Func, typename... ProcessedArgs>
