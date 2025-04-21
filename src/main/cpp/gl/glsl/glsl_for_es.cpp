@@ -930,12 +930,12 @@ std::string preprocess_glsl(const std::string& glsl, GLenum glsl_type) {
 int get_or_add_glsl_version(std::string& glsl) {
     int glsl_version = getGLSLVersion(glsl.c_str());
     if (glsl_version == -1) {
-        glsl_version = 330;
-        glsl.insert(0, "#version 330\n");
-    } else if (glsl_version < 160) {
+        glsl_version = 430;
+        glsl.insert(0, "#version 430\n");
+    } else if (glsl_version < 320) {
         // force upgrade glsl version
-        glsl = replace_line_starting_with(glsl, "#version", "#version 330 compatibility\n");
-        glsl_version = 330;
+        glsl = replace_line_starting_with(glsl, "#version", "#version 430\n");
+        glsl_version = 430;
     }
     LOG_D("GLSL version: %d",glsl_version)
     return glsl_version;
