@@ -731,7 +731,7 @@ std::string GLSLtoGLSLES(const char* glsl_code, GLenum glsl_type, uint essl_vers
     }
     
     int return_code = -1;
-    std::string converted = /*glsl_version<140? GLSLtoGLSLES_1(glsl_code, glsl_type, essl_version, return_code):*/GLSLtoGLSLES_2(glsl_code, glsl_type, essl_version, return_code);
+    std::string converted = /*GLSLtoGLSLES_1(glsl_code, glsl_type, essl_version, return_code):*/GLSLtoGLSLES_2(glsl_code, glsl_type, essl_version, return_code);
     if (return_code == 0 && !converted.empty()) {
         converted = process_uniform_declarations(converted);
         Cache::get_instance().put(sha256_string.c_str(), converted.c_str());
@@ -931,12 +931,12 @@ std::string preprocess_glsl(const std::string& glsl, GLenum glsl_type) {
 int get_or_add_glsl_version(std::string& glsl) {
     int glsl_version = getGLSLVersion(glsl.c_str());
     if (glsl_version == -1) {
-        glsl_version = 430;
-        glsl.insert(0, "#version 430\n");
-    } else if (glsl_version < 150) {
+        glsl_version = 330;
+        glsl.insert(0, "#version 330 core\n");
+    } else if (glsl_version < 330) {
         // force upgrade glsl version
-        glsl = replace_line_starting_with(glsl, "#version", "#version 150\n");
-        glsl_version = 150;
+        glsl = replace_line_starting_with(glsl, "#version", "#version 330 core\n");
+        glsl_version = 330;
     }
     LOG_D("GLSL version: %d",glsl_version)
     return glsl_version;
@@ -1099,7 +1099,7 @@ std::string GLSLtoGLSLES_2(const char *glsl_code, GLenum glsl_type, uint essl_ve
 
 std::string GLSLtoGLSLES_1(const char *glsl_code, GLenum glsl_type, uint esversion, int& return_code) {
     LOG_W("Warning: use glsl optimizer to convert shader.")
-    esversion = 320;
+    esversion = 310;
     std::string result = MesaConvertShader(glsl_code, glsl_type == GL_VERTEX_SHADER ? GL_VERTEX_SHADER : GL_FRAGMENT_SHADER, 460LL, esversion);
 //    char * ret = (char*)malloc(sizeof(char) * strlen(result) + 1);
 //    strcpy(ret, result);
