@@ -918,6 +918,7 @@ std::string preprocess_glsl(const std::string& glsl, GLenum glsl_type) {
         replace_all(ret, "varying", "in");
     }
     replace_all(ret, "texture2D", "texture");
+    replace_all(ret, "textureSize2D", "textureSize");
 
     // replace gl_FragColor
 //    inject_fragcolor(ret);
