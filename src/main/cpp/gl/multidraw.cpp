@@ -265,16 +265,24 @@ layout(std430, binding = 3) writeonly buffer Output { uint out_indices[]; };
 void main() {
     uint outIdx = gl_GlobalInvocationID.x;
     if (outIdx >= prefixSums[prefixSums.length() - 1])
-        return;
+    return;
 
     // Find out draw call #
     int low = 0;
-    int l = draws.length() - 1;
-    for (low = 0; low < l; ++low) {
+    int high = draws.length();
+    for (low = 0; low < high; ++low) {
         if (prefixSums[low] > outIdx) {
             break;
         }
     }
+//    while (low < high) {
+//        int mid = low + (high - low) / 2;
+//        if (prefixSums[mid] > outIdx) {
+//            high = mid;
+//        } else {
+//            low = mid + 1;
+//        }
+//    }
 
     // figure out which index to take
     DrawCommand cmd = draws[low];
