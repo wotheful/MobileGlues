@@ -8,10 +8,10 @@
 #include "GL/gl.h"
 #include "../log.h"
 #include "ankerl/unordered_dense.h"
+
 #include <vector>
 #include <memory>
 #include <tuple>
-
 #include <cstring>
 #include <utility>
 #include <type_traits>
@@ -23,6 +23,9 @@ using unordered_map = ankerl::unordered_dense::map<K, V>;
 #define DEBUG 0
 
 // Todo: record more functions
+
+template <typename K, typename V>
+using unordered_map = ankerl::unordered_dense::map<K, V>;
 
 class GLCmd {
 public:
