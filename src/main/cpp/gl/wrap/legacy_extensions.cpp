@@ -5,7 +5,6 @@
 #include "../includes.h"
 #include "../log.h"
 #include <GL/gl.h>
-#include "../../gles/gles.h"
 
 #define DEBUG 0
 
@@ -321,7 +320,7 @@ GLAPI GLAPIENTRY GLint glGetProgramResourceLocationIndex(GLuint program, GLenum 
         return -1;
     }
 
-    GLuint resourceIndex = gles_func_t::glGetProgramResourceIndex(program, programInterface, name);
+    GLuint resourceIndex = GLES.glGetProgramResourceIndex(program, programInterface, name);
     if (resourceIndex == GL_INVALID_INDEX) {
         return -1;
     }
@@ -331,7 +330,7 @@ GLAPI GLAPIENTRY GLint glGetProgramResourceLocationIndex(GLuint program, GLenum 
             GLint index = 0;
             GLenum props[] = { GL_INDEX };
             GLsizei length;
-            gles_func_t::glGetProgramResourceiv(program, programInterface, resourceIndex,
+            GLES.glGetProgramResourceiv(program, programInterface, resourceIndex,
                                    1, props, 1, &length, &index);
             return index;
         }
