@@ -36,6 +36,9 @@ void* get_multidraw_func(const char* name) {
         case multidraw_mode_t::DrawElements:
             namestr += "_drawelements";
             break;
+        case multidraw_mode_t::Compute:
+            namestr += "_compute";
+            break;
         default:
             LOG_W("get_multidraw_func() cannot determine multidraw emulation mode!")
             return nullptr;
@@ -71,6 +74,7 @@ void *glXGetProcAddressARB(const char *name) {
     if (!proc)
         proc = dlsym(RTLD_DEFAULT, (const char*)name);
 
+    LOG_D("glXGetProcAddressARB(\"%s\")", name)
     if (!proc) {
         fprintf(stderr, "Failed to get OpenGL function %s: %s\n", name, dlerror());
         LOG_W("Failed to get OpenGL function: %s", (const char*)name)

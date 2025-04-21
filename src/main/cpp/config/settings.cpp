@@ -42,7 +42,7 @@ void init_settings() {
         enableExtComputeShader = 0;
     if (enableCompatibleMode < 0 || enableCompatibleMode > 1)
         enableCompatibleMode = 0;
-    if ((int)multidrawMode < 0 || (int)multidrawMode > 4)
+    if ((int)multidrawMode < 0 || (int)multidrawMode >= (int)multidraw_mode_t::MaxValue)
         multidrawMode = multidraw_mode_t::Auto;
 
     // 1205
@@ -141,6 +141,9 @@ void init_settings() {
         case multidraw_mode_t::DrawElements:
             draw_mode_str = "DrawElements";
             break;
+        case multidraw_mode_t::Compute:
+            draw_mode_str = "Compute";
+            break;
         case multidraw_mode_t::Auto:
             draw_mode_str = "Auto";
             break;
@@ -199,6 +202,12 @@ void init_settings_post() {
         case multidraw_mode_t::DrawElements:
             LOG_V("multidrawMode = DrawElements")
             global_settings.multidraw_mode = multidraw_mode_t::DrawElements;
+            LOG_V("    -> DrawElements (OK)")
+            break;
+        case multidraw_mode_t::Compute:
+            LOG_V("multidrawMode = Compute")
+            global_settings.multidraw_mode = multidraw_mode_t::Compute;
+            LOG_V("    -> Compute (OK)")
             break;
         case multidraw_mode_t::Auto:
         default:

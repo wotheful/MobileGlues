@@ -16,7 +16,9 @@ enum class multidraw_mode_t: int {
     PreferIndirect,
     PreferBaseVertex,
     PreferMultidrawIndirect,
-    DrawElements
+    DrawElements,
+    Compute,
+    MaxValue
 };
 
 struct global_settings_t {
