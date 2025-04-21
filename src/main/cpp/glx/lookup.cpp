@@ -36,6 +36,9 @@ void* get_multidraw_func(const char* name) {
         case multidraw_mode_t::DrawElements:
             namestr += "_drawelements";
             break;
+        case multidraw_mode_t::Compute:
+            namestr += "_compute";
+            break;
         default:
             LOG_W("get_multidraw_func() cannot determine multidraw emulation mode!")
             return nullptr;

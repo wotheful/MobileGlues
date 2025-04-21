@@ -19,6 +19,8 @@ unordered_map<GLuint, GLuint> g_gen_arrays;
 
 unordered_map<GLenum, GLuint> g_bound_buffers;
 GLuint bound_array = 0;
+// fake array - fake ibo
+unordered_map<GLuint, GLuint> g_element_array_buffer_per_vao;
 
 unordered_map<GLuint, BufferMapping> g_active_mappings;
 
@@ -48,6 +50,18 @@ GLuint find_real_buffer(GLuint key) {
         return it->second;
     else
         return 0;
+}
+
+GLuint get_ibo_by_vao(GLuint vao) {
+    return g_element_array_buffer_per_vao[vao];
+}
+
+GLuint find_bound_array() {
+    return bound_array;
+}
+
+void update_vao_ibo_binding(GLuint vao, GLuint ibo) {
+    g_element_array_buffer_per_vao[vao] = ibo;
 }
 
 GLuint find_bound_buffer(GLenum key) {
@@ -93,6 +107,10 @@ GLuint find_bound_buffer(GLenum key) {
             target = 0;
             break;
     }
+    if (target == GL_ELEMENT_ARRAY_BUFFER) {
+        return get_ibo_by_vao(find_bound_array());
+    }
+
     auto it = g_bound_buffers.find(target);
     if (it != g_bound_buffers.end())
         return it->second;
@@ -118,6 +136,7 @@ void modify_array(GLuint key, GLuint value) {
 void remove_array(GLuint key) {
     if (g_gen_arrays.find(key) != g_gen_arrays.end())
         g_gen_arrays.erase(key);
+    g_element_array_buffer_per_vao.erase(key);
 }
 
 GLuint find_real_array(GLuint key) {
@@ -126,10 +145,6 @@ GLuint find_real_array(GLuint key) {
         return it->second;
     else
         return 0;
-}
-
-GLuint find_bound_array() {
-    return bound_array;
 }
 
 static GLenum get_binding_query(GLenum target) {
@@ -173,6 +188,11 @@ void glBindBuffer(GLenum target, GLuint buffer) {
     LOG()
     LOG_D("glBindBuffer, target = %s, buffer = %d", glEnumToString(target), buffer)
     g_bound_buffers[target] = buffer;
+    // save ibo binding to vao
+    if (target == GL_ELEMENT_ARRAY_BUFFER) {
+        update_vao_ibo_binding(find_bound_array(), buffer);
+    }
+
     if (!has_buffer(buffer) || buffer == 0) {
         GLES.glBindBuffer(target, buffer);
         CHECK_GL_ERROR
@@ -193,6 +213,11 @@ void glBindBufferRange(GLenum target, GLuint index, GLuint buffer, GLintptr offs
     LOG()
     LOG_D("glBindBufferRange, target = %s, index = %d, buffer = %d, offset = %p, size = %zi", glEnumToString(target), index, buffer, (void*) offset, size)
     g_bound_buffers[target] = buffer;
+    // save ibo binding to vao
+    if (target == GL_ELEMENT_ARRAY_BUFFER) {
+        update_vao_ibo_binding(find_bound_array(), buffer);
+    }
+
     if (!has_buffer(buffer) || buffer == 0) {
         GLES.glBindBufferRange(target, index, buffer, offset, size);
         CHECK_GL_ERROR
@@ -212,6 +237,11 @@ void glBindBufferBase(GLenum target, GLuint index, GLuint buffer) {
     LOG()
     LOG_D("glBindBufferBase, target = %s, index = %d, buffer = %d", glEnumToString(target), index, buffer)
     g_bound_buffers[target] = buffer;
+    // save ibo binding to vao
+    if (target == GL_ELEMENT_ARRAY_BUFFER) {
+        update_vao_ibo_binding(find_bound_array(), buffer);
+    }
+
     if (!has_buffer(buffer) || buffer == 0) {
         GLES.glBindBufferBase(target, index, buffer);
         CHECK_GL_ERROR
@@ -425,12 +455,17 @@ void glBindVertexArray(GLuint array) {
     LOG()
     LOG_D("glBindVertexArray(%d)", array)
     bound_array = array;
+
+    // update bound ibo
+    g_bound_buffers[GL_ELEMENT_ARRAY_BUFFER] = get_ibo_by_vao(array);
+
     if (!has_array(array) || array == 0) {
         LOG_D("Does not have va=%d found!", array)
         GLES.glBindVertexArray(array);
         CHECK_GL_ERROR
         return;
     }
+
     GLuint real_array = find_real_array(array);
     if (!real_array) {
         LOG_D("va=%d not initialized, initializing...", array)
