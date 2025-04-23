@@ -10,6 +10,8 @@
 #include "mg.h"
 #define DEBUG false
 
+bool trigger_stub_function = false;
+
 #ifdef __cplusplus
 extern "C" {
 #endif
