@@ -132,7 +132,7 @@ void glDrawBuffer(GLenum buffer) {
                    buffer < GL_COLOR_ATTACHMENT0 + static_cast<GLenum>(maxAttachments)) {
             auto *buffers = (GLenum *)alloca(maxAttachments * sizeof(GLenum));
             for (int i = 0; i < maxAttachments; i++) {
-                buffers[i] = (i == buffer - GL_COLOR_ATTACHMENT0) ? buffer : GL_NONE;
+                buffers[i] = (i == (buffer - GL_COLOR_ATTACHMENT0)) ? buffer : GL_NONE;
             }
             GLES.glDrawBuffers(maxAttachments, buffers);
         }
@@ -178,14 +178,4 @@ GLenum glCheckFramebufferStatus(GLenum target) {
     }
     return status;
     CHECK_GL_ERROR
-}
-
-void glDeleteFramebuffers (GLsizei n, const GLuint *framebuffers) {
-    LOG()
-    GLES.glDeleteFramebuffers(n, framebuffers);
-}
-
-void glGenFramebuffers (GLsizei n, GLuint *framebuffers) {
-    LOG()
-    GLES.glGenFramebuffers(n, framebuffers);
 }
