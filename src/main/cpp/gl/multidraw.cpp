@@ -268,21 +268,25 @@ void main() {
     return;
 
     // Find out draw call #
-    int low = 0;
-    int high = draws.length();
-    for (low = 0; low < high; ++low) {
-        if (prefixSums[low] > outIdx) {
-            break;
-        }
-    }
-//    while (low < high) {
-//        int mid = low + (high - low) / 2;
-//        if (prefixSums[mid] > outIdx) {
-//            high = mid;
-//        } else {
-//            low = mid + 1;
+//    int low = 0;
+//    int high = draws.length();
+//    for (low = 0; low < high; ++low) {
+//        if (prefixSums[low] > outIdx) {
+//            break;
 //        }
 //    }
+
+    int low = 0;
+    int high = draws.length();
+    while (low < high) {
+        int mid = low + (high - low) / 2;
+        if (prefixSums[mid] <= outIdx) {
+            low = mid + 1; // next [mid + 1, high)
+        }
+        else {
+            high = mid; // next [low, mid)
+        }
+    }
 
     // figure out which index to take
     DrawCommand cmd = draws[low];
@@ -414,7 +418,7 @@ GLAPI GLAPIENTRY void mg_glMultiDrawElementsBaseVertex_compute(
     GLES.glGetIntegerv(GL_CURRENT_PROGRAM, &prev_program);
     CHECK_GL_ERROR_NO_INIT
     GLint prev_vb = 0;
-    GLES.glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &prev_vb);
+    GLES.glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &prev_vb);
     CHECK_GL_ERROR_NO_INIT
 
     // Dispatch compute
@@ -434,7 +438,7 @@ GLAPI GLAPIENTRY void mg_glMultiDrawElementsBaseVertex_compute(
     LOG_D("draw")
     GLES.glUseProgram(prev_program);
     CHECK_GL_ERROR_NO_INIT
-    GLES.glBindBuffer(GL_VERTEX_ARRAY, prev_vb);
+    GLES.glBindBuffer(GL_ARRAY_BUFFER, prev_vb);
     CHECK_GL_ERROR_NO_INIT
     GLES.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, g_outputibo);
     CHECK_GL_ERROR_NO_INIT

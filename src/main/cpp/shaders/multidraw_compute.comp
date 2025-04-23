@@ -21,21 +21,25 @@ void main() {
     return;
 
     // Find out draw call #
-    int low = 0;
-    int high = draws.length();
-    for (low = 0; low < high; ++low) {
-        if (prefixSums[low] > outIdx) {
-            break;
-        }
-    }
-//    while (low < high) {
-//        int mid = low + (high - low) / 2;
-//        if (prefixSums[mid] > outIdx) {
-//            high = mid;
-//        } else {
-//            low = mid + 1;
+//    int low = 0;
+//    int high = draws.length();
+//    for (low = 0; low < high; ++low) {
+//        if (prefixSums[low] > outIdx) {
+//            break;
 //        }
 //    }
+
+    int low = 0;
+    int high = draws.length();
+    while (low < high) {
+        int mid = low + (high - low) / 2;
+        if (prefixSums[mid] <= outIdx) {
+            low = mid + 1; // next [mid + 1, high)
+        }
+        else {
+            high = mid; // next [low, mid)
+        }
+    }
 
     // figure out which index to take
     DrawCommand cmd = draws[low];
