@@ -5,7 +5,7 @@ project("mobileglues")
 enable_language(C)
 enable_language(CXX)
 
-set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD 20)
 
 set(CAMKE_C_STANDARD 17)
 
