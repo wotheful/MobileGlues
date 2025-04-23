@@ -6,7 +6,7 @@
 #include "../log.h"
 #include <GL/gl.h>
 
-#define DEBUG 0
+#define DEBUG 1
 
 extern "C" {
 GLAPI GLAPIENTRY GLboolean glIsRenderbufferEXT(GLuint renderbuffer) {
