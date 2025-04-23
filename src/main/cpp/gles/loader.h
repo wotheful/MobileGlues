@@ -129,7 +129,7 @@ extern "C" GLAPI GLAPIENTRY type name(__VA_ARGS__) { \
 
 #define STUB_FUNCTION_END(type,name,...)                                    \
     if(trigger_stub_function) return;                                       \
-    trigger_stub_function = true;
+    trigger_stub_function = true;                                           \
     LOG_W("Stub function: %s @ %s(...)", RENDERERNAME, __FUNCTION__);       \
     return (type)0;                                                         \
 }
