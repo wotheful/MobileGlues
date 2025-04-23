@@ -148,6 +148,8 @@ program_t& glstate_t::get_or_generate_program(const uint64_t key) {
             // reserve key==0 as null program for failure
             return fpe_programs[0];
         }
+    } else {
+        LOG_D("Using existing shader: 0x%x", key)
     }
 
     auto& prog = fpe_programs[key];
