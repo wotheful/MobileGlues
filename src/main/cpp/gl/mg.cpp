@@ -48,18 +48,6 @@ void write_log_n(const char* format, ...) {
     fflush(file);
 }
 
-void write_log_n(const char* format, ...) {
-    if (file == NULL) {
-        return;
-    }
-    va_list args;
-    va_start(args, format);
-    vfprintf(file, format, args);
-    va_end(args);
-    // Todo: close file
-    fflush(file);
-}
-
 void clear_log() {
     file = fopen(log_file_path, "w");
     if (file == nullptr) {
