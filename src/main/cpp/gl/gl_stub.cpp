@@ -2663,7 +2663,7 @@ GLAPI GLAPIENTRY void glRasterPos2usv(const GLushort *v) { LOG_W("Stub: glRaster
 GLAPI GLAPIENTRY void glVertex3bv(const GLbyte *v) { LOG_W("Stub: glVertex3bv") }
 GLAPI GLAPIENTRY void glFramebufferTextureLayerEXT(GLenum target, GLenum attachment, GLuint texture, GLint level, GLint layer) { LOG_W("Stub: glFramebufferTextureLayerEXT") }
 GLAPI GLAPIENTRY void glQueryCounterARB(GLuint id, GLenum target) { LOG_W("Stub: glQueryCounterARB") }
-GLAPI GLAPIENTRY void glVertexAttrib2s(GLuint index, GLshort x, GLshort y) { LOG_W("Stub: glVertexAttrib2s") }
+//GLAPI GLAPIENTRY void glVertexAttrib2s(GLuint index, GLshort x, GLshort y) { LOG_W("Stub: glVertexAttrib2s") }
 GLAPI GLAPIENTRY void glWindowPos2b(GLbyte x, GLbyte y) { LOG_W("Stub: glWindowPos2b") }
 GLAPI GLAPIENTRY void glTexCoord2usv(const GLushort *v) { LOG_W("Stub: glTexCoord2usv") }
 GLAPI GLAPIENTRY void glVertexAttrib4Nub(GLuint index, GLubyte x, GLubyte y, GLubyte z, GLubyte w) { LOG_W("Stub: glVertexAttrib4Nub") }
