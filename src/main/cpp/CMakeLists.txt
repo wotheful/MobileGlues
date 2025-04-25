@@ -102,7 +102,6 @@ target_include_directories(mobileglues PUBLIC
         ${CMAKE_SOURCE_DIR}/include
         )
 
-
 if (PROFILING)
         find_package(Threads)
         include_directories(${CMAKE_SOURCE_DIR}/3rdparty/perfetto/sdk)

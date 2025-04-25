@@ -71,6 +71,67 @@ void prepare_indirect_buffer(const GLsizei *counts, GLenum type, const void *con
     GLES.glUnmapBuffer(GL_DRAW_INDIRECT_BUFFER);
 }
 
+static bool g_drawssbo_inited = false;
+static GLsizei g_drawssbo_size = 0;
+GLuint g_drawssbo = 0;
+
+void prepare_compute_drawcmd_ssbo(const GLsizei *counts, GLenum type, const void *const *indices,
+                             GLsizei primcount, const GLint *basevertex) {
+    if (!g_drawssbo_inited) {
+        GLES.glGenBuffers(1, &g_drawssbo);
+        GLES.glBindBuffer(GL_DRAW_INDIRECT_BUFFER, g_drawssbo);
+        g_drawssbo_size = 1;
+        GLES.glBufferData(GL_DRAW_INDIRECT_BUFFER,
+                          g_drawssbo_size * sizeof(drawcmd_compute_t), NULL, GL_DYNAMIC_DRAW);
+
+        g_drawssbo_inited = true;
+    }
+
+    if (g_drawssbo_size < primcount) {
+        size_t sz = g_drawssbo_size;
+
+        LOG_D("Before resize: %d", sz)
+
+        // 2-exponential to reduce reallocation
+        while (sz < primcount)
+            sz *= 2;
+
+        GLES.glBufferData(GL_DRAW_INDIRECT_BUFFER,
+                          sz * sizeof(drawcmd_compute_t), NULL, GL_DYNAMIC_DRAW);
+        g_drawssbo_size = sz;
+    }
+
+    LOG_D("After resize: %d", g_drawssbo_size)
+
+    auto* pcmds = (drawcmd_compute_t*)
+            GLES.glMapBufferRange(GL_DRAW_INDIRECT_BUFFER,
+                                  0, primcount * sizeof(drawcmd_compute_t),
+                                  GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
+
+    GLsizei elementSize;
+    switch (type) {
+        case GL_UNSIGNED_BYTE:
+            elementSize = 1;
+            break;
+        case GL_UNSIGNED_SHORT:
+            elementSize = 2;
+            break;
+        case GL_UNSIGNED_INT:
+            elementSize = 4;
+            break;
+        default:
+            elementSize = 4;
+    }
+
+    for (GLsizei i = 0; i < primcount; ++i) {
+        auto byteOffset = reinterpret_cast<uintptr_t>(indices[i]);
+        pcmds[i].firstIndex = static_cast<GLuint>(byteOffset / elementSize);
+        pcmds[i].baseVertex = basevertex ? basevertex[i] : 0;
+    }
+
+    GLES.glUnmapBuffer(GL_DRAW_INDIRECT_BUFFER);
+}
+
 void mg_glMultiDrawElementsBaseVertex_drawelements(GLenum mode, GLsizei* counts, GLenum type, const void* const* indices, GLsizei primcount, const GLint* basevertex) {
     LOG()
 
@@ -250,11 +311,11 @@ R"(#version 310 es
 layout(local_size_x = 64) in;
 
 struct DrawCommand {
-    uint  count;
-    uint  instanceCount;
+//    uint  count;
+//    uint  instanceCount;
     uint  firstIndex;
     int   baseVertex;
-    uint  reservedMustBeZero;
+//    uint  reservedMustBeZero;
 };
 
 layout(std430, binding = 0) readonly buffer Input { uint in_indices[]; };
@@ -269,7 +330,7 @@ void main() {
 
     // Find out draw call #
 //    int low = 0;
-//    int high = draws.length();
+//    int high = prefixSums.length();
 //    for (low = 0; low < high; ++low) {
 //        if (prefixSums[low] > outIdx) {
 //            break;
@@ -277,14 +338,14 @@ void main() {
 //    }
 
     int low = 0;
-    int high = draws.length();
+    int high = prefixSums.length() - 1;
     while (low < high) {
         int mid = low + (high - low) / 2;
-        if (prefixSums[mid] <= outIdx) {
-            low = mid + 1; // next [mid + 1, high)
+        if (prefixSums[mid] > outIdx) {
+            high = mid; // next [low, mid)
         }
         else {
-            high = mid; // next [low, mid)
+            low = mid + 1; // next [mid + 1, high)
         }
     }
 
@@ -305,6 +366,55 @@ GLuint g_prefixsumbuffer = 0;
 GLuint g_outputibo = 0;
 GLuint g_compute_program = 0;
 char g_compile_info[1024];
+
+GLuint compile_compute_program(const std::string& src) {
+    auto program = GLES.glCreateProgram();
+    CHECK_GL_ERROR_NO_INIT
+    GLuint shader = GLES.glCreateShader(GL_COMPUTE_SHADER);
+    CHECK_GL_ERROR_NO_INIT
+    const char* s[] = { src.c_str() };
+    const GLint length[] = { static_cast<GLint>(src.length()) };
+    GLES.glShaderSource(shader, 1, s, length);
+    CHECK_GL_ERROR_NO_INIT
+    GLES.glCompileShader(shader);
+    CHECK_GL_ERROR_NO_INIT
+    int success = 0;
+    GLES.glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
+    CHECK_GL_ERROR_NO_INIT
+    if (!success) {
+        GLES.glGetShaderInfoLog(shader, 1024, NULL, g_compile_info);
+        CHECK_GL_ERROR_NO_INIT
+        LOG_E("%s: %s shader compile error: %s\nsrc:\n%s",
+              __func__,
+              "compute",
+              g_compile_info,
+              src.c_str());
+#if DEBUG || GLOBAL_DEBUG
+        abort();
+#endif
+        return -1;
+    }
+
+    GLES.glAttachShader(program, shader);
+    CHECK_GL_ERROR_NO_INIT
+    GLES.glLinkProgram(program);
+    CHECK_GL_ERROR_NO_INIT
+
+    GLES.glGetProgramiv(program, GL_LINK_STATUS, &success);
+    CHECK_GL_ERROR_NO_INIT
+    if(!success) {
+        GLES.glGetProgramInfoLog(program, 1024, NULL, g_compile_info);
+        CHECK_GL_ERROR_NO_INIT
+        LOG_E("program link error: %s", g_compile_info);
+#if DEBUG || GLOBAL_DEBUG
+        abort();
+#endif
+        return -1;
+    }
+
+    return program;
+}
+
 GLAPI GLAPIENTRY void mg_glMultiDrawElementsBaseVertex_compute(
         GLenum mode, GLsizei *counts, GLenum type, const void *const *indices, GLsizei primcount, const GLint *basevertex) {
     LOG()
@@ -317,7 +427,8 @@ GLAPI GLAPIENTRY void mg_glMultiDrawElementsBaseVertex_compute(
     // TODO: support `types` other than GL_UNSIGNED_INT
 
     // Align compute shader input format with standard OpenGL indirect-draw format
-    prepare_indirect_buffer(counts, type, indices, primcount, basevertex);
+//    prepare_indirect_buffer(counts, type, indices, primcount, basevertex);
+    prepare_compute_drawcmd_ssbo(counts, type, indices, primcount, basevertex);
 
     // Init compute buffers
     if (!g_compute_inited) {
@@ -325,56 +436,14 @@ GLAPI GLAPIENTRY void mg_glMultiDrawElementsBaseVertex_compute(
         GLES.glGenBuffers(1, &g_prefixsumbuffer);
         GLES.glGenBuffers(1, &g_outputibo);
 
-        g_compute_program = GLES.glCreateProgram();
-        CHECK_GL_ERROR_NO_INIT
-        GLuint shader = GLES.glCreateShader(GL_COMPUTE_SHADER);
-        CHECK_GL_ERROR_NO_INIT
-        const char* s[] = { multidraw_comp_shader.c_str() };
-        const GLint length[] = { static_cast<GLint>(multidraw_comp_shader.length()) };
-        GLES.glShaderSource(shader, 1, s, length);
-        CHECK_GL_ERROR_NO_INIT
-        GLES.glCompileShader(shader);
-        CHECK_GL_ERROR_NO_INIT
-        int success = 0;
-        GLES.glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
-        CHECK_GL_ERROR_NO_INIT
-        if (!success) {
-            GLES.glGetShaderInfoLog(shader, 1024, NULL, g_compile_info);
-            CHECK_GL_ERROR_NO_INIT
-            LOG_E("%s: %s shader compile error: %s\nsrc:\n%s",
-                  __func__,
-                  "compute",
-                  g_compile_info,
-                  multidraw_comp_shader.c_str());
-#if DEBUG || GLOBAL_DEBUG
-            abort();
-#endif
-            return;
-        }
-
-        GLES.glAttachShader(g_compute_program, shader);
-        CHECK_GL_ERROR_NO_INIT
-        GLES.glLinkProgram(g_compute_program);
-        CHECK_GL_ERROR_NO_INIT
-
-        GLES.glGetProgramiv(g_compute_program, GL_LINK_STATUS, &success);
-        CHECK_GL_ERROR_NO_INIT
-        if(!success) {
-            GLES.glGetProgramInfoLog(g_compute_program, 1024, NULL, g_compile_info);
-            CHECK_GL_ERROR_NO_INIT
-            LOG_E("program link error: %s", g_compile_info);
-#if DEBUG || GLOBAL_DEBUG
-            abort();
-#endif
-            return;
-        }
+        g_compute_program = compile_compute_program(multidraw_comp_shader);
 
         g_compute_inited = true;
     }
 
     // Resize prefix sum buffer if needed
-    if (g_prefix_sum.size() < g_cmdbufsize)
-        g_prefix_sum.resize(g_cmdbufsize);
+    if (g_prefix_sum.size() < g_drawssbo_size)
+        g_prefix_sum.resize(g_drawssbo_size);
 
     // Calculate prefix sum
     g_prefix_sum[0] = counts[0];
@@ -406,7 +475,7 @@ GLAPI GLAPIENTRY void mg_glMultiDrawElementsBaseVertex_compute(
     // Bind buffers
     GLES.glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, ibo);
     CHECK_GL_ERROR_NO_INIT
-    GLES.glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, g_indirectbuffer);
+    GLES.glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, g_drawssbo);
     CHECK_GL_ERROR_NO_INIT
     GLES.glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, g_prefixsumbuffer);
     CHECK_GL_ERROR_NO_INIT
