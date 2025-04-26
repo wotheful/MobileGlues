@@ -917,7 +917,14 @@ std::string preprocess_glsl(const std::string& glsl, GLenum glsl_type) {
     } else if (glsl_type == GL_FRAGMENT_SHADER) {
         replace_all(ret, "varying", "in");
     }
-
+    replace_all(ret, "texture2D", "texture");
+    replace_all(ret, "vec3 worldPosDiff", "vec4 worldPosDiff");
+    replace_all(ret, "vec3[3](vWorldPos[0] - vWorldPos[1]", "vec4[3](vWorldPos[0] - vWorldPos[1]");
+    replace_all(ret, "vec3 reflection;", "vec3 reflection=vec3(0,0,0);");
+    replace_all(ret, "#version 330 compatibility", "#version 330");
+    replace_all(ret, "#version 450 compatibility", "#version 450");
+    replace_all(ret, "#version 400 compatibility", "#version 400");
+    
     // replace gl_FragColor
 //    inject_fragcolor(ret);
 
@@ -936,7 +943,7 @@ int get_or_add_glsl_version(std::string& glsl) {
         glsl = replace_line_starting_with(glsl, "#version", "#version 330 core\n");
         glsl_version = 330;
     }
-    LOG_D("GLSL version: %d",glsl_version)
+    LOG_W("GLSL version: %d",glsl_version)
     return glsl_version;
 }
 
@@ -1007,7 +1014,6 @@ std::string spirv_to_essl(std::vector<unsigned int> spirv, uint essl_version, in
     spvc_context context = nullptr;
     spvc_parsed_ir ir = nullptr;
     spvc_compiler compiler_glsl = nullptr;
-    spvc_set active = nullptr;
     spvc_compiler_options options = nullptr;
     spvc_resources resources = nullptr;
     const spvc_reflected_resource *list = nullptr;
